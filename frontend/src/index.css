@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Table styles for better overflow handling and softer background */
+@layer components {
+  .table-container {
+    @apply overflow-x-auto -mx-2 -my-2 sm:-mx-4 lg:-mx-6;
+  }
+  
+  .table-wrapper {
+    @apply inline-block min-w-full py-2 align-middle;
+  }
+  
+  .table {
+    @apply min-w-full divide-y divide-gray-300/50;
+  }
+  
+  .table-header {
+    @apply bg-white/80 backdrop-blur-sm;
+  }
+  
+  .table-body {
+    @apply bg-white/70 backdrop-blur-sm divide-y divide-gray-200/50;
+  }
+  
+  .table-cell {
+    @apply whitespace-nowrap px-3 py-4 text-sm max-w-xs overflow-hidden text-ellipsis;
+  }
+  
+  .table-cell-content {
+    @apply truncate max-w-full;
+  }
+}
