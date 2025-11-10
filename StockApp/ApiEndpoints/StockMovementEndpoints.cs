@@ -3,6 +3,7 @@ using StockApp.App.StockMovement.Command;
 using StockApp.App.StockMovement.Query;
 using StockApp.Common.Models;
 using StockApp.Entities;
+using StockApp.Services;
 
 namespace StockApp.ApiEndpoints;
 
@@ -49,6 +50,25 @@ public static class StockMovementEndpoints
         .Produces<CreateStockMovementCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest);
+
+        #endregion
+
+        #region Export Excel
+
+        group.MapGet("/export/excel", async (
+            IMediator mediator,
+            IExcelService excelService) =>
+        {
+            var movements = await mediator.Send(new GetAllStockMovementsQuery());
+            var content = excelService.GenerateStockMovementsExcel(movements);
+            var fileName = $"Stok_Hareketleri_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+            return Results.File(
+                content,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName,
+                enableRangeProcessing: false);
+        })
+        .Produces(StatusCodes.Status200OK);
 
         #endregion
     }

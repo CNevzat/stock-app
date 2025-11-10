@@ -33,8 +33,8 @@ public class MarkdownService : IMarkdownService
         markdown.AppendLine();
 
         // Tablo başlığı
-        markdown.AppendLine("| # | Ürün Adı | Stok Kodu | Kategori | Mevcut Stok | Kritik Eşik | Eksik Miktar | Durum |");
-        markdown.AppendLine("|---|---|---|---|---|---|---|---|");
+        markdown.AppendLine("| # | Ürün Adı | Stok Kodu | Kategori | Mevcut Stok | Kritik Eşik | Eksik Miktar | Satın Alma | Satış | Envanter Maliyeti | Potansiyel Gelir | Potansiyel Kar | Durum |");
+        markdown.AppendLine("|---|---|---|---|---|---|---|---|---|---|---|---|---|");
 
         // Ürünleri ekle
         int index = 1;
@@ -42,8 +42,13 @@ public class MarkdownService : IMarkdownService
         {
             var eksikMiktar = product.LowStockThreshold - product.StockQuantity;
             var durum = eksikMiktar > 10 ? "🔴 Çok Kritik" : eksikMiktar > 5 ? "🟡 Kritik" : "🟠 Dikkat";
+            var purchasePrice = product.CurrentPurchasePrice;
+            var salePrice = product.CurrentSalePrice;
+            var inventoryCost = product.StockQuantity * purchasePrice;
+            var potentialRevenue = product.StockQuantity * salePrice;
+            var potentialProfit = potentialRevenue - inventoryCost;
 
-            markdown.AppendLine($"| {index} | {EscapeMarkdown(product.Name)} | {EscapeMarkdown(product.StockCode)} | {EscapeMarkdown(product.CategoryName)} | **{product.StockQuantity}** | {product.LowStockThreshold} | **{eksikMiktar}** | {durum} |");
+            markdown.AppendLine($"| {index} | {EscapeMarkdown(product.Name)} | {EscapeMarkdown(product.StockCode)} | {EscapeMarkdown(product.CategoryName)} | **{product.StockQuantity}** | {product.LowStockThreshold} | **{eksikMiktar}** | ₺{purchasePrice:N2} | ₺{salePrice:N2} | ₺{inventoryCost:N2} | ₺{potentialRevenue:N2} | ₺{potentialProfit:N2} | {durum} |");
             index++;
         }
 
@@ -53,11 +58,20 @@ public class MarkdownService : IMarkdownService
 
         // Özet istatistikler
         var toplamEksik = products.Sum(p => p.LowStockThreshold - p.StockQuantity);
-        var ortalamaEksik = products.Any() ? toplamEksik / products.Count : 0;
+        var toplamMaliyet = products.Sum(p => p.StockQuantity * p.CurrentPurchasePrice);
+        var toplamGelir = products.Sum(p => p.StockQuantity * p.CurrentSalePrice);
+        var toplamKar = toplamGelir - toplamMaliyet;
+        var ortalamaMarj = products.Any() && toplamMaliyet > 0
+            ? (toplamKar / toplamMaliyet) * 100m
+            : 0m;
         
         markdown.AppendLine("## 📊 Özet İstatistikler");
         markdown.AppendLine();
         markdown.AppendLine($"- **Toplam Eksik Stok:** {toplamEksik} adet");
+        markdown.AppendLine($"- **Toplam Envanter Maliyeti:** ₺{toplamMaliyet:N2}");
+        markdown.AppendLine($"- **Potansiyel Gelir:** ₺{toplamGelir:N2}");
+        markdown.AppendLine($"- **Potansiyel Kar:** ₺{toplamKar:N2}");
+        markdown.AppendLine($"- **Ortalama Marj:** {ortalamaMarj:N2} %");
         markdown.AppendLine($"- **En Kritik Ürün:** {products.First().Name} ({products.First().LowStockThreshold - products.First().StockQuantity} adet eksik)");
         markdown.AppendLine();
 

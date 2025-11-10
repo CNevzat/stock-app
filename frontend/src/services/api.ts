@@ -1,4 +1,7 @@
-const API_BASE_URL = 'http://localhost:5134/';
+// API base URL - mobil ve web için
+import { getApiBaseUrl } from '../utils/apiConfig';
+
+const API_BASE_URL = getApiBaseUrl();
 
 import {Api} from "../Api";
 

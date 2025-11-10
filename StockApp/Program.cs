@@ -25,10 +25,27 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:3000")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials(); // SignalR için gerekli
+        if (builder.Environment.IsDevelopment())
+        {
+            // Development'ta tüm origin'lere izin ver (mobil cihazlar için)
+            // Not: AllowAnyOrigin() ve AllowCredentials() birlikte kullanılamaz
+            policy.SetIsOriginAllowed(_ => true) // Tüm origin'lere izin ver
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials(); // SignalR için gerekli
+        }
+        else
+        {
+            // Production'da sadece belirli origin'lere izin ver
+            policy.WithOrigins(
+                    "http://localhost:5173", 
+                    "http://localhost:5174", 
+                    "http://localhost:3000"
+                  )
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials(); // SignalR için gerekli
+        }
     });
 });
 
@@ -36,6 +53,11 @@ builder.Services.AddCors(options =>
 builder.Services.AddApplicationServices(builder.Configuration);
 // SignalR ekleme
 builder.Services.AddSignalR();
+
+// Mobil cihazlardan erişim için tüm IP adreslerinde dinle
+if (builder.Environment.IsDevelopment())
+{
+}
 
 var app = builder.Build();
 
@@ -53,9 +75,6 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
-// Static files serving (images için)
-app.UseStaticFiles();
-
 // Use exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -64,5 +83,22 @@ app.MapHub<StockHub>("/hubs/stock");
 
 // Map all API endpoints
 app.MapApiEndpoints();
+
+// Static files serving (images ve frontend için)
+// Production'da frontend dosyalarını serve et (SPA fallback)
+if (!app.Environment.IsDevelopment())
+{
+    // Default files (index.html) ve static files için
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+    
+    // React Router için fallback - tüm non-API istekleri index.html'e yönlendir
+    app.MapFallbackToFile("/index.html");
+}
+else
+{
+    // Development'ta sadece images için static files
+    app.UseStaticFiles();
+}
 
 app.Run();

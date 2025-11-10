@@ -92,6 +92,12 @@ export interface CreateProductCommand {
   lowStockThreshold?: number;
   /** @format int32 */
   categoryId?: number;
+  /** @format double */
+  purchasePrice?: number;
+  /** @format double */
+  salePrice?: number;
+  /** @format int32 */
+  locationId?: number | null;
 }
 
 export interface CreateProductCommandResponse {
@@ -105,6 +111,8 @@ export interface CreateStockMovementCommand {
   type?: StockMovementType;
   /** @format int32 */
   quantity?: number;
+  /** @format double */
+  unitPrice?: number;
   description?: string | null;
 }
 
@@ -128,6 +136,18 @@ export interface DashboardStatsDto {
   lowStockProducts?: number;
   /** @format int32 */
   outOfStockProducts?: number;
+  /** @format double */
+  totalInventoryCost?: number;
+  /** @format double */
+  totalInventoryPotentialRevenue?: number;
+  /** @format double */
+  totalExpectedSalesRevenue?: number;
+  /** @format double */
+  totalPurchaseSpent?: number;
+  /** @format double */
+  totalPotentialProfit?: number;
+  /** @format double */
+  averageMarginPercentage?: number;
   categoryStats?: CategoryStatsDto[] | null;
   productStockStatus?: ProductStockDto[] | null;
   stockDistribution?: StockDistributionDto[] | null;
@@ -196,6 +216,17 @@ export interface ProductDto {
   /** @format int32 */
   categoryId?: number;
   categoryName?: string | null;
+  /** @format int32 */
+  locationId?: number | null;
+  locationName?: string | null;
+  /** @format double */
+  currentPurchasePrice?: number;
+  /** @format double */
+  currentSalePrice?: number;
+  /** @format double */
+  averagePurchasePrice?: number;
+  /** @format double */
+  averageSalePrice?: number;
   /** @format date-time */
   createdAt?: string;
   /** @format date-time */
@@ -281,6 +312,14 @@ export interface UpdateProductCommand {
   stockQuantity?: number | null;
   /** @format int32 */
   lowStockThreshold?: number | null;
+  /** @format int32 */
+  categoryId?: number | null;
+  /** @format int32 */
+  locationId?: number | null;
+  /** @format double */
+  purchasePrice?: number | null;
+  /** @format double */
+  salePrice?: number | null;
 }
 
 export interface UpdateProductCommandResponse {
@@ -976,5 +1015,20 @@ export class Api<
   };
 }
 
-export const api = new Api({ baseURL: "http://localhost:5134" });
+// API base URL - hem dev hem production'da 5134 portunu kullan
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  // Production'da window.location.hostname:5134 kullan
+  if (import.meta.env.PROD) {
+    return `http://${window.location.hostname}:5134`;
+  }
+  // Development'ta localhost:5134
+  return 'http://localhost:5134';
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+export const api = new Api({ baseURL: API_BASE_URL });
 export default api;

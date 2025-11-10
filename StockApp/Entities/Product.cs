@@ -12,6 +12,8 @@ namespace StockApp.Entities
         public string? ImagePath { get; set; } // Ürün resmi yolu
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
+        public decimal CurrentPurchasePrice { get; set; }
+        public decimal CurrentSalePrice { get; set; }
 
         // Foreign keys
         public int CategoryId { get; set; }
@@ -22,5 +24,6 @@ namespace StockApp.Entities
 
         // Dinamik özellikler
         public List<ProductAttribute> Attributes { get; set; } = new();
+        public List<ProductPrice> PriceHistory { get; set; } = new();
     }
 }

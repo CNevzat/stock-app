@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { signalRService } from '../services/signalRService';
 import type { DashboardStats } from '../services/dashboardService';
-import * as signalR from '@microsoft/signalr';
 
 export const useSignalR = () => {
   const queryClient = useQueryClient();

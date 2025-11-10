@@ -74,6 +74,12 @@ namespace StockApp.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("CurrentPurchasePrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CurrentSalePrice")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -143,6 +149,34 @@ namespace StockApp.Migrations
                     b.ToTable("ProductAttributes");
                 });
 
+            modelBuilder.Entity("StockApp.Entities.ProductPrice", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("PurchasePrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("SalePrice")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.ToTable("ProductPrices");
+                });
+
             modelBuilder.Entity("StockApp.Entities.StockMovement", b =>
                 {
                     b.Property<int>("Id")
@@ -166,6 +200,9 @@ namespace StockApp.Migrations
 
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -235,6 +272,17 @@ namespace StockApp.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("StockApp.Entities.ProductPrice", b =>
+                {
+                    b.HasOne("StockApp.Entities.Product", "Product")
+                        .WithMany("PriceHistory")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("StockApp.Entities.StockMovement", b =>
                 {
                     b.HasOne("StockApp.Entities.Category", "Category")
@@ -267,6 +315,8 @@ namespace StockApp.Migrations
             modelBuilder.Entity("StockApp.Entities.Product", b =>
                 {
                     b.Navigation("Attributes");
+
+                    b.Navigation("PriceHistory");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,7 +1,8 @@
 import * as signalR from '@microsoft/signalr';
 import type { DashboardStats } from './dashboardService';
+import { getHubUrl } from '../utils/apiConfig';
 
-const HUB_URL = 'http://localhost:5134/hubs/stock';
+const HUB_URL = getHubUrl();
 
 // Event callback type'ları
 export type ProductCreatedCallback = (product: any) => void;

@@ -29,6 +29,8 @@ public record ProductDto
     public string? ImagePath { get; init; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
+    public decimal CurrentPurchasePrice { get; init; }
+    public decimal CurrentSalePrice { get; init; }
 }
 
 internal class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, PaginatedList<ProductDto>>
@@ -84,7 +86,9 @@ internal class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Pagin
             LocationName = p.Location != null ? p.Location.Name : null,
             ImagePath = p.ImagePath,
             CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt
+            UpdatedAt = p.UpdatedAt,
+            CurrentPurchasePrice = p.CurrentPurchasePrice,
+            CurrentSalePrice = p.CurrentSalePrice
         })
         // En son güncellenen veya oluşturulan kayıt en üstte (UpdatedAt varsa onu, yoksa CreatedAt'i kullan)
         .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt);

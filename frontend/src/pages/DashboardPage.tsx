@@ -2,10 +2,18 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { dashboardService } from '../services/dashboardService'
 import { useSignalR } from '../hooks/useSignalR'
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, LineChart, Line, AreaChart, Area, LabelList } from 'recharts'
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, LabelList, ComposedChart, Line } from 'recharts'
 
 export default function DashboardPage() {
   const [isDownloading, setIsDownloading] = useState(false)
+  const formatCurrency = (value?: number | null) =>
+    new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+      Number(value ?? 0)
+    )
+  const formatCompactCurrency = (value?: number | null) =>
+    new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY', notation: 'compact', maximumFractionDigits: 1 }).format(
+      Number(value ?? 0)
+    )
   
   // SignalR bağlantısını başlat ve dashboard güncellemelerini dinle
   const { isConnected } = useSignalR()
@@ -13,7 +21,18 @@ export default function DashboardPage() {
   const handleDownloadPdf = async () => {
     setIsDownloading(true)
     try {
-      const response = await fetch('http://localhost:5134/api/reports/critical-stock/pdf', {
+      // API base URL helper
+      const getApiBaseUrl = () => {
+        if (import.meta.env.VITE_API_BASE_URL) {
+          return import.meta.env.VITE_API_BASE_URL;
+        }
+        if (import.meta.env.PROD) {
+          return `http://${window.location.hostname}:5134`;
+        }
+        return 'http://localhost:5134';
+      };
+      const API_BASE_URL = getApiBaseUrl();
+      const response = await fetch(`${API_BASE_URL}/api/reports/critical-stock/pdf`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf',
@@ -171,6 +190,68 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Finansal Genel Bakış */}
+      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {[
+          {
+            title: 'Toplam Envanter Değeri',
+            value: stats.totalInventoryCost,
+            description: 'Stoktaki ürünlerin alış fiyatlarına göre toplam maliyeti',
+            gradient: 'from-indigo-500 to-indigo-600',
+            icon: (
+              <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 1.12-3 2.5S10.343 13 12 13s3-1.12 3-2.5S13.657 8 12 8z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 10.5c0 2.485-2.462 4.5-5 4.5s-5-2.015-5-4.5" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1M12 19v1M6.5 6.5l.707.707M16.793 16.793l.707.707M4 12h1M19 12h1" />
+              </svg>
+            ),
+          },
+          {
+            title: 'Beklenen Toplam Satış',
+            value: stats.totalExpectedSalesRevenue,
+            description: 'Ürün satış fiyatı x stok adedi toplamı',
+            gradient: 'from-emerald-500 to-emerald-600',
+            icon: (
+              <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v8m0 0l3-3m-3 3l-3-3" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15a7 7 0 0114 0 7 7 0 01-14 0z" />
+              </svg>
+            ),
+          },
+          {
+            title: 'Potansiyel Kar',
+            value: stats.totalPotentialProfit,
+            description: 'Satış sonrası elde edilebilecek toplam kar',
+            gradient: 'from-purple-500 to-purple-600',
+            icon: (
+              <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7H7v6h6V7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 11v6M15 17h4M17 3v4m0 0a4 4 0 110 8 4 4 0 110-8z" />
+              </svg>
+            ),
+          },
+        ].map((card) => (
+          <div key={card.title} className={`overflow-hidden rounded-xl bg-gradient-to-br ${card.gradient} shadow-lg`}>
+            <div className="p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0 rounded-lg bg-white bg-opacity-30 p-3">
+                  {card.icon}
+                </div>
+                <div className="ml-5 w-0 flex-1">
+                  <dl>
+                    <dt className="text-sm font-medium text-white/80 truncate">{card.title}</dt>
+                    <dd className="flex items-baseline">
+                      <div className="text-2xl font-bold text-white">{formatCurrency(card.value)}</div>
+                    </dd>
+                    <dd className="mt-2 text-xs text-white/70">{card.description}</dd>
+                  </dl>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Grafikler - 3 Yan Yana */}
@@ -338,6 +419,88 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Kategori Bazlı Finansal Değerler */}
+      {stats.categoryValueDistribution && stats.categoryValueDistribution.length > 0 && (
+        <div className="mt-8">
+          <div className="overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg shadow-lg border border-white/20">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Kategorilere Göre Envanter Değeri ve Beklenen Kar</h3>
+                <span className="text-xs uppercase tracking-wide text-gray-500">
+                  {stats.categoryValueDistribution.length} kategori
+                </span>
+              </div>
+              <ResponsiveContainer width="100%" height={380}>
+                <ComposedChart
+                  data={stats.categoryValueDistribution.map((category) => ({
+                    categoryName: category.categoryName,
+                    totalCost: Number(category.totalCost ?? 0),
+                    totalRevenue: Number(category.totalPotentialRevenue ?? 0),
+                    totalProfit: Number(category.totalPotentialProfit ?? 0),
+                  }))}
+                  margin={{ top: 10, right: 40, left: 10, bottom: 40 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="categoryName" tick={{ fontSize: 11 }} interval={0} angle={-25} textAnchor="end" height={70} />
+                  <YAxis tickFormatter={(value) => formatCompactCurrency(value)} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#fff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '0.5rem',
+                    }}
+                    formatter={(value: number, name: string, props: any) => {
+                      const dataKey = props?.dataKey ?? name
+                      const label =
+                        dataKey === 'totalCost'
+                          ? 'Envanter Maliyeti'
+                          : dataKey === 'totalRevenue'
+                          ? 'Beklenen Satış'
+                          : 'Beklenen Kar'
+                      return [formatCurrency(value), label]
+                    }}
+                    labelFormatter={(label) => `Kategori: ${label}`}
+                  />
+                  <Legend
+                    formatter={(_value, entry) => {
+                      const dataKey = entry?.dataKey ?? entry?.value
+                      return dataKey === 'totalCost'
+                        ? 'Envanter Maliyeti'
+                        : dataKey === 'totalRevenue'
+                        ? 'Beklenen Satış'
+                        : 'Beklenen Kar'
+                    }}
+                  />
+                  <Bar
+                    dataKey="totalCost"
+                    name="Envanter Maliyeti"
+                    barSize={22}
+                    radius={[4, 4, 0, 0]}
+                    fill="#3b82f6"
+                  />
+                  <Bar
+                    dataKey="totalRevenue"
+                    name="Beklenen Satış"
+                    barSize={22}
+                    radius={[4, 4, 0, 0]}
+                    fill="#10b981"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="totalProfit"
+                    name="Beklenen Kar"
+                    stroke="#a855f7"
+                    strokeWidth={3}
+                    dot={{ r: 5 }}
+                    activeDot={{ r: 7 }}
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Kritik Stok Uyarıları - Tam Genişlik */}
       <div className="mt-8 overflow-hidden rounded-xl backdrop-blur-lg shadow-lg border border-white/10">
@@ -562,58 +725,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* İstatistikler */}
-      <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
-        <div className="overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg shadow border border-white/20">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md bg-indigo-100 p-3">
-                <svg className="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dt className="text-sm font-medium text-gray-500 truncate">Toplam Öznitelik</dt>
-                <dd className="text-2xl font-bold text-gray-900">{stats.totalProductAttributes || 0}</dd>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg shadow border border-white/20">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md bg-red-100 p-3">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dt className="text-sm font-medium text-gray-500 truncate">Stokta Yok</dt>
-                <dd className="text-2xl font-bold text-gray-900">{stats.outOfStockProducts || 0}</dd>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="overflow-hidden rounded-xl bg-white/30 backdrop-blur-lg shadow border border-white/20">
-          <div className="p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0 rounded-md bg-green-100 p-3">
-                <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-5 w-0 flex-1">
-                <dt className="text-sm font-medium text-gray-500 truncate">Stokta Var</dt>
-                <dd className="text-2xl font-bold text-gray-900">
-                  {(stats.totalProducts || 0) - (stats.lowStockProducts || 0) - (stats.outOfStockProducts || 0)}
-                </dd>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
       </div>
     </div>
   )

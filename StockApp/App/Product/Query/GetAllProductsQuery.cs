@@ -18,6 +18,7 @@ internal class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery,
     {
         var products = await _context.Products
             .Include(p => p.Category)
+            .Include(p => p.Location)
             .Select(p => new ProductDto
             {
                 Id = p.Id,
@@ -28,8 +29,12 @@ internal class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery,
                 LowStockThreshold = p.LowStockThreshold,
                 CategoryId = p.CategoryId,
                 CategoryName = p.Category.Name,
+                LocationId = p.LocationId,
+                LocationName = p.Location != null ? p.Location.Name : null,
                 CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt
+                UpdatedAt = p.UpdatedAt,
+                CurrentPurchasePrice = p.CurrentPurchasePrice,
+                CurrentSalePrice = p.CurrentSalePrice
             })
             .OrderBy(p => p.Name)
             .ToListAsync(cancellationToken);

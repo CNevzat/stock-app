@@ -36,8 +36,17 @@ export const productAttributeService = {
   },
 
   exportExcel: async () => {
-    const API_BASE_URL = 'http://localhost:5134/';
-    const response = await fetch(`${API_BASE_URL}api/product-attributes/export/excel`, {
+    const getApiBaseUrl = () => {
+      if (import.meta.env.VITE_API_BASE_URL) {
+        return import.meta.env.VITE_API_BASE_URL;
+      }
+      if (import.meta.env.PROD) {
+        return `http://${window.location.hostname}:5134`;
+      }
+      return 'http://localhost:5134';
+    };
+    const API_BASE_URL = getApiBaseUrl();
+    const response = await fetch(`${API_BASE_URL}/api/product-attributes/export/excel`, {
       method: 'GET',
     });
     

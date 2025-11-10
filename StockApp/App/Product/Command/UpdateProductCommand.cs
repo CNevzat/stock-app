@@ -5,6 +5,7 @@ using StockApp.App.Dashboard.Query;
 using StockApp.App.Product.Query;
 using StockApp.Hub;
 using StockApp.Services;
+using StockApp.Entities;
 
 namespace StockApp.App.Product.Command;
 
@@ -16,6 +17,9 @@ public record UpdateProductCommand : IRequest<UpdateProductCommandResponse>
     public int? StockQuantity { get; init; }
     public int? LowStockThreshold { get; init; }
     public int? LocationId { get; init; }
+    public int? CategoryId { get; init; }
+    public decimal? PurchasePrice { get; init; }
+    public decimal? SalePrice { get; init; }
     public string? ImagePath { get; init; }
 }
 
@@ -83,6 +87,41 @@ internal class UpdateProductCommandHandler : IRequestHandler<UpdateProductComman
             }
         }
 
+        if (request.CategoryId.HasValue)
+        {
+            product.CategoryId = request.CategoryId.Value;
+        }
+
+        var priceChanged = false;
+
+        if (request.PurchasePrice.HasValue)
+        {
+            if (request.PurchasePrice.Value <= 0)
+            {
+                throw new ArgumentException("Satın alma fiyatı 0'dan büyük olmalıdır.", nameof(request.PurchasePrice));
+            }
+
+            if (product.CurrentPurchasePrice != request.PurchasePrice.Value)
+            {
+                product.CurrentPurchasePrice = request.PurchasePrice.Value;
+                priceChanged = true;
+            }
+        }
+
+        if (request.SalePrice.HasValue)
+        {
+            if (request.SalePrice.Value <= 0)
+            {
+                throw new ArgumentException("Satış fiyatı 0'dan büyük olmalıdır.", nameof(request.SalePrice));
+            }
+
+            if (product.CurrentSalePrice != request.SalePrice.Value)
+            {
+                product.CurrentSalePrice = request.SalePrice.Value;
+                priceChanged = true;
+            }
+        }
+
         if (request.ImagePath != null)
         {
             // Eski resmi sil (yeni resim eklendiyse)
@@ -97,6 +136,20 @@ internal class UpdateProductCommandHandler : IRequestHandler<UpdateProductComman
         product.UpdatedAt = DateTime.UtcNow;
 
         _context.Products.Update(product);
+
+        if (priceChanged)
+        {
+            var priceHistory = new ProductPrice
+            {
+                ProductId = product.Id,
+                PurchasePrice = product.CurrentPurchasePrice,
+                SalePrice = product.CurrentSalePrice,
+                EffectiveDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ProductPrices.Add(priceHistory);
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
         // SignalR ile dashboard stats gönder

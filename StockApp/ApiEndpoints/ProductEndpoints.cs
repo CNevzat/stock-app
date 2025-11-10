@@ -1,3 +1,4 @@
+using System.Globalization;
 using MediatR;
 using StockApp.App.Product;
 using StockApp.App.Product.Command;
@@ -73,7 +74,17 @@ public static class ProductEndpoints
                 }
 
                 var form = await request.ReadFormAsync();
-                
+
+                if (!TryParseDecimal(form["purchasePrice"].ToString(), out var purchasePrice))
+                {
+                    return Results.BadRequest("Satın alma fiyatı geçerli bir sayı olmalıdır.");
+                }
+
+                if (!TryParseDecimal(form["salePrice"].ToString(), out var salePrice))
+                {
+                    return Results.BadRequest("Satış fiyatı geçerli bir sayı olmalıdır.");
+                }
+
                 // Ürün bilgilerini form'dan al
                 var command = new CreateProductCommand
                 {
@@ -84,7 +95,9 @@ public static class ProductEndpoints
                     CategoryId = int.Parse(form["categoryId"].ToString()),
                     LocationId = form.ContainsKey("locationId") && !string.IsNullOrEmpty(form["locationId"].ToString()) 
                         ? int.Parse(form["locationId"].ToString()) 
-                        : null
+                        : null,
+                    PurchasePrice = purchasePrice,
+                    SalePrice = salePrice
                 };
 
                 // Ürünü oluştur
@@ -167,6 +180,21 @@ public static class ProductEndpoints
             if (form.ContainsKey("lowStockThreshold") && int.TryParse(form["lowStockThreshold"].ToString(), out var lowStockThreshold))
             {
                 command = command with { LowStockThreshold = lowStockThreshold };
+            }
+
+            if (form.ContainsKey("purchasePrice") && TryParseDecimal(form["purchasePrice"].ToString(), out var purchasePrice))
+            {
+                command = command with { PurchasePrice = purchasePrice };
+            }
+
+            if (form.ContainsKey("salePrice") && TryParseDecimal(form["salePrice"].ToString(), out var salePrice))
+            {
+                command = command with { SalePrice = salePrice };
+            }
+
+            if (form.ContainsKey("categoryId") && int.TryParse(form["categoryId"].ToString(), out var categoryId))
+            {
+                command = command with { CategoryId = categoryId };
             }
 
             if (form.ContainsKey("locationId"))
@@ -257,6 +285,22 @@ public static class ProductEndpoints
         .Produces(StatusCodes.Status200OK);
 
         #endregion
+    }
+
+    private static bool TryParseDecimal(string? input, out decimal value)
+    {
+        value = 0;
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        if (decimal.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out value))
+        {
+            return true;
+        }
+
+        return decimal.TryParse(input, NumberStyles.Any, new CultureInfo("tr-TR"), out value);
     }
 }
 

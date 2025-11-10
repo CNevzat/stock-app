@@ -62,3 +62,10 @@ internal class DeleteLocationCommandHandler : IRequestHandler<DeleteLocationComm
 
 
 
+
+
+
+
+
+
+

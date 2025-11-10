@@ -166,7 +166,7 @@ export default function LocationsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {locationsData?.items?.map((location, index) => (
+                {locationsData?.items?.map((location: LocationDto, index: number) => (
                   <tr key={location.id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                       <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-semibold">

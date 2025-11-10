@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using StockApp.Entities;
 using System.Globalization;
+using System.Linq;
 
 namespace StockApp.App.Dashboard.Query;
 
@@ -20,9 +21,17 @@ public record DashboardStatsDto
     public int TodayStockOut { get; init; }
     public int ThisWeekStockIn { get; init; }
     public int ThisWeekStockOut { get; init; }
+    public decimal TotalInventoryCost { get; init; }
+    public decimal TotalInventoryPotentialRevenue { get; init; }
+    public decimal TotalExpectedSalesRevenue { get; init; }
+    public decimal TotalPotentialProfit { get; init; }
+    public decimal TotalPurchaseSpent { get; init; }
+    public decimal AverageMarginPercentage { get; init; }
     public List<CategoryStatsDto> CategoryStats { get; init; } = new();
     public List<ProductStockDto> ProductStockStatus { get; init; } = new();
     public List<StockDistributionDto> StockDistribution { get; init; } = new();
+    public List<CategoryValueDto> CategoryValueDistribution { get; init; } = new();
+    public List<ProductValueDto> TopValuableProducts { get; init; } = new();
     public List<RecentStockMovementDto> RecentStockMovements { get; init; } = new();
     public List<StockMovementTrendDto> StockMovementTrend { get; init; } = new(); // Son 1 ay (günlük)
     public List<StockMovementTrendDto> LastYearStockMovementTrend { get; init; } = new(); // Son 1 yıl (aylık)
@@ -52,6 +61,25 @@ public record StockDistributionDto
     public string Status { get; init; } = string.Empty;
     public int Count { get; init; }
     public int Percentage { get; init; }
+}
+
+public record CategoryValueDto
+{
+    public int CategoryId { get; init; }
+    public string CategoryName { get; init; } = string.Empty;
+    public decimal TotalCost { get; init; }
+    public decimal TotalPotentialRevenue { get; init; }
+    public decimal TotalPotentialProfit { get; init; }
+}
+
+public record ProductValueDto
+{
+    public int ProductId { get; init; }
+    public string ProductName { get; init; } = string.Empty;
+    public string StockCode { get; init; } = string.Empty;
+    public decimal InventoryCost { get; init; }
+    public decimal InventoryPotentialRevenue { get; init; }
+    public decimal PotentialProfit { get; init; }
 }
 
 public record RecentStockMovementDto
@@ -105,6 +133,61 @@ internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStats
         // Her ürünün kendi LowStockThreshold değerine göre kontrol
         var lowStockProducts = await _context.Products.CountAsync(p => p.StockQuantity > 0 && p.StockQuantity < p.LowStockThreshold, cancellationToken);
         var outOfStockProducts = await _context.Products.CountAsync(p => p.StockQuantity == 0, cancellationToken);
+
+        var pricingSnapshot = await _context.Products
+            .Include(p => p.Category)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.StockCode,
+                p.CategoryId,
+                CategoryName = p.Category.Name,
+                p.StockQuantity,
+                p.CurrentPurchasePrice,
+                p.CurrentSalePrice
+            })
+            .ToListAsync(cancellationToken);
+
+        var totalInventoryCost = pricingSnapshot.Sum(p => p.StockQuantity * p.CurrentPurchasePrice);
+        var totalInventoryRevenue = pricingSnapshot.Sum(p => p.StockQuantity * p.CurrentSalePrice);
+        var totalPotentialProfit = totalInventoryRevenue - totalInventoryCost;
+        var totalPurchaseSpent = await _context.StockMovements
+            .Where(sm => sm.Type == StockMovementType.In)
+            .SumAsync(sm => (decimal?)sm.UnitPrice * sm.Quantity, cancellationToken) ?? 0m;
+
+        var marginData = pricingSnapshot
+            .Where(p => p.CurrentPurchasePrice > 0 && p.CurrentSalePrice > 0)
+            .Select(p => ((p.CurrentSalePrice - p.CurrentPurchasePrice) / p.CurrentPurchasePrice) * 100m)
+            .ToList();
+        var averageMarginPercentage = marginData.Any() ? marginData.Average() : 0m;
+
+        var categoryValueDistribution = pricingSnapshot
+            .GroupBy(p => new { p.CategoryId, p.CategoryName })
+            .Select(g => new CategoryValueDto
+            {
+                CategoryId = g.Key.CategoryId,
+                CategoryName = g.Key.CategoryName,
+                TotalCost = g.Sum(x => x.StockQuantity * x.CurrentPurchasePrice),
+                TotalPotentialRevenue = g.Sum(x => x.StockQuantity * x.CurrentSalePrice),
+                TotalPotentialProfit = g.Sum(x => x.StockQuantity * (x.CurrentSalePrice - x.CurrentPurchasePrice))
+            })
+            .OrderByDescending(c => c.TotalPotentialRevenue)
+            .ToList();
+
+        var topValuableProducts = pricingSnapshot
+            .Select(p => new ProductValueDto
+            {
+                ProductId = p.Id,
+                ProductName = p.Name,
+                StockCode = p.StockCode,
+                InventoryCost = p.StockQuantity * p.CurrentPurchasePrice,
+                InventoryPotentialRevenue = p.StockQuantity * p.CurrentSalePrice,
+                PotentialProfit = p.StockQuantity * (p.CurrentSalePrice - p.CurrentPurchasePrice)
+            })
+            .OrderByDescending(p => p.InventoryPotentialRevenue)
+            .Take(10)
+            .ToList();
 
         // Kategori bazlı istatistikler - Top 7 kategori + Diğer
         var allCategoryStats = await _context.Categories
@@ -324,9 +407,17 @@ internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStats
             TodayStockOut = todayStockOut,
             ThisWeekStockIn = thisWeekStockIn,
             ThisWeekStockOut = thisWeekStockOut,
+            TotalInventoryCost = totalInventoryCost,
+            TotalInventoryPotentialRevenue = totalInventoryRevenue,
+            TotalExpectedSalesRevenue = totalInventoryRevenue,
+            TotalPotentialProfit = totalPotentialProfit,
+            TotalPurchaseSpent = totalPurchaseSpent,
+            AverageMarginPercentage = averageMarginPercentage,
             CategoryStats = categoryStats,
             ProductStockStatus = productStockStatus,
             StockDistribution = stockDistribution,
+            CategoryValueDistribution = categoryValueDistribution,
+            TopValuableProducts = topValuableProducts,
             RecentStockMovements = recentStockMovements,
             StockMovementTrend = stockMovementTrend,
             LastYearStockMovementTrend = lastYearTrend,

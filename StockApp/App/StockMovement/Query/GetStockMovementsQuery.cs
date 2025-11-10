@@ -25,6 +25,8 @@ public record StockMovementDto
     public StockMovementType Type { get; init; }
     public string TypeText => Type == StockMovementType.In ? "Giriş" : "Çıkış";
     public int Quantity { get; init; }
+    public decimal UnitPrice { get; init; }
+    public decimal TotalValue { get; init; }
     public string? Description { get; init; }
     public DateTime CreatedAt { get; init; }
     public int CurrentStockQuantity { get; init; }
@@ -77,6 +79,8 @@ internal class GetStockMovementsQueryHandler : IRequestHandler<GetStockMovements
             CategoryName = sm.Category.Name,
             Type = sm.Type,
             Quantity = sm.Quantity,
+            UnitPrice = sm.UnitPrice,
+            TotalValue = sm.UnitPrice * sm.Quantity,
             Description = sm.Description,
             CreatedAt = sm.CreatedAt,
             CurrentStockQuantity = sm.Product.StockQuantity,

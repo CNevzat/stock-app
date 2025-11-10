@@ -36,11 +36,28 @@ internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductComman
     public async Task<DeleteProductCommandResponse> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
     {
         var product = await _context.Products
+            .Include(p => p.Attributes)
             .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
 
         if (product == null)
         {
             throw new KeyNotFoundException($"Product with ID {request.Id} not found.");
+        }
+
+        // İlişkili stok hareketlerini sil
+        var stockMovements = await _context.StockMovements
+            .Where(sm => sm.ProductId == request.Id)
+            .ToListAsync(cancellationToken);
+        
+        if (stockMovements.Any())
+        {
+            _context.StockMovements.RemoveRange(stockMovements);
+        }
+
+        // Ürün özniteliklerini sil (navigation property üzerinden zaten yüklendi)
+        if (product.Attributes.Any())
+        {
+            _context.ProductAttributes.RemoveRange(product.Attributes);
         }
 
         // Ürün resmini sil
@@ -49,6 +66,7 @@ internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductComman
             _imageService.DeleteImage(product.ImagePath);
         }
 
+        // Ürünü sil
         _context.Products.Remove(product);
         await _context.SaveChangesAsync(cancellationToken);
 

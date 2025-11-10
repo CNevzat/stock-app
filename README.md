@@ -15,6 +15,7 @@ Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript f
 - ✅ **Excel Export** - Ürün ve öznitelik verilerini Excel'e aktarma
 - ✅ **Image Upload** - Ürün resimlerini yükleme ve yönetme
 - ✅ **Exception Handling** - Merkezi hata yönetimi
+- ✅ **Fiyat Yönetimi** - Ürün bazlı alış/satış fiyatı takibi, geçmiş saklama, SignalR ile canlı güncellemeler
 
 ### Frontend
 - ✅ **Complete CRUD Operations** - Tüm varlıklar için tam CRUD
@@ -26,6 +27,15 @@ Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript f
 - ✅ **Real-time Updates** - React Query ile otomatik güncelleme
 - ✅ **Dashboard** - İstatistikler ve grafiklerle dashboard
 - ✅ **SignalR Integration** - Real-time stok güncellemeleri
+- ✅ **Fiyat Kartları & Grafikler** - Alış/satış fiyatı, ortalama ve geçmiş grafikleri
+- ✅ **Excel Export Geliştirmeleri** - Fiyat bilgilerini de içeren ürün & öznitelik çıktı dosyaları
+
+### Mobil (React Native)
+- ✅ **Drawer Menü** - Kategorilere ayrılmış yan menü ve stack navigasyon
+- ✅ **Web ile Parite** - Dashboard, Ürün, Kategori, Lokasyon, Stok Hareketi, Öznitelik ve Yapılacaklar ekranları
+- ✅ **Ürün Fiyat Yönetimi** - Ürün oluşturma/düzenlemede alış/satış fiyatı, stok hareketlerinde birim fiyat zorunluluğu
+- ✅ **Görsel Yükleme** - Ürün oluşturma ve düzenlemede medya seçimi ile görsel ekleme
+- ✅ **SignalR Senkronizasyonu** - Dashboard metrikleri ve ürün detayları için canlı veri akışı
 
 ## 🚀 Teknoloji Stack
 

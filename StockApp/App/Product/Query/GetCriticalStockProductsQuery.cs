@@ -35,7 +35,9 @@ internal class GetCriticalStockProductsQueryHandler : IRequestHandler<GetCritica
                 CategoryId = p.CategoryId,
                 CategoryName = p.Category.Name,
                 CreatedAt = p.CreatedAt,
-                UpdatedAt = p.UpdatedAt
+                UpdatedAt = p.UpdatedAt,
+                CurrentPurchasePrice = p.CurrentPurchasePrice,
+                CurrentSalePrice = p.CurrentSalePrice
             })
             .ToListAsync(cancellationToken);
 

@@ -1,12 +1,14 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
 import { productService } from '../services/productService'
 import { categoryService } from '../services/categoryService'
 import { locationService } from '../services/locationService'
 import { stockMovementService } from '../services/stockMovementService'
+import { productAttributeService } from '../services/productAttributeService'
 import { signalRService } from '../services/signalRService'
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
+import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts'
 
 // Kategori renklerini belirle
 const getCategoryColor = (categoryId: number) => {
@@ -23,6 +25,23 @@ const getCategoryColor = (categoryId: number) => {
     { bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-600/20' },
   ];
   return colors[categoryId % colors.length];
+};
+
+// API base URL helper - hem dev hem production'da 5134 portunu kullan
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (import.meta.env.PROD) {
+    return `http://${window.location.hostname}:5134`;
+  }
+  return 'http://localhost:5134';
+};
+
+// Image URL helper
+const getImageUrl = (imagePath: string | null | undefined) => {
+  if (!imagePath) return null;
+  return `${getApiBaseUrl()}${imagePath}`;
 };
 
 export default function ProductsPage() {
@@ -93,48 +112,55 @@ export default function ProductsPage() {
     }
   }, [])
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
+  const [detailProductId, setDetailProductId] = useState<number | null>(null)
+  const detailProductIdRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    detailProductIdRef.current = detailProductId
+  }, [detailProductId])
+
   // SignalR - Real-time updates için event listener'lar
   useEffect(() => {
-    // SignalR bağlantısını başlat
     signalRService.startConnection().catch((error) => {
       console.error('SignalR bağlantı hatası:', error)
     })
 
-    // Product Created event
     const handleProductCreated = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['categories'] }) // Product count için
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     }
 
-    // Product Updated event
-    const handleProductUpdated = () => {
+    const handleProductUpdated = (product: any) => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['categories'] }) // Product count için
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+
+      if (product?.id && product.id === detailProductIdRef.current) {
+        queryClient.invalidateQueries({ queryKey: ['product-detail', detailProductIdRef.current] })
+        queryClient.invalidateQueries({ queryKey: ['stock-movements-detail', detailProductIdRef.current] })
+        queryClient.invalidateQueries({ queryKey: ['product-attributes-detail', detailProductIdRef.current] })
+      }
     }
 
-    // Product Deleted event
     const handleProductDeleted = () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
-      queryClient.invalidateQueries({ queryKey: ['categories'] }) // Product count için
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
     }
 
-    // Event listener'ları kaydet
     signalRService.onProductCreated(handleProductCreated)
     signalRService.onProductUpdated(handleProductUpdated)
     signalRService.onProductDeleted(handleProductDeleted)
 
-    // Cleanup
     return () => {
       signalRService.offProductCreated(handleProductCreated)
       signalRService.offProductUpdated(handleProductUpdated)
       signalRService.offProductDeleted(handleProductDeleted)
     }
   }, [queryClient])
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(null)
-  const [detailProductId, setDetailProductId] = useState<number | null>(null)
+
   const [stockMovementPage, setStockMovementPage] = useState(1)
   const [stockMovementPageSize] = useState(10)
   const [isStockMovementModalOpen, setIsStockMovementModalOpen] = useState(false)
@@ -142,6 +168,7 @@ export default function ProductsPage() {
     productId: 0,
     type: 1, // 1 = Giriş, 2 = Çıkış
     quantity: 0,
+    unitPrice: 0,
     description: '',
   })
   const [formData, setFormData] = useState({
@@ -151,6 +178,8 @@ export default function ProductsPage() {
     lowStockThreshold: 5,
     categoryId: 0,
     locationId: undefined as number | undefined,
+    purchasePrice: 0,
+    salePrice: 0,
   })
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null | undefined>(null)
@@ -192,6 +221,42 @@ export default function ProductsPage() {
     enabled: !!detailProductId,
   })
 
+  // Fetch product attributes for detail modal
+  const { data: productAttributesData } = useQuery({
+    queryKey: ['product-attributes-detail', detailProductId],
+    queryFn: () => productAttributeService.getAll({
+      pageNumber: 1,
+      pageSize: 100, // Tüm öznitelikleri getir
+      productId: detailProductId || undefined,
+    }),
+    enabled: !!detailProductId,
+  })
+
+  const { data: detailProductData, isLoading: isDetailProductLoading } = useQuery({
+    queryKey: ['product-detail', detailProductId],
+    queryFn: () => productService.getById(detailProductId ?? 0),
+    enabled: detailProductId !== null,
+  })
+
+  const activeDetailProduct = useMemo(() => {
+    if (detailProductData) {
+      return detailProductData
+    }
+    return productsData?.items?.find((p: any) => p.id === detailProductId) || null
+  }, [detailProductData, productsData?.items, detailProductId])
+
+  const getDefaultMovementUnitPrice = useCallback((type: number) => {
+    if (!activeDetailProduct) {
+      return 0
+    }
+    return type === 1
+      ? Number(activeDetailProduct.currentPurchasePrice ?? 0)
+      : Number(activeDetailProduct.currentSalePrice ?? 0)
+  }, [activeDetailProduct])
+
+  const formatCurrency = (value: number) =>
+    `₺${value.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+
   // Create mutation
   const createMutation = useMutation({
     mutationFn: (dto: CreateProductCommand & { image?: File }) => productService.create(dto),
@@ -219,6 +284,10 @@ export default function ProductsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
     },
+    onError: (error: any) => {
+      const errorMessage = error?.message || 'Ürün silinirken bir hata oluştu';
+      alert(errorMessage);
+    },
   })
 
   // Stock Movement mutation for product detail
@@ -232,7 +301,13 @@ export default function ProductsPage() {
       queryClient.invalidateQueries({ queryKey: ['products-all'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       setIsStockMovementModalOpen(false)
-      setStockMovementFormData({ productId: detailProductId || 0, type: 1, quantity: 0, description: '' })
+      setStockMovementFormData({
+        productId: detailProductId || 0,
+        type: 1,
+        quantity: 0,
+        unitPrice: getDefaultMovementUnitPrice(1),
+        description: '',
+      })
     },
     onError: (error: any) => {
       const errorMessage = error?.message || error?.response?.data?.message || 'Bir hata oluştu!'
@@ -241,7 +316,16 @@ export default function ProductsPage() {
   })
 
   const resetForm = () => {
-    setFormData({ name: '', description: '', stockQuantity: 0, lowStockThreshold: 5, categoryId: 0, locationId: undefined })
+    setFormData({
+      name: '',
+      description: '',
+      stockQuantity: 0,
+      lowStockThreshold: 5,
+      categoryId: 0,
+      locationId: undefined,
+      purchasePrice: 0,
+      salePrice: 0,
+    })
     setSelectedImage(null)
     setImagePreview(null)
     setSelectedProductId(null)
@@ -264,12 +348,36 @@ export default function ProductsPage() {
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.name.trim()) {
+      alert('Ürün adı gereklidir.')
+      return
+    }
+    if (!formData.categoryId) {
+      alert('Lütfen bir kategori seçin.')
+      return
+    }
+    if (formData.purchasePrice <= 0 || formData.salePrice <= 0) {
+      alert('Satın alma ve satış fiyatları 0\'dan büyük olmalıdır.')
+      return
+    }
     createMutation.mutate({ ...formData, image: selectedImage || undefined } as any)
   }
 
   const handleUpdate = (e: React.FormEvent) => {
     e.preventDefault()
     if (selectedProductId) {
+      if (!formData.name.trim()) {
+        alert('Ürün adı gereklidir.')
+        return
+      }
+      if (!formData.categoryId) {
+        alert('Lütfen bir kategori seçin.')
+        return
+      }
+      if (formData.purchasePrice <= 0 || formData.salePrice <= 0) {
+        alert('Satın alma ve satış fiyatları 0\'dan büyük olmalıdır.')
+        return
+      }
       updateMutation.mutate({
         id: selectedProductId,
         dto: {
@@ -277,7 +385,10 @@ export default function ProductsPage() {
           name: formData.name,
           description: formData.description,
           lowStockThreshold: formData.lowStockThreshold,
+          categoryId: formData.categoryId,
           locationId: formData.locationId,
+          purchasePrice: formData.purchasePrice,
+          salePrice: formData.salePrice,
           image: selectedImage || undefined,
         } as any,
       })
@@ -291,14 +402,15 @@ export default function ProductsPage() {
       description: product.description,
       stockQuantity: 0, // Artık kullanılmıyor, backend'e gönderilmiyor
       lowStockThreshold: product.lowStockThreshold || 5,
-      categoryId: 0,
+      categoryId: product.categoryId || 0,
       locationId: product.locationId || undefined,
+      purchasePrice: product.currentPurchasePrice || 0,
+      salePrice: product.currentSalePrice || 0,
     })
-    // Mevcut resmi göster
     setSelectedImage(null)
     const imagePath = (product as any).imagePath
     if (imagePath) {
-      setImagePreview(`http://localhost:5134${imagePath}`)
+      setImagePreview(getImageUrl(imagePath))
     } else {
       setImagePreview(null)
     }
@@ -317,6 +429,41 @@ export default function ProductsPage() {
     setDetailProductId(product.id)
     setIsDetailModalOpen(true)
   }
+
+  const handleDelete = (product: any) => {
+    if (product.id && confirm('Silmek istediğinize emin misiniz?')) {
+      deleteMutation.mutate(product.id)
+    }
+  }
+
+  const detailPriceHistory = useMemo(() => {
+    if (!activeDetailProduct?.priceHistory) {
+      return [] as Array<{ id: number; purchasePrice: number; salePrice: number; effectiveDate: string }>;
+    }
+    return [...activeDetailProduct.priceHistory]
+      .filter((entry): entry is { id: number; purchasePrice: number; salePrice: number; effectiveDate: string } => !!entry.effectiveDate)
+      .sort((a, b) => new Date(a.effectiveDate ?? '').getTime() - new Date(b.effectiveDate ?? '').getTime())
+  }, [activeDetailProduct?.priceHistory])
+
+  const priceHistoryChartData = useMemo(() =>
+    detailPriceHistory.map((entry) => {
+      const dateObj = entry.effectiveDate ? new Date(entry.effectiveDate) : null
+      const dateLabel = dateObj
+        ? dateObj.toLocaleString('tr-TR', {
+            day: '2-digit',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : ''
+      return {
+        id: entry.id,
+        dateLabel,
+        purchasePrice: Number(entry.purchasePrice ?? 0),
+        salePrice: Number(entry.salePrice ?? 0),
+      }
+    }),
+  [detailPriceHistory])
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
@@ -462,15 +609,15 @@ export default function ProductsPage() {
       </div>
 
       <div className="mt-8 flow-root">
-        <div className="rounded-lg shadow-sm border border-gray-200 bg-white overflow-hidden">
-          <div className="px-4 sm:px-6 lg:px-8 py-2">
-            <table className="w-full divide-y divide-gray-200">
+        <div className="inline-block w-full align-middle">
+          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+            <table className="min-w-full divide-y divide-gray-300">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="py-3.5 pl-2 pr-2 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[50px]">
+                  <th scope="col" className="py-3.5 pl-2 pr-2 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[50px]">
                     #
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[280px] max-w-[280px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[260px] max-w-[260px]">
                     İsim
                   </th>
                   <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[100px]">
@@ -479,30 +626,36 @@ export default function ProductsPage() {
                   <th className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[60px]">
                     Stok
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[100px] max-w-[100px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[140px] max-w-[180px]">
                     Kategori
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[100px] max-w-[100px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[160px] max-w-[200px]">
                     Lokasyon
                   </th>
-                  <th className="relative py-3.5 pl-2 pr-2 text-right text-sm font-semibold text-gray-900 whitespace-nowrap w-[210px]">
+                  <th className="px-2 py-3.5 text-right text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[110px]">
+                    Satın Alma
+                  </th>
+                  <th className="px-2 py-3.5 text-right text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[110px]">
+                    Satış
+                  </th>
+                  <th className="relative py-3.5 pl-2 pr-2 text-right text-sm font-semibold text-gray-900 whitespace-nowrap w-[280px]">
                     <span className="sr-only">İşlemler</span>
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 bg-white">
-                {productsData?.items?.map((product, index) => (
+                {productsData?.items?.map((product: any, index: number) => (
                   <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="whitespace-nowrap py-4 pl-2 pr-2 text-sm font-medium text-gray-900">
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 font-semibold text-xs">
                         {(page - 1) * pageSize + index + 1}
                       </span>
                     </td>
-                    <td className="px-2 py-4 text-sm font-medium text-gray-900 min-w-[280px] max-w-[280px]">
+                    <td className="px-2 py-4 text-sm font-medium text-gray-900 min-w-[260px] max-w-[260px]">
                       <div className="flex items-center gap-2">
                         {(product as any).imagePath && (
                           <img
-                            src={`http://localhost:5134${(product as any).imagePath || ''}`}
+                            src={getImageUrl((product as any).imagePath) || ''}
                             alt={product.name}
                             className="h-8 w-8 object-cover rounded flex-shrink-0"
                           />
@@ -522,65 +675,51 @@ export default function ProductsPage() {
                         {product.stockQuantity ?? 0}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[100px] max-w-[100px]">
+                    <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[140px] max-w-[180px]">
                       {(() => {
                         const color = getCategoryColor(product.categoryId || 0);
                         return (
-                          <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring} truncate`}>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${color.bg} ${color.text} ring-1 ring-inset ${color.ring}`}>
                             {product.categoryName}
                           </span>
                         );
                       })()}
                     </td>
-                    <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[100px] max-w-[100px]">
-                      {(product as any).locationName ? (
-                        <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset bg-gray-50 text-gray-700 ring-gray-600/20 truncate">
-                          <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          {(product as any).locationName}
-                        </span>
-                      ) : (
-                        <span className="text-gray-400 text-xs">-</span>
-                      )}
+                    <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[160px] max-w-[200px]">
+                      <span className="block truncate max-w-[220px]">{product.locationName || '-'}</span>
                     </td>
-                    <td className="relative whitespace-nowrap py-4 pl-2 pr-2 text-right text-sm font-medium w-[210px]">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          onClick={() => openDetailModal(product)}
-                          className="inline-flex items-center gap-x-1 rounded-lg bg-green-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-green-500 transition-all duration-200"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          </svg>
-                          Detay
-                        </button>
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="inline-flex items-center gap-x-1 rounded-lg bg-blue-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-blue-500 transition-all duration-200"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Düzenle
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (product.id && confirm('Silmek istediğinize emin misiniz?')) {
-                              deleteMutation.mutate(product.id)
-                            }
-                          }}
-                          className="inline-flex items-center gap-x-1 rounded-lg bg-red-600 px-2 py-1 text-xs font-semibold text-white shadow-sm hover:bg-red-500 transition-all duration-200"
-                        >
-                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Sil
-                        </button>
-                      </div>
+                    <td className="whitespace-nowrap px-2 py-4 text-sm text-right min-w-[110px]">
+                      ₺{Number(product.currentPurchasePrice ?? 0).toLocaleString('tr-TR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </td>
+                    <td className="whitespace-nowrap px-2 py-4 text-sm text-right min-w-[110px]">
+                      ₺{Number(product.currentSalePrice ?? 0).toLocaleString('tr-TR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </td>
+                    <td className="relative py-4 pl-2 pr-4 text-right text-sm font-medium whitespace-nowrap w-[280px]">
+                      <div className="flex justify-end items-center gap-1.5">
+                         <button
+                           onClick={() => openDetailModal(product)}
+                           className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100">
+                           Detay
+                         </button>
+                         <button
+                           onClick={() => openEditModal(product)}
+                           className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100">
+                           Düzenle
+                         </button>
+                         <button
+                           onClick={() => handleDelete(product)}
+                           className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                           Sil
+                         </button>
+                       </div>
+                     </td>
                   </tr>
                 ))}
               </tbody>
@@ -673,6 +812,50 @@ export default function ProductsPage() {
                         required
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-700">
+                        Satın Alma Fiyatı *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        id="purchasePrice"
+                        required
+                        value={formData.purchasePrice === 0 ? '' : formData.purchasePrice}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value)
+                          setFormData({ ...formData, purchasePrice: Number.isNaN(value) ? 0 : value })
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '') {
+                            setFormData({ ...formData, purchasePrice: 0 })
+                          }
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
+                        Satış Fiyatı *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        id="salePrice"
+                        required
+                        value={formData.salePrice === 0 ? '' : formData.salePrice}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value)
+                          setFormData({ ...formData, salePrice: Number.isNaN(value) ? 0 : value })
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '') {
+                            setFormData({ ...formData, salePrice: 0 })
+                          }
+                        }}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
                       />
                     </div>
@@ -904,6 +1087,48 @@ export default function ProductsPage() {
                       />
                     </div>
                     <div>
+                      <label htmlFor="edit-purchasePrice" className="block text-sm font-medium text-gray-700">
+                        Satın Alma Fiyatı *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        id="edit-purchasePrice"
+                        value={formData.purchasePrice === 0 ? '' : formData.purchasePrice}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value)
+                          setFormData({ ...formData, purchasePrice: Number.isNaN(value) ? 0 : value })
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '') {
+                            setFormData({ ...formData, purchasePrice: 0 })
+                          }
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="edit-salePrice" className="block text-sm font-medium text-gray-700">
+                        Satış Fiyatı *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        id="edit-salePrice"
+                        value={formData.salePrice === 0 ? '' : formData.salePrice}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value)
+                          setFormData({ ...formData, salePrice: Number.isNaN(value) ? 0 : value })
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '') {
+                            setFormData({ ...formData, salePrice: 0 })
+                          }
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                      />
+                    </div>
+                    <div>
                       <label htmlFor="edit-lowStockThreshold" className="block text-sm font-medium text-gray-700">
                         Düşük Stok Eşiği
                       </label>
@@ -928,6 +1153,25 @@ export default function ProductsPage() {
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
                       />
                     </div>
+                  <div>
+                    <label htmlFor="edit-categoryId" className="block text-sm font-medium text-gray-700">
+                      Kategori
+                    </label>
+                    <select
+                      id="edit-categoryId"
+                      required
+                      value={formData.categoryId}
+                      onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value) })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                    >
+                      <option value="">Kategori Seçin</option>
+                      {categoriesData?.items?.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                     <div>
                       <label htmlFor="edit-locationId" className="block text-sm font-medium text-gray-700 mb-2">
                         Lokasyon (Opsiyonel)
@@ -1048,226 +1292,372 @@ export default function ProductsPage() {
 
       {/* Detail Modal */}
       {isDetailModalOpen && detailProductId && (
-        <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => {
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 pt-20">
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40" onClick={() => {
               setIsDetailModalOpen(false)
               setDetailProductId(null)
             }} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl sm:p-6 max-h-[90vh] overflow-y-auto">
-              <div>
+            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all w-full max-w-4xl max-h-[85vh] flex flex-col z-50">
+              <div className="flex-1 overflow-y-auto px-4 pb-4 pt-5">
                 <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-6">
                   Ürün Detayları ve Stok Hareketleri
                 </h3>
                 
-                {/* Ürün Bilgileri */}
-                {productsData?.items?.find(p => p.id === detailProductId) && (() => {
-                  const product = productsData.items!.find(p => p.id === detailProductId)!
-                  const productImage = (product as any).imagePath
+                {/* Ürün Bilgileri ve Fiyatlar */}
+                {(() => {
+                  const baseProduct = detailProductData ?? (productsData?.items?.find((p: any) => p.id === detailProductId) ?? null)
+
+                  if (!baseProduct) {
+                    return isDetailProductLoading ? (
+                      <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
+                        <span className="text-sm text-gray-500">Ürün bilgileri yükleniyor...</span>
+                      </div>
+                    ) : null;
+                  }
+
+                  const createdAtDate = baseProduct?.createdAt
+                    ? new Date(baseProduct.createdAt).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '-'
+                  const createdAtTime = baseProduct?.createdAt
+                    ? new Date(baseProduct.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                    : ''
+                  const updatedAtDate = baseProduct?.updatedAt
+                    ? new Date(baseProduct.updatedAt).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    : '-'
+                  const updatedAtTime = baseProduct?.updatedAt
+                    ? new Date(baseProduct.updatedAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })
+                    : ''
+
+                  const productImage = (baseProduct as any).imagePath
+                  const lastPurchasePrice = Number(baseProduct.currentPurchasePrice ?? 0)
+                  const averagePurchasePrice = Number(baseProduct.averagePurchasePrice ?? lastPurchasePrice)
+                  const lastSalePrice = Number(baseProduct.currentSalePrice ?? 0)
+                  const averageSalePrice = Number(baseProduct.averageSalePrice ?? lastSalePrice)
+                  const inventoryCost = Number((baseProduct.stockQuantity ?? 0) * lastPurchasePrice)
+                  const potentialRevenue = Number((baseProduct.stockQuantity ?? 0) * lastSalePrice)
+                  const potentialProfit = potentialRevenue - inventoryCost
+
                   return (
-                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                      <div className="flex gap-6">
-                        {/* Ürün Resmi */}
-                        {productImage && (
-                          <div className="flex-shrink-0">
-                            <img
-                              src={`http://localhost:5134${productImage}`}
-                              alt={product.name}
-                              className="h-48 w-48 object-cover rounded-lg border-2 border-gray-200 shadow-md"
-                            />
-                          </div>
-                        )}
-                        {/* Ürün Bilgileri */}
-                        <div className="flex-1 grid grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Ürün Adı</label>
-                            <p className="text-base font-semibold text-gray-900">{product.name}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Stok Kodu</label>
-                            <p className="text-base font-mono text-gray-900">{product.stockCode}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Kategori</label>
-                            <p className="text-base text-gray-900">{product.categoryName}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Lokasyon</label>
-                            <p className="text-base text-gray-900">{(product as any).locationName || '-'}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Mevcut Stok</label>
-                            <p className="text-base font-semibold text-gray-900">{product.stockQuantity}</p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Eklenme Tarihi</label>
-                            <p className="text-base text-gray-900">
-                              {new Date(product.createdAt + 'Z').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                              <span className="text-sm text-gray-500 ml-2">
-                                {new Date(product.createdAt + 'Z').toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                              </span>
-                            </p>
-                          </div>
-                          <div>
-                            <label className="text-sm font-medium text-gray-500">Güncelleme Tarihi</label>
-                            <p className="text-base text-gray-900">
-                              {product.updatedAt 
-                                ? (
-                                  <>
-                                    {new Date(product.updatedAt + 'Z').toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                                    <span className="text-sm text-gray-500 ml-2">
-                                      {new Date(product.updatedAt + 'Z').toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-                                    </span>
-                                  </>
-                                )
-                                : '-'
-                              }
-                            </p>
-                          </div>
-                          <div className="col-span-2">
-                            <label className="text-sm font-medium text-gray-500">Açıklama</label>
-                            <p className="text-base text-gray-900">{product.description || '-'}</p>
+                    <>
+                      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <div className="flex gap-6">
+                          {/* Ürün Resmi */}
+                          {productImage && (
+                            <div className="flex-shrink-0">
+                              <img
+                                src={getImageUrl(productImage) || ''}
+                                alt={baseProduct.name}
+                                className="h-48 w-48 object-cover rounded-lg border-2 border-gray-200 shadow-md"
+                              />
+                            </div>
+                          )}
+                          {/* Ürün Bilgileri */}
+                          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Ürün Adı</label>
+                              <p className="text-base font-semibold text-gray-900">{baseProduct.name}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Stok Kodu</label>
+                              <p className="text-base font-mono text-gray-900">{baseProduct.stockCode}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Kategori</label>
+                              <p className="text-base text-gray-900">{baseProduct.categoryName}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Lokasyon</label>
+                              <p className="text-base text-gray-900">{(baseProduct as any).locationName || '-'}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Mevcut Stok</label>
+                              <p className="text-base font-semibold text-gray-900">{baseProduct.stockQuantity}</p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Eklenme Tarihi</label>
+                              <p className="text-base text-gray-900">
+                                {createdAtDate}
+                                {createdAtTime && (
+                                  <span className="text-sm text-gray-500 ml-2">{createdAtTime}</span>
+                                )}
+                              </p>
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">Güncelleme Tarihi</label>
+                              <p className="text-base text-gray-900">
+                                {updatedAtDate}
+                                {updatedAtTime && (
+                                  <span className="text-sm text-gray-500 ml-2">{updatedAtTime}</span>
+                                )}
+                              </p>
+                            </div>
+                            <div className="md:col-span-2">
+                              <label className="text-sm font-medium text-gray-500">Açıklama</label>
+                              <p className="text-base text-gray-900">{baseProduct.description || '-'}</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+
+                      <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Satın Alma Fiyatı</div>
+                          <div className="mt-2 text-lg font-bold text-gray-900">{formatCurrency(lastPurchasePrice)}</div>
+                          <div className="text-sm text-gray-500">Ortalama: {formatCurrency(averagePurchasePrice)}</div>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Satış Fiyatı</div>
+                          <div className="mt-2 text-lg font-bold text-gray-900">{formatCurrency(lastSalePrice)}</div>
+                          <div className="text-sm text-gray-500">Ortalama: {formatCurrency(averageSalePrice)}</div>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Envanter Maliyeti</div>
+                          <div className="mt-2 text-lg font-bold text-blue-600">{formatCurrency(inventoryCost)}</div>
+                        </div>
+                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Potansiyel Kar</div>
+                          <div className={`mt-2 text-lg font-bold ${potentialProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {formatCurrency(potentialProfit)}
+                          </div>
+                        </div>
+                      </div>
+
+                      {detailPriceHistory.length > 0 && (
+                        <div className="mb-6 bg-gray-50 rounded-lg p-4">
+                          <h4 className="text-md font-semibold text-gray-900 mb-4">Fiyat Geçmişi</h4>
+                          <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={priceHistoryChartData}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="dateLabel" tick={{ fontSize: 12 }} />
+                                <YAxis />
+                                <Tooltip
+                                  formatter={(value: number) =>
+                                    `₺${Number(value).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                  }
+                                  labelFormatter={(label) => label}
+                                />
+                                <Legend />
+                                <Line type="monotone" dataKey="purchasePrice" name="Satın Alma" stroke="#6366f1" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="salePrice" name="Satış" stroke="#f97316" strokeWidth={2} dot={false} />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <div className="mt-4 overflow-x-auto bg-white rounded-lg border border-gray-200">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-100">
+                                <tr>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarih</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satın Alma</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satış</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                {[...detailPriceHistory].reverse().map((entry) => (
+                                  <tr key={entry.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                      {new Date(entry.effectiveDate ?? '').toLocaleString('tr-TR', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                      })}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                                      ₺{Number(entry.purchasePrice ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                                      ₺{Number(entry.salePrice ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stok Hareketleri Tablosu */}
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-md font-semibold text-gray-900">Stok Hareketleri</h4>
+                          <button
+                            onClick={() => {
+                              setStockMovementFormData({
+                                productId: detailProductId || 0,
+                                type: 1,
+                                quantity: 0,
+                                unitPrice: getDefaultMovementUnitPrice(1),
+                                description: '',
+                              })
+                              setIsStockMovementModalOpen(true)
+                            }}
+                            className="inline-flex items-center gap-x-2 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 transition-all duration-200"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                            </svg>
+                            Stok Hareketi Ekle
+                          </button>
+                        </div>
+                        {(stockMovementsData as any)?.items && (stockMovementsData as any).items.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    #
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    İşlem Tipi
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Miktar
+                                  </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Birim Fiyat
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  Toplam
+                                </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Açıklama
+                                  </th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Tarih
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200 bg-white">
+                                {(stockMovementsData as any).items.map((movement: any, index: number) => (
+                                  <tr key={movement.id} className="hover:bg-gray-50">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                      {(stockMovementPage - 1) * stockMovementPageSize + index + 1}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap">
+                                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
+                                        movement.type === 1
+                                          ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
+                                          : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                      }`}>
+                                        {movement.type === 1 ? '📥 Giriş' : '📤 Çıkış'}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                      {movement.quantity}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-right text-gray-700">
+                                      ₺{Number(movement.unitPrice ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-right text-blue-600">
+                                      ₺{Number(movement.totalValue ?? ((movement.quantity || 0) * (movement.unitPrice || 0))).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
+                                      {movement.description || '-'}
+                                    </td>
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                      {movement.createdAt ? new Date(movement.createdAt).toLocaleString('tr-TR', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      }) : '-'}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 text-gray-500">
+                            Bu ürün için henüz stok hareketi bulunmamaktadır.
+                          </div>
+                        )}
+                        
+                        {/* Pagination for Stock Movements */}
+                        {stockMovementsData && (stockMovementsData.totalPages ?? 0) > 1 && (
+                          <div className="mt-4 flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 rounded-lg">
+                            <div className="flex flex-1 justify-between sm:hidden">
+                              <button
+                                onClick={() => setStockMovementPage(stockMovementPage - 1)}
+                                disabled={!stockMovementsData.hasPreviousPage}
+                                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Önceki
+                              </button>
+                              <button
+                                onClick={() => setStockMovementPage(stockMovementPage + 1)}
+                                disabled={!stockMovementsData.hasNextPage}
+                                className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Sonraki
+                              </button>
+                            </div>
+                            <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                              <div>
+                                <p className="text-sm text-gray-800">
+                                  <span className="font-medium">{stockMovementsData.pageNumber}</span> / <span className="font-medium">{stockMovementsData.totalPages}</span> sayfa gösteriliyor
+                                </p>
+                              </div>
+                              <div>
+                                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
+                                  <button
+                                    onClick={() => setStockMovementPage(stockMovementPage - 1)}
+                                    disabled={!stockMovementsData.hasPreviousPage}
+                                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Önceki
+                                  </button>
+                                  <button
+                                    onClick={() => setStockMovementPage(stockMovementPage + 1)}
+                                    disabled={!stockMovementsData.hasNextPage}
+                                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    Sonraki
+                                  </button>
+                                </nav>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
                   )
                 })()}
 
-                {/* Stok Hareketleri Tablosu */}
-                <div className="mt-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-md font-semibold text-gray-900">Stok Hareketleri</h4>
-                    <button
-                      onClick={() => {
-                        setStockMovementFormData({
-                          productId: detailProductId || 0,
-                          type: 1,
-                          quantity: 0,
-                          description: '',
-                        })
-                        setIsStockMovementModalOpen(true)
-                      }}
-                      className="inline-flex items-center gap-x-2 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-green-500 transition-all duration-200"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                      </svg>
-                      Stok Hareketi Ekle
-                    </button>
-                  </div>
-                  {(stockMovementsData as any)?.items && (stockMovementsData as any).items.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead className="bg-gray-50">
-                          <tr>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              #
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              İşlem Tipi
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Miktar
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Açıklama
-                            </th>
-                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                              Tarih
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200 bg-white">
-                          {(stockMovementsData as any).items.map((movement: any, index: number) => (
-                            <tr key={movement.id} className="hover:bg-gray-50">
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                {(stockMovementPage - 1) * stockMovementPageSize + index + 1}
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap">
-                                <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                                  movement.type === 1
-                                    ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                    : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
-                                }`}>
-                                  {movement.type === 1 ? '📥 Giriş' : '📤 Çıkış'}
-                                </span>
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
-                                {movement.quantity}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
-                                {movement.description || '-'}
-                              </td>
-                              <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                                {new Date(movement.createdAt).toLocaleString('tr-TR', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric',
-                                  hour: '2-digit',
-                                  minute: '2-digit'
-                                })}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                {/* Ürün Öznitelikleri */}
+                <div className="mt-6 mb-6">
+                  <h4 className="text-md font-semibold text-gray-900 mb-3">Ürün Öznitelikleri</h4>
+                  {productAttributesData?.items && productAttributesData.items.length > 0 ? (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {productAttributesData.items.map((attribute: any) => (
+                          <div key={attribute.id} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                                  {attribute.key}
+                                </div>
+                                <div className="text-sm font-semibold text-gray-900">
+                                  {attribute.value}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      Bu ürün için henüz stok hareketi bulunmamaktadır.
-                    </div>
-                  )}
-                  
-                  {/* Pagination for Stock Movements */}
-                  {stockMovementsData && (stockMovementsData.totalPages ?? 0) > 1 && (
-                    <div className="mt-4 flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 rounded-lg">
-                      <div className="flex flex-1 justify-between sm:hidden">
-                        <button
-                          onClick={() => setStockMovementPage(stockMovementPage - 1)}
-                          disabled={!stockMovementsData.hasPreviousPage}
-                          className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Önceki
-                        </button>
-                        <button
-                          onClick={() => setStockMovementPage(stockMovementPage + 1)}
-                          disabled={!stockMovementsData.hasNextPage}
-                          className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          Sonraki
-                        </button>
-                      </div>
-                      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm text-gray-800">
-                            <span className="font-medium">{stockMovementsData.pageNumber}</span> / <span className="font-medium">{stockMovementsData.totalPages}</span> sayfa gösteriliyor
-                          </p>
-                        </div>
-                        <div>
-                          <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm">
-                            <button
-                              onClick={() => setStockMovementPage(stockMovementPage - 1)}
-                              disabled={!stockMovementsData.hasPreviousPage}
-                              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Önceki
-                            </button>
-                            <button
-                              onClick={() => setStockMovementPage(stockMovementPage + 1)}
-                              disabled={!stockMovementsData.hasNextPage}
-                              className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              Sonraki
-                            </button>
-                          </nav>
-                        </div>
-                      </div>
+                    <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
+                      Bu ürün için henüz öznitelik tanımlanmamıştır.
                     </div>
                   )}
                 </div>
               </div>
-              <div className="mt-6 flex justify-end">
+              <div className="flex-shrink-0 border-t border-gray-200 px-4 py-3 flex justify-end bg-white">
                 <button
                   type="button"
                   onClick={() => {
@@ -1287,13 +1677,19 @@ export default function ProductsPage() {
 
       {/* Stock Movement Modal for Product Detail */}
       {isStockMovementModalOpen && (
-        <div className="fixed inset-0 z-20 overflow-y-auto">
+        <div className="fixed inset-0 z-[70] overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => {
+            <div className="fixed inset-0 z-[65] bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => {
               setIsStockMovementModalOpen(false)
-              setStockMovementFormData({ productId: detailProductId || 0, type: 1, quantity: 0, description: '' })
+              setStockMovementFormData({
+                productId: detailProductId || 0,
+                type: 1,
+                quantity: 0,
+                unitPrice: getDefaultMovementUnitPrice(1),
+                description: '',
+              })
             }} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative z-[70] transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
               <form onSubmit={(e) => {
                 e.preventDefault()
                 if (stockMovementFormData.productId === 0) {
@@ -1302,6 +1698,10 @@ export default function ProductsPage() {
                 }
                 if (stockMovementFormData.quantity <= 0) {
                   alert('Miktar 0\'dan büyük olmalıdır!')
+                  return
+                }
+                if (stockMovementFormData.unitPrice <= 0) {
+                  alert('Birim fiyat 0\'dan büyük olmalıdır!')
                   return
                 }
                 stockMovementMutation.mutate(stockMovementFormData)
@@ -1319,7 +1719,15 @@ export default function ProductsPage() {
                         id="stock-movement-type"
                         required
                         value={stockMovementFormData.type}
-                        onChange={(e) => setStockMovementFormData({ ...stockMovementFormData, type: Number(e.target.value) })}
+                        onChange={(e) => {
+                          const newType = Number(e.target.value)
+                          const defaultPrice = getDefaultMovementUnitPrice(newType)
+                          setStockMovementFormData({
+                            ...stockMovementFormData,
+                            type: newType,
+                            unitPrice: defaultPrice || 0,
+                          })
+                        }}
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm px-3 py-2 border"
                       >
                         <option value="1">📥 Giriş</option>
@@ -1353,6 +1761,32 @@ export default function ProductsPage() {
                       />
                     </div>
                     <div>
+                      <label htmlFor="stock-movement-unitPrice" className="block text-sm font-medium text-gray-700">
+                        {stockMovementFormData.type === 1 ? 'Satın Alma Fiyatı' : 'Satış Fiyatı'} *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        id="stock-movement-unitPrice"
+                        required
+                        value={stockMovementFormData.unitPrice === 0 ? '' : stockMovementFormData.unitPrice}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value)
+                          setStockMovementFormData({
+                            ...stockMovementFormData,
+                            unitPrice: Number.isNaN(value) ? 0 : value,
+                          })
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === '') {
+                            setStockMovementFormData({ ...stockMovementFormData, unitPrice: 0 })
+                          }
+                        }}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm px-3 py-2 border"
+                      />
+                    </div>
+                    <div>
                       <label htmlFor="stock-movement-description" className="block text-sm font-medium text-gray-700">
                         Açıklama (Opsiyonel)
                       </label>
@@ -1378,7 +1812,13 @@ export default function ProductsPage() {
                     type="button"
                     onClick={() => {
                       setIsStockMovementModalOpen(false)
-                      setStockMovementFormData({ productId: detailProductId || 0, type: 1, quantity: 0, description: '' })
+                      setStockMovementFormData({
+                        productId: detailProductId || 0,
+                        type: 1,
+                        quantity: 0,
+                        unitPrice: getDefaultMovementUnitPrice(1),
+                        description: '',
+                      })
                     }}
                     className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
                   >

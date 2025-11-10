@@ -527,7 +527,7 @@ export default function ProductAttributesPage() {
                         {showProductDropdown && productSearchInput && formData.productId === 0 && (
                           <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                             {productsData?.items
-                              ?.filter(product => 
+                              ?.filter((product: any) => 
                                 product.name?.toLowerCase().includes(productSearchInput.toLowerCase())
                               )
                               .length === 0 ? (
@@ -536,10 +536,10 @@ export default function ProductAttributesPage() {
                                 </div>
                               ) : (
                                 productsData?.items
-                                  ?.filter(product => 
+                                  ?.filter((product: any) => 
                                     product.name?.toLowerCase().includes(productSearchInput.toLowerCase())
                                   )
-                                  .map((product) => (
+                                  .map((product: any) => (
                                     <button
                                       key={product.id}
                                       type="button"
@@ -563,7 +563,7 @@ export default function ProductAttributesPage() {
                           <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg">
                             <p className="text-sm text-indigo-700">
                               <span className="font-medium">Seçilen:</span> {
-                                productsData?.items?.find(p => p.id === formData.productId)?.name
+                                productsData?.items?.find((p: any) => p.id === formData.productId)?.name
                               }
                             </p>
                           </div>
@@ -682,7 +682,7 @@ export default function ProductAttributesPage() {
                         {showProductDropdown && productSearchInput && bulkFormData.productId === 0 && (
                           <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                             {productsData?.items
-                              ?.filter(product => 
+                              ?.filter((product: any) => 
                                 product.name?.toLowerCase().includes(productSearchInput.toLowerCase())
                               )
                               .length === 0 ? (
@@ -691,10 +691,10 @@ export default function ProductAttributesPage() {
                                 </div>
                               ) : (
                                 productsData?.items
-                                  ?.filter(product => 
+                                  ?.filter((product: any) => 
                                     product.name?.toLowerCase().includes(productSearchInput.toLowerCase())
                                   )
-                                  .map((product) => (
+                                  .map((product: any) => (
                                     <button
                                       key={product.id}
                                       type="button"
@@ -718,7 +718,7 @@ export default function ProductAttributesPage() {
                           <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg">
                             <p className="text-sm text-indigo-700">
                               <span className="font-medium">Seçilen:</span> {
-                                productsData?.items?.find(p => p.id === bulkFormData.productId)?.name
+                                productsData?.items?.find((p: any) => p.id === bulkFormData.productId)?.name
                               }
                             </p>
                           </div>

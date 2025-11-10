@@ -9,6 +9,7 @@ public class StockMovement
     public Category Category { get; set; } = null!;
     public StockMovementType Type { get; set; }
     public int Quantity { get; set; }
+    public decimal UnitPrice { get; set; }
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

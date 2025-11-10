@@ -17,3 +17,10 @@ namespace StockApp.Entities
 
 
 
+
+
+
+
+
+
+

@@ -1,9 +1,20 @@
 import api, {type PaginationQuery} from "./api.ts";
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
 
+// API base URL helper - hem dev hem production'da 5134 portunu kullan
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  if (import.meta.env.PROD) {
+    return `http://${window.location.hostname}:5134`;
+  }
+  return 'http://localhost:5134';
+};
+
 export const productService = {
   getAll: async (params: PaginationQuery & { searchTerm?: string; categoryId?: number; locationId?: number }) => {
-    const API_BASE_URL = 'http://localhost:5134/api';
+    const API_BASE_URL = getApiBaseUrl();
     const queryParams = new URLSearchParams({
       pageNumber: params.pageNumber.toString(),
       pageSize: params.pageSize.toString(),
@@ -12,7 +23,7 @@ export const productService = {
     if (params.categoryId) queryParams.append('categoryId', params.categoryId.toString());
     if (params.locationId) queryParams.append('locationId', params.locationId.toString());
     
-    const response = await fetch(`${API_BASE_URL}/products?${queryParams}`);
+    const response = await fetch(`${API_BASE_URL}/api/products?${queryParams}`);
     if (!response.ok) throw new Error('Failed to fetch products');
     return response.json();
   },
@@ -25,15 +36,31 @@ export const productService = {
   },
 
   create: async (dto: CreateProductCommand & { image?: File }) => {
-    const API_BASE_URL = 'http://localhost:5134/';
+    const API_BASE_URL = getApiBaseUrl();
     const formData = new FormData();
     
-    formData.append('name', dto.name);
-    formData.append('description', dto.description || '');
-    formData.append('stockQuantity', dto.stockQuantity.toString());
-    formData.append('lowStockThreshold', dto.lowStockThreshold.toString());
-    formData.append('categoryId', dto.categoryId.toString());
-    
+    if (dto.name !== undefined && dto.name !== null) {
+      formData.append('name', dto.name);
+    }
+    if (dto.description !== undefined) {
+      formData.append('description', dto.description || '');
+    }
+    if (dto.stockQuantity !== undefined && dto.stockQuantity !== null) {
+      formData.append('stockQuantity', dto.stockQuantity.toString());
+    }
+    if (dto.lowStockThreshold !== undefined && dto.lowStockThreshold !== null) {
+      formData.append('lowStockThreshold', dto.lowStockThreshold.toString());
+    }
+    if (dto.categoryId !== undefined && dto.categoryId !== null) {
+      formData.append('categoryId', dto.categoryId.toString());
+    }
+    if ((dto as any).purchasePrice !== undefined && (dto as any).purchasePrice !== null) {
+      formData.append('purchasePrice', (dto as any).purchasePrice.toString());
+    }
+    if ((dto as any).salePrice !== undefined && (dto as any).salePrice !== null) {
+      formData.append('salePrice', (dto as any).salePrice.toString());
+    }
+
     if ((dto as any).locationId) {
       formData.append('locationId', (dto as any).locationId.toString());
     }
@@ -42,7 +69,7 @@ export const productService = {
       formData.append('image', dto.image);
     }
     
-    const response = await fetch(`${API_BASE_URL}api/products`, {
+    const response = await fetch(`${API_BASE_URL}/api/products`, {
       method: 'POST',
       body: formData,
     });
@@ -57,10 +84,12 @@ export const productService = {
   },
 
   update: async (dto: UpdateProductCommand & { image?: File }) => {
-    const API_BASE_URL = 'http://localhost:5134/';
+    const API_BASE_URL = getApiBaseUrl();
     const formData = new FormData();
     
-    formData.append('id', dto.id.toString());
+    if (dto.id !== undefined && dto.id !== null) {
+      formData.append('id', dto.id.toString());
+    }
     
     if (dto.name !== undefined && dto.name !== null) {
       formData.append('name', dto.name);
@@ -73,6 +102,15 @@ export const productService = {
     }
     if (dto.lowStockThreshold !== undefined && dto.lowStockThreshold !== null) {
       formData.append('lowStockThreshold', dto.lowStockThreshold.toString());
+    }
+    if (dto.categoryId !== undefined && dto.categoryId !== null) {
+      formData.append('categoryId', dto.categoryId.toString());
+    }
+    if ((dto as any).purchasePrice !== undefined && (dto as any).purchasePrice !== null) {
+      formData.append('purchasePrice', (dto as any).purchasePrice.toString());
+    }
+    if ((dto as any).salePrice !== undefined && (dto as any).salePrice !== null) {
+      formData.append('salePrice', (dto as any).salePrice.toString());
     }
     
     if ((dto as any).locationId !== undefined) {
@@ -87,7 +125,7 @@ export const productService = {
       formData.append('image', dto.image);
     }
     
-    const response = await fetch(`${API_BASE_URL}api/products`, {
+    const response = await fetch(`${API_BASE_URL}/api/products`, {
       method: 'PUT',
       body: formData,
     });
@@ -102,14 +140,20 @@ export const productService = {
   },
 
   delete: async (id: number) => {
-    await api.api.productsDelete({
-        id : id
-    });
+    try {
+      const response = await api.api.productsDelete({
+        id: id
+      });
+      return response.data;
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.detail || error?.response?.data?.title || error?.message || 'Ürün silinirken bir hata oluştu';
+      throw new Error(errorMessage);
+    }
   },
 
   exportExcel: async () => {
-    const API_BASE_URL = 'http://localhost:5134/';
-    const response = await fetch(`${API_BASE_URL}api/products/export/excel`, {
+    const API_BASE_URL = getApiBaseUrl();
+    const response = await fetch(`${API_BASE_URL}/api/products/export/excel`, {
       method: 'GET',
     });
     

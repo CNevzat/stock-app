@@ -14,6 +14,7 @@ namespace StockApp
         public DbSet<StockMovement> StockMovements => Set<StockMovement>();
         public DbSet<TodoItem> TodoItems => Set<TodoItem>();
         public DbSet<Location> Locations => Set<Location>();
+        public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -38,6 +39,12 @@ namespace StockApp
                 .HasMany(p => p.Attributes)
                 .WithOne(a => a.Product)
                 .HasForeignKey(a => a.ProductId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Product>()
+                .HasMany(p => p.PriceHistory)
+                .WithOne(pp => pp.Product)
+                .HasForeignKey(pp => pp.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Product StockCode unique constraint
