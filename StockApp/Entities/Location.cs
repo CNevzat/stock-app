@@ -24,3 +24,4 @@ namespace StockApp.Entities
 
 
 
+

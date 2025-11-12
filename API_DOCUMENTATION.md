@@ -13,6 +13,7 @@ Bu dokümantasyon Stock Management Application API'sinin tüm endpoint'lerini ve
 - [Products API](#products-api)
 - [Product Attributes API](#product-attributes-api)
 - [Stock Movements API](#stock-movements-api)
+- [Reports API](#reports-api)
 - [Todos API](#todos-api)
 - [Dashboard API](#dashboard-api)
 - [SignalR Hub](#signalr-hub)
@@ -800,6 +801,56 @@ GET /api/stock-movements?pageNumber=1&pageSize=10&productId=1&type=1
 **Not:** Stok hareketi oluşturulduğunda ürünün stok miktarı otomatik olarak güncellenir:
 - `type=1` (In): Stok miktarı artar
 - `type=2` (Out): Stok miktarı azalır (eğer yeterli stok yoksa hata döner)
+
+### Stok Hareketlerini Excel'e Aktar
+
+Tüm stok hareketlerini Excel formatında indirir. Filtre uygulanmaz; mevcut kayıtların tamamı döner.
+
+**Endpoint:** `GET /api/stock-movements/export/excel`
+
+**Örnek İstek:**
+
+```http
+GET /api/stock-movements/export/excel
+```
+
+**Response:**
+
+- Content-Type: `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- Dosya adı: `Stok_Hareketleri_YYYYMMDD_HHMMSS.xlsx`
+
+---
+
+## Reports API
+
+### Doğal Dil Raporu Oluştur
+
+Gemini API kullanarak mevcut stok verileri üzerinden doğal dilde rapor üretir.
+
+**Endpoint:** `POST /api/reports/natural-language`
+
+**Request Body:**
+
+```json
+{
+  "question": "Geçen ay en çok kar getiren ürün hangisiydi?"
+}
+```
+
+**Örnek Response:**
+
+```json
+{
+  "success": true,
+  "message": "• Gaming Laptop kategorisi toplam ₺1.250.000 gelir üretti...\n• Ortalama marj %32 seviyesinde...\n\nÖzet: Veriler son güncel dashboard anlık görüntüsünden alınmıştır.",
+  "model": "models/gemini-1.5-flash",
+  "isConfigured": true
+}
+```
+
+**Hata Senaryoları:**
+- `success = false`, `isConfigured = false`: `GEMINI_API_KEY` yapılandırılmamış.
+- `success = false`, `message` dolu: Modelden anlamlı yanıt alınamadı veya soru boş gönderildi.
 
 ---
 

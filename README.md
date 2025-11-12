@@ -13,9 +13,11 @@ Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript f
 - ✅ **SignalR** - Real-time güncellemeler
 - ✅ **SQLite Database** - Kolay geliştirme ortamı
 - ✅ **Excel Export** - Ürün ve öznitelik verilerini Excel'e aktarma
+- ✅ **Stock Movement Export** - Tüm stok hareketlerini Excel'e aktarma
 - ✅ **Image Upload** - Ürün resimlerini yükleme ve yönetme
 - ✅ **Exception Handling** - Merkezi hata yönetimi
 - ✅ **Fiyat Yönetimi** - Ürün bazlı alış/satış fiyatı takibi, geçmiş saklama, SignalR ile canlı güncellemeler
+- ✅ **Doğal Dil Raporlama** - Gemini API ile soru-cevap tabanlı rapor üretimi
 
 ### Frontend
 - ✅ **Complete CRUD Operations** - Tüm varlıklar için tam CRUD
@@ -28,7 +30,7 @@ Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript f
 - ✅ **Dashboard** - İstatistikler ve grafiklerle dashboard
 - ✅ **SignalR Integration** - Real-time stok güncellemeleri
 - ✅ **Fiyat Kartları & Grafikler** - Alış/satış fiyatı, ortalama ve geçmiş grafikleri
-- ✅ **Excel Export Geliştirmeleri** - Fiyat bilgilerini de içeren ürün & öznitelik çıktı dosyaları
+- ✅ **Excel Export Geliştirmeleri** - Fiyat bilgilerini de içeren ürün, öznitelik ve stok hareketi çıktı dosyaları
 
 ### Mobil (React Native)
 - ✅ **Drawer Menü** - Kategorilere ayrılmış yan menü ve stack navigasyon
@@ -157,6 +159,21 @@ npm run dev
 
 Frontend çalışacak: `http://localhost:5173`
 
+### 4. Gemini Yapılandırması (Opsiyonel fakat doğal dil raporları için gerekli)
+
+1. Google AI Studio üzerinden bir API anahtarı oluşturun.
+2. Anahtarı `.env` veya çalıştırdığınız ortamın gizli değişkenlerine `GEMINI_API_KEY` adıyla ekleyin.
+3. `appsettings.json` içerisinde dilerseniz modeli özelleştirebilirsiniz:
+
+```json
+"Gemini": {
+  "Model": "gemini-1.5-flash",
+  "BaseUrl": "https://generativelanguage.googleapis.com/v1beta"
+}
+```
+
+> Not: `Gemini:ApiKey` alanını dosyaya yazmayın; anahtar ortam değişkenlerinden okunacaktır.
+
 ## 📊 Veritabanı
 
 ### Entity'ler
@@ -275,6 +292,11 @@ Detaylı API dokümantasyonu için [API_DOCUMENTATION.md](./API_DOCUMENTATION.md
 #### Stock Movements
 - `GET /api/stock-movements` - Stok hareketlerini listele
 - `POST /api/stock-movements` - Yeni stok hareketi oluştur
+- `GET /api/stock-movements/export/excel` - Excel'e aktar
+
+#### Reports
+- `GET /api/reports/critical-stock/pdf` - Kritik stok PDF raporu
+- `POST /api/reports/natural-language` - Gemini destekli doğal dil raporu üret
 
 #### Todos
 - `GET /api/todos` - Yapılacakları listele

@@ -7,6 +7,7 @@ import ProductsPage from './pages/ProductsPage'
 import ProductAttributesPage from './pages/ProductAttributesPage'
 import StockMovementsPage from './pages/StockMovementsPage'
 import TodosPage from './pages/TodosPage'
+import { ChatWidget } from './components/ChatWidget'
 
 function NavLink({ to, onClick, children }: { to: string; onClick: () => void; children: React.ReactNode }) {
   const location = useLocation()
@@ -80,7 +81,7 @@ function App() {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 relative">
+    <div className="relative min-h-screen bg-gray-50">
       <div className="relative z-10">
       {/* Navigation */}
       <nav className="bg-white shadow-sm border-b border-gray-200 relative z-20">
@@ -142,6 +143,8 @@ function App() {
         </Routes>
       </main>
       </div>
+
+      <ChatWidget />
     </div>
   )
 }

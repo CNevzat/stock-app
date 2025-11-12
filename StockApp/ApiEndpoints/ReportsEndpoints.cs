@@ -1,5 +1,6 @@
 using MediatR;
 using StockApp.App.Product.Query;
+using StockApp.App.Reports.Query;
 using StockApp.Services;
 
 namespace StockApp.ApiEndpoints;
@@ -20,6 +21,18 @@ public static class ReportsEndpoints
             return Results.File(pdfBytes, "application/pdf", "critical-stock-report.pdf");
         })
         .Produces<byte[]>(StatusCodes.Status200OK, "application/pdf");
+
+        group.MapPost("/natural-language", async (
+            NaturalLanguageReportRequest request,
+            IMediator mediator,
+            CancellationToken cancellationToken) =>
+        {
+            var result = await mediator.Send(new GetNaturalLanguageReportQuery(request.Question ?? string.Empty), cancellationToken);
+            return Results.Ok(result);
+        })
+        .Produces<NaturalLanguageReportResponse>(StatusCodes.Status200OK);
     }
 }
+
+public record NaturalLanguageReportRequest(string Question);
 

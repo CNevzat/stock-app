@@ -98,6 +98,15 @@ Dashboard, SignalR ile real-time olarak güncellenir. Sağ üst köşedeki durum
 
 Kritik stok raporunu PDF olarak indirmek için "PDF İndir" butonuna tıklayın.
 
+### Yapay Zekâ Raporu (Gemini)
+
+Doğal dilde soru sorarak anlık rapor almak için:
+1. Swagger arayüzünden `POST /api/reports/natural-language` endpoint'ini açın.
+2. `question` alanına sorunuzu yazın (örn. "Bu ay en karlı ürün hangisi?").
+3. İsteği göndererek Gemini servisinden gelen maddeli raporu inceleyin.
+
+> Not: Bu özellik için sistem yöneticisinin `GEMINI_API_KEY` anahtarını tanımlamış olması gerekir. Tanımlı değilse endpoint bilgilendirici bir mesaj döner.
+
 ---
 
 ## Kategoriler
@@ -405,9 +414,15 @@ Stok hareketleri sayfasında:
 ### Hareket Detayları
 
 Stok hareketi kaydedildikten sonra:
-- Ürünün stok miktarı otomatik güncellenir
-- Yeni stok miktarı gösterilir
-- Hareket geçmişe eklenir
+- Ürünün stok miktarı otomatik olarak güncellenir ve tablodaki değer güncel stok seviyesini yansıtır.
+- Hareket geçmiş listesine eklenir; açıklama alanından işlem notları görüntülenebilir.
+
+### Excel'e Aktarma
+
+Stok hareketlerini Excel dosyasına aktarmak için:
+1. Sayfanın üst kısmındaki **"Excel'e Aktar"** butonuna tıklayın.
+2. Dosya otomatik olarak indirilir.
+3. Dosya adı `Stok_Hareketleri_YYYYMMDD_HHMMSS.xlsx` formatındadır.
 
 ---
 

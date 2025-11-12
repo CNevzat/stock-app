@@ -1,8 +1,11 @@
+using System;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StockApp.Services;
+using StockApp.Options;
+using StockApp.App.Chat;
 
 namespace StockApp;
 
@@ -28,6 +31,11 @@ public static class DependencyInjection
         services.AddScoped<IPdfService, PdfService>();
         services.AddScoped<IExcelService, ExcelService>();
         services.AddScoped<IImageService, ImageService>();
+        services.AddScoped<IChatIntentDetector, ChatIntentDetector>();
+        services.AddScoped<IGeminiIntentClassifier, GeminiIntentClassifier>();
+
+        services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
+        services.AddScoped<IGeminiService, GeminiService>();
 
         return services;
     }

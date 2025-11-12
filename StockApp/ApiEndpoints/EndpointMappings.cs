@@ -27,5 +27,8 @@ public static class EndpointMappings
 
         // ==================== REPORTS ====================
         app.MapReports();
+
+        // ==================== CHAT ====================
+        app.MapChat();
     }
 }
