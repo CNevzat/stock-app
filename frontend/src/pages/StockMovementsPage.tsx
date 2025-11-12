@@ -2,23 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { stockMovementService } from '../services/stockMovementService'
 
-// Kategori renklerini belirle
-const getCategoryColor = (categoryId: number) => {
-  const colors = [
-    { bg: 'bg-purple-50', text: 'text-purple-700', ring: 'ring-purple-600/20' },
-    { bg: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-600/20' },
-    { bg: 'bg-green-50', text: 'text-green-700', ring: 'ring-green-600/20' },
-    { bg: 'bg-yellow-50', text: 'text-yellow-700', ring: 'ring-yellow-600/20' },
-    { bg: 'bg-red-50', text: 'text-red-700', ring: 'ring-red-600/20' },
-    { bg: 'bg-pink-50', text: 'text-pink-700', ring: 'ring-pink-600/20' },
-    { bg: 'bg-indigo-50', text: 'text-indigo-700', ring: 'ring-indigo-600/20' },
-    { bg: 'bg-cyan-50', text: 'text-cyan-700', ring: 'ring-cyan-600/20' },
-    { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-600/20' },
-    { bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-600/20' },
-  ];
-  return colors[categoryId % colors.length];
-};
-
 export default function StockMovementsPage() {
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
@@ -114,24 +97,11 @@ export default function StockMovementsPage() {
                     <td className="px-3 py-4 text-sm text-gray-900 font-medium max-w-[150px]">
                       <div className="truncate">{movement.productName}</div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      {(() => {
-                        const color = getCategoryColor(movement.categoryId || 0);
-                        return (
-                          <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring}`}>
-                            {movement.categoryName}
-                          </span>
-                        );
-                      })()}
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                      {movement.categoryName || '-'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                        movement.type === 1
-                          ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                          : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
-                      }`}>
-                        {movement.type === 1 ? '📥 Giriş' : '📤 Çıkış'}
-                      </span>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                      {movement.type === 1 ? 'Giriş' : 'Çıkış'}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900">
                       {movement.quantity}

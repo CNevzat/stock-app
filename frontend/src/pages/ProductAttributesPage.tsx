@@ -5,23 +5,6 @@ import { productService } from '../services/productService'
 import { signalRService } from '../services/signalRService'
 import type { CreateProductAttributeCommand, UpdateProductAttributeCommand } from '../Api'
 
-// Ürün renklerini belirle (aynı ürüne ait öznitelikler aynı renkte olacak)
-const getProductColor = (productId: number) => {
-  const colors = [
-    { bg: 'bg-purple-50', text: 'text-purple-700', ring: 'ring-purple-600/20' },
-    { bg: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-600/20' },
-    { bg: 'bg-green-50', text: 'text-green-700', ring: 'ring-green-600/20' },
-    { bg: 'bg-yellow-50', text: 'text-yellow-700', ring: 'ring-yellow-600/20' },
-    { bg: 'bg-red-50', text: 'text-red-700', ring: 'ring-red-600/20' },
-    { bg: 'bg-pink-50', text: 'text-pink-700', ring: 'ring-pink-600/20' },
-    { bg: 'bg-indigo-50', text: 'text-indigo-700', ring: 'ring-indigo-600/20' },
-    { bg: 'bg-cyan-50', text: 'text-cyan-700', ring: 'ring-cyan-600/20' },
-    { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-600/20' },
-    { bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-600/20' },
-  ];
-  return colors[productId % colors.length];
-};
-
 export default function ProductAttributesPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)

@@ -121,7 +121,7 @@ export function ChatWidget() {
             {isLoading && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span className="inline-flex h-2 w-2 animate-pulse rounded-full bg-indigo-500"></span>
-                <span>Yanıt hazırlanıyor...</span>
+                <span>Düşünüyorum...</span>
               </div>
             )}
             <div ref={messagesEndRef} />
@@ -146,7 +146,7 @@ export function ChatWidget() {
               type="text"
               value={inputValue}
               onChange={(event) => setInputValue(event.target.value)}
-              placeholder="Sorunu buraya yaz..."
+              placeholder="Sana nasıl yardımcı olabilirim?"
               className="flex-1 rounded-full border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               disabled={isLoading}
             />

@@ -408,17 +408,11 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
                 break;
 
             case ChatIntent.HowToManageCategory:
-                prompt.AppendLine("Kategori yönetimi adımları:");
-                prompt.AppendLine("1. Kategoriler sayfasında 'Yeni Kategori' butonuyla yeni kategori ekle.");
-                prompt.AppendLine("2. Var olan kategoriyi düzenlemek için satırdaki 'Düzenle' butonuna tıkla.");
-                prompt.AppendLine("3. Kategori silmek için 'Sil' butonunu kullan; confirmedikten sonra ilişkili ürünler etkilenebilir.");
+                prompt.AppendLine("Kategori sayfasından direkt olarak ürün ataması yapılamaz. Ürün eklerken kategori seçilerek kategoriye ürün atanmış olunur.");
                 break;
 
             case ChatIntent.HowToManageLocation:
-                prompt.AppendLine("Lokasyon (depo) yönetim adımları:");
-                prompt.AppendLine("1. Lokasyonlar sayfasında 'Yeni Lokasyon' butonuyla isim ve açıklama gir.");
-                prompt.AppendLine("2. Düzenlemek için lokasyon kartındaki 'Düzenle' butonunu kullan.");
-                prompt.AppendLine("3. Silme işlemi için 'Sil' butonu; onay sonrası lokasyon ürünleri başka lokasyona taşınabilir.");
+                prompt.AppendLine("Lokasyonunun kendisini değiştirmek istiyorsanız Lokasyonlar sayfasından ilgili lokasyonu güncelleyebilirsiniz. Eğer ürünün lokasyonunu değiştirmek istiyorsanız Ürünler sayfasından ilgili ürün üzerinde 'Düzenle' butonuna tıklayıp açılan ekranda ürünün lokasyonunu değiştirebilirsiniz.");
                 break;
 
             case ChatIntent.HowToAddAttribute:
@@ -428,12 +422,21 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
                 prompt.AppendLine("3. 'Kaydet' diyerek özniteliği ekle; ürün detayında görüntülenir.");
                 break;
 
+            case ChatIntent.ExplainAttributePurpose:
+                prompt.AppendLine("Özniteliklerin amacı ve kullanımına dair özet hazırla.");
+                prompt.AppendLine("- Özniteliklerin ürünlere ek bilgi kazandırdığını belirt.");
+                prompt.AppendLine("- Filtreleme, raporlama ve ürün detaylarında nasıl avantaj sağladığını açıkla.");
+                prompt.AppendLine("- Gerekirse öznitelik ekleme/düzenleme adımlarına kısa değin.");
+                break;
+
+            case ChatIntent.HowToExportProductsExcel:
+                prompt.AppendLine("Kullanıcıya kısa ve net olarak Excel aktarım adımını anlat.");
+                prompt.AppendLine("Mesaj: Üst menüden 'Ürünler' sayfasına gidilir. 'Excel'e Aktar' butonu ile cihazınıza ürünler listesini Excel formatında indirebilirsiniz.");
+                break;
+
             case ChatIntent.HowToViewStockMovements:
-                prompt.AppendLine("Stok hareketlerini görüntüleme:");
-                prompt.AppendLine("1. Stok Hareketleri menüsünden sayfaya geç.");
-                prompt.AppendLine("2. Üst filtrelerden ürün, kategori veya hareket tipini seç.");
-                prompt.AppendLine("3. Tablo en güncel hareketleri gösterir; tarih ve açıklama sütunlarından detay okuyabilirsin.");
-                prompt.AppendLine("4. Excel'e aktarmak için üstteki 'Excel'e Aktar' butonunu kullan.");
+                prompt.AppendLine("Kullanıcıya stok hareketlerini Excel’e aktarma adımını kısa anlat.");
+                prompt.AppendLine("Mesaj: Üst menüden 'Stok Hareketleri' sayfasına gidilir. 'Excel'e Aktar' butonu ile cihazınıza stok hareketlerini Excel formatında indirebilirsiniz.");
                 break;
 
             case ChatIntent.GeneralAppHelp:
@@ -471,9 +474,11 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
             or ChatIntent.HowToManageCategory
             or ChatIntent.HowToManageLocation
             or ChatIntent.HowToAddAttribute
+            or ChatIntent.ExplainAttributePurpose
             or ChatIntent.HowToManageAttribute
             or ChatIntent.HowToViewStockMovements
-            or ChatIntent.HowToUseTodos;
+            or ChatIntent.HowToUseTodos
+            or ChatIntent.HowToExportProductsExcel;
 
     private static string BuildHelpResponse(ChatIntent intent) => intent switch
     {
@@ -522,18 +527,11 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
             """,
 
         ChatIntent.HowToManageCategory => """
-            Kategori yönetimi:
-            1. Kategoriler sayfasında “Yeni Kategori” butonuyla isim belirleyip ekle.
-            2. Mevcut kategoriyi düzenlemek için satırdaki “Düzenle” butonuna tıkla.
-            3. Silme işlemi “Sil” butonu üzerinden yapılır; doğrulama istemi gelir.
-            4. Kategori silindiğinde ilişkili ürünlerin kategorisi güncellenmediği sürece raporlarında eksik çıkabilir.
+            Kategori sayfasından direkt olarak ürün ataması yapılamaz. Ürün eklerken kategori seçilerek kategoriye ürün atanmış olunur.
             """,
 
         ChatIntent.HowToManageLocation => """
-            Lokasyon (depo) yönetimi:
-            1. Lokasyonlar sayfasında “Yeni Lokasyon” butonuna tıklayıp isim ve açıklama gir.
-            2. Lokasyon kartındaki “Düzenle” butonuyla bilgiler değiştirilebilir.
-            3. “Sil” ile lokasyon kaldırılır; ürünlerin yeni lokasyonlara taşınması gerekir.
+            Lokasyonunun kendisini değiştirmek istiyorsanız Lokasyonlar sayfasından ilgili lokasyonu güncelleyebilirsiniz. Eğer ürünün lokasyonunu değiştirmek istiyorsanız Ürünler sayfasından ilgili ürün üzerinde “Düzenle” butonuna tıklayıp açılan ekranda ürünün lokasyonunu değiştirebilirsiniz.
             """,
 
         ChatIntent.HowToAddAttribute => """
@@ -541,6 +539,14 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
             1. Öznitelikler sayfasında “Yeni Öznitelik” butonuna tıkla.
             2. İlgili ürünü seç, anahtar ve değer alanlarını doldur (örn. “Renk”: “Mavi”).
             3. Kaydettiğinde öznitelik, ürün detayında ve listelerde görüntülenir.
+            """,
+
+        ChatIntent.ExplainAttributePurpose => """
+            Öznitelikler ne işe yarar?
+            - Öznitelikler, ürünlere renk, beden, materyal gibi ek bilgiler eklemeni sağlar.
+            - Depo ekibi ve satış tarafı ürün detayında bu bilgilere hızlıca ulaşır.
+            - Filtreleme ve raporlarda belirli özelliklere göre listeleme yapabilirsin (örn. “Rengi Mavi olanlar”).
+            - İhtiyaç duyarsan öznitelikler sayfasından yeni özellik ekleyebilir, düzenleyebilir veya silebilirsin.
             """,
 
         ChatIntent.HowToManageAttribute => """
@@ -551,11 +557,11 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
             """,
 
         ChatIntent.HowToViewStockMovements => """
-            Stok hareketlerini görüntülemek için:
-            1. Menülerden “Stok Hareketleri” sayfasına git.
-            2. Üstteki filtrelerle ürün, kategori veya hareket tipini seç.
-            3. Tablo en güncel giriş/çıkışları tarih ve açıklama bilgileriyle listeler.
-            4. “Excel’e Aktar” butonuyla listeyi rapor olarak indirebilirsin.
+            Üst menüden “Stok Hareketleri” sayfasına gidilir. “Excel’e Aktar” butonu ile cihazınıza stok hareketlerini Excel formatında indirebilirsiniz.
+            """,
+
+        ChatIntent.HowToExportProductsExcel => """
+            Üst menüden “Ürünler” sayfasına gidilir. “Excel’e Aktar” butonu ile cihazınıza ürünler listesini Excel formatında indirebilirsiniz.
             """,
 
         ChatIntent.HowToUseTodos => """
@@ -600,7 +606,7 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
             },
             ChatIntent.HowToDeleteProduct => new[]
             {
-                "Silinen ürünlerin raporları nasıl etkilenir?",
+                "Ürünleri kalıcı olarak silmek güvenli mi?",
                 "Yeni ürün ekleme adımlarını hatırlatır mısın?"
             },
             ChatIntent.HowToManageCategory => new[]
@@ -618,10 +624,20 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
                 "Öznitelik güncelleme nasıl yapılır?",
                 "Öznitelik listesinde filtreleme var mı?"
             },
+            ChatIntent.ExplainAttributePurpose => new[]
+            {
+                "Öznitelik nasıl eklenir?",
+                "Hangi ürünlerde öznitelik var?"
+            },
             ChatIntent.HowToManageAttribute => new[]
             {
                 "Öznitelik ekleme adımları nelerdir?",
                 "Öznitelikleri filtreleyebilir miyim?"
+            },
+            ChatIntent.HowToExportProductsExcel => new[]
+            {
+                "Stok hareketlerini Excel'e nasıl aktarırım?",
+                "Excel çıktı dosyası neleri içeriyor?"
             },
             ChatIntent.HowToViewStockMovements => new[]
             {
@@ -631,7 +647,7 @@ internal class GetChatResponseQueryHandler : IRequestHandler<GetChatResponseQuer
             ChatIntent.HowToUseTodos => new[]
             {
                 "Görevleri nasıl filtrelerim?",
-                "Tamamlanan görevleri arşivlemek mümkün mü?"
+                "Görevleri başkasıyla paylaşabilir miyim?"
             },
             ChatIntent.TopStockQuantityProduct => new[]
             {

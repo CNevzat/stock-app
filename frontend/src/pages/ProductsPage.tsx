@@ -10,23 +10,6 @@ import { signalRService } from '../services/signalRService'
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts'
 
-// Kategori renklerini belirle
-const getCategoryColor = (categoryId: number) => {
-  const colors = [
-    { bg: 'bg-purple-50', text: 'text-purple-700', ring: 'ring-purple-600/20' },
-    { bg: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-600/20' },
-    { bg: 'bg-green-50', text: 'text-green-700', ring: 'ring-green-600/20' },
-    { bg: 'bg-yellow-50', text: 'text-yellow-700', ring: 'ring-yellow-600/20' },
-    { bg: 'bg-red-50', text: 'text-red-700', ring: 'ring-red-600/20' },
-    { bg: 'bg-pink-50', text: 'text-pink-700', ring: 'ring-pink-600/20' },
-    { bg: 'bg-indigo-50', text: 'text-indigo-700', ring: 'ring-indigo-600/20' },
-    { bg: 'bg-cyan-50', text: 'text-cyan-700', ring: 'ring-cyan-600/20' },
-    { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-600/20' },
-    { bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-600/20' },
-  ];
-  return colors[categoryId % colors.length];
-};
-
 // API base URL helper - hem dev hem production'da 5134 portunu kullan
 const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
@@ -676,15 +659,9 @@ export default function ProductsPage() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[140px] max-w-[180px]">
-                      {(() => {
-                        const color = getCategoryColor(product.categoryId || 0);
-                        return (
-                          <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${color.bg} ${color.text} ring-1 ring-inset ${color.ring}`}>
-                            {product.categoryName}
-                          </span>
-                        );
-                      })()}
+                      <span className="block truncate text-gray-700">
+                        {product.categoryName || '-'}
+                      </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[160px] max-w-[200px]">
                       <span className="block truncate max-w-[220px]">{product.locationName || '-'}</span>

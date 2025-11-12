@@ -27,9 +27,11 @@ public enum ChatIntent
     HowToManageCategory,
     HowToManageLocation,
     HowToAddAttribute,
+    ExplainAttributePurpose,
     HowToManageAttribute,
     HowToViewStockMovements,
     HowToUseTodos,
+    HowToExportProductsExcel,
 
     // Küçük konuşma
     SmallTalk

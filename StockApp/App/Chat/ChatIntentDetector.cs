@@ -22,7 +22,16 @@ public class ChatIntentDetector : IChatIntentDetector
         { "uygulama nasıl", ChatIntent.GeneralAppHelp },
         { "nasıl kullan", ChatIntent.GeneralAppHelp },
         { "ne yapabilirsin", ChatIntent.AiAssistantInfo },
-        { "ne yapıyorsun", ChatIntent.AiAssistantInfo }
+        { "ne yapıyorsun", ChatIntent.AiAssistantInfo },
+        { "lokasyon nasıl eklenir", ChatIntent.HowToManageLocation },
+        { "lokasyon eklenir", ChatIntent.HowToManageLocation },
+        { "depo nasıl eklenir", ChatIntent.HowToManageLocation },
+        { "öznitelik ne işe yarar", ChatIntent.ExplainAttributePurpose },
+        { "öznitelik nedir", ChatIntent.ExplainAttributePurpose },
+        { "attribute nedir", ChatIntent.ExplainAttributePurpose },
+        { "ürünleri excel", ChatIntent.HowToExportProductsExcel },
+        { "excel'e ürün", ChatIntent.HowToExportProductsExcel },
+        { "excel ürüne aktar", ChatIntent.HowToExportProductsExcel }
     };
 
     private static readonly string[] SmallTalkKeywords =
@@ -68,9 +77,30 @@ public class ChatIntentDetector : IChatIntentDetector
             return new ChatQuestionContext(ChatIntent.HowToManageCategory, normalized);
         }
 
-        if (lower.Contains("lokasyon ekle") || lower.Contains("depo ekle") || lower.Contains("lokasyon düzenle") || lower.Contains("lokasyon sil"))
+        if (lower.Contains("lokasyon ekle") ||
+            lower.Contains("lokasyon eklenir") ||
+            lower.Contains("lokasyon nasıl") ||
+            lower.Contains("depo ekle") ||
+            lower.Contains("depo nasıl") ||
+            lower.Contains("lokasyon düzenle") ||
+            lower.Contains("lokasyon sil"))
         {
             return new ChatQuestionContext(ChatIntent.HowToManageLocation, normalized);
+        }
+
+        if (lower.Contains("öznitelik ne işe yar") ||
+            lower.Contains("öznitelik ne demek") ||
+            lower.Contains("attribute ne") ||
+            lower.Contains("öznitelik nedir"))
+        {
+            return new ChatQuestionContext(ChatIntent.ExplainAttributePurpose, normalized);
+        }
+
+        if (lower.Contains("ürünleri excel") ||
+            lower.Contains("excel'e ürün") ||
+            lower.Contains("excel aktar") && lower.Contains("ürün"))
+        {
+            return new ChatQuestionContext(ChatIntent.HowToExportProductsExcel, normalized);
         }
 
         if (lower.Contains("öznitelik ekle") || lower.Contains("attribute ekle") || lower.Contains("ürün özelliği ekle"))

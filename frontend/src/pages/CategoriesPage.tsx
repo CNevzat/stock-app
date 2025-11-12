@@ -5,23 +5,6 @@ import { categoryService } from '../services/categoryService'
 import { signalRService } from '../services/signalRService'
 import type { CreateCategoryCommand, UpdateCategoryCommand } from '../Api'
 
-// Kategori renklerini belirle
-const getCategoryColor = (categoryId: number) => {
-  const colors = [
-    { bg: 'bg-purple-50', text: 'text-purple-700', ring: 'ring-purple-600/20', icon: 'text-purple-500' },
-    { bg: 'bg-blue-50', text: 'text-blue-700', ring: 'ring-blue-600/20', icon: 'text-blue-500' },
-    { bg: 'bg-green-50', text: 'text-green-700', ring: 'ring-green-600/20', icon: 'text-green-500' },
-    { bg: 'bg-yellow-50', text: 'text-yellow-700', ring: 'ring-yellow-600/20', icon: 'text-yellow-500' },
-    { bg: 'bg-red-50', text: 'text-red-700', ring: 'ring-red-600/20', icon: 'text-red-500' },
-    { bg: 'bg-pink-50', text: 'text-pink-700', ring: 'ring-pink-600/20', icon: 'text-pink-500' },
-    { bg: 'bg-indigo-50', text: 'text-indigo-700', ring: 'ring-indigo-600/20', icon: 'text-indigo-500' },
-    { bg: 'bg-cyan-50', text: 'text-cyan-700', ring: 'ring-cyan-600/20', icon: 'text-cyan-500' },
-    { bg: 'bg-orange-50', text: 'text-orange-700', ring: 'ring-orange-600/20', icon: 'text-orange-500' },
-    { bg: 'bg-teal-50', text: 'text-teal-700', ring: 'ring-teal-600/20', icon: 'text-teal-500' },
-  ];
-  return colors[categoryId % colors.length];
-};
-
 export default function CategoriesPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
@@ -219,35 +202,23 @@ export default function CategoriesPage() {
                       </span>
                     </td>
                     <td className="px-3 py-4 text-sm font-medium text-gray-900 max-w-[200px]">
-                      <div className="truncate">
-                        {(() => {
-                          const color = getCategoryColor(category.id || 0);
-                          return (
-                            <span className="inline-flex items-center">
-                              <svg className={`w-5 h-5 mr-2 ${color.icon} flex-shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                              </svg>
-                              <span className="truncate">{category.name}</span>
-                            </span>
-                          );
-                        })()}
+                      <div className="truncate inline-flex items-center gap-2">
+                        <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        <span className="truncate">{category.name}</span>
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      {(() => {
-                        const color = getCategoryColor(category.id || 0);
-                        return (
-                          <button
-                            onClick={() => navigate(`/products?categoryId=${category.id}`)}
-                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${color.bg} ${color.text} ${color.ring} hover:opacity-80 transition-opacity cursor-pointer`}
-                          >
-                            <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                            </svg>
-                            {category.productCount} Ürün
-                          </button>
-                        );
-                      })()}
+                      <button
+                        onClick={() => navigate(`/products?categoryId=${category.id}`)}
+                        className="inline-flex items-center rounded-full border border-gray-300 px-3 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 transition"
+                      >
+                        <svg className="w-3 h-3 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                        </svg>
+                        {category.productCount} Ürün
+                      </button>
                     </td>
                     <td className="relative whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-4">
                       <div className="flex justify-end gap-2">
