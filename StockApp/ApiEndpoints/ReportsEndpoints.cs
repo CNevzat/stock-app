@@ -20,6 +20,7 @@ public static class ReportsEndpoints
             var pdfBytes = await pdfService.GenerateCriticalStockPdf(products);
             return Results.File(pdfBytes, "application/pdf", "critical-stock-report.pdf");
         })
+        .RequireAuthorization("CanViewReports")
         .Produces<byte[]>(StatusCodes.Status200OK, "application/pdf");
 
         group.MapPost("/natural-language", async (
@@ -30,6 +31,7 @@ public static class ReportsEndpoints
             var result = await mediator.Send(new GetNaturalLanguageReportQuery(request.Question ?? string.Empty), cancellationToken);
             return Results.Ok(result);
         })
+        .RequireAuthorization("CanViewReports")
         .Produces<NaturalLanguageReportResponse>(StatusCodes.Status200OK);
     }
 }

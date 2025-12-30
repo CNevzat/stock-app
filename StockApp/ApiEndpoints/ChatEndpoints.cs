@@ -23,6 +23,7 @@ public static class ChatEndpoints
             var response = await mediator.Send(new GetChatResponseQuery(request.Question), cancellationToken);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanUseChat")
         .Produces<ChatResponseDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest);
     }

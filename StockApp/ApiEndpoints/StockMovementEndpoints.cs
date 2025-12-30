@@ -34,6 +34,7 @@ public static class StockMovementEndpoints
             var movements = await mediator.Send(query);
             return Results.Ok(movements);
         })
+        .RequireAuthorization("CanViewStockMovements")
         .Produces<PaginatedList<StockMovementDto>>(StatusCodes.Status200OK);
 
         #endregion
@@ -47,6 +48,7 @@ public static class StockMovementEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageStockMovements")
         .Produces<CreateStockMovementCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest);
@@ -68,6 +70,7 @@ public static class StockMovementEndpoints
                 fileName,
                 enableRangeProcessing: false);
         })
+        .RequireAuthorization("CanViewStockMovements")
         .Produces(StatusCodes.Status200OK);
 
         #endregion

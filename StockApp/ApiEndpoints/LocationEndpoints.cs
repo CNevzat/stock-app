@@ -29,6 +29,7 @@ public static class LocationEndpoints
             var locations = await mediator.Send(query);
             return Results.Ok(locations);
         })
+        .RequireAuthorization("CanViewLocations")
         .Produces<PaginatedList<LocationDto>>(StatusCodes.Status200OK);
 
         #endregion
@@ -49,6 +50,7 @@ public static class LocationEndpoints
 
             return Results.Ok(location);
         })
+        .RequireAuthorization("CanViewLocations")
         .Produces<LocationDetailDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -63,6 +65,7 @@ public static class LocationEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageLocations")
         .Produces<CreateLocationCommandResponse>(StatusCodes.Status200OK);
 
         #endregion
@@ -76,6 +79,7 @@ public static class LocationEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageLocations")
         .Produces<UpdateLocationCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -91,6 +95,7 @@ public static class LocationEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageLocations")
         .Produces<DeleteLocationCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 

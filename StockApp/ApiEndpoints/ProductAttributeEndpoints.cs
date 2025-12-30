@@ -32,6 +32,7 @@ public static class ProductAttributeEndpoints
             var attributes = await mediator.Send(query);
             return Results.Ok(attributes);
         })
+        .RequireAuthorization("CanViewProductAttributes")
         .Produces<PaginatedList<StockApp.App.ProductAttribute.Query.ProductAttributeDto>>(StatusCodes.Status200OK);
 
         #endregion
@@ -52,6 +53,7 @@ public static class ProductAttributeEndpoints
 
             return Results.Ok(attribute);
         })
+        .RequireAuthorization("CanViewProductAttributes")
         .Produces<ProductAttributeDetailDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -66,6 +68,7 @@ public static class ProductAttributeEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageProductAttributes")
         .Produces<CreateProductAttributeCommandResponse>(StatusCodes.Status200OK);
 
         #endregion
@@ -79,6 +82,7 @@ public static class ProductAttributeEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageProductAttributes")
         .Produces<UpdateProductAttributeCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -94,6 +98,7 @@ public static class ProductAttributeEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageProductAttributes")
         .Produces<DeleteProductAttributeCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -117,6 +122,7 @@ public static class ProductAttributeEndpoints
                 fileName,
                 enableRangeProcessing: false);
         })
+        .RequireAuthorization("CanViewProductAttributes")
         .Produces(StatusCodes.Status200OK);
 
         #endregion

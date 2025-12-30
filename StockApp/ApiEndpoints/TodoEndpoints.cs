@@ -32,6 +32,7 @@ public static class TodoEndpoints
             var result = await mediator.Send(query);
             return Results.Ok(result);
         })
+        .RequireAuthorization("CanViewTodos")
         .Produces<PaginatedList<TodoDto>>(StatusCodes.Status200OK);
 
         #endregion
@@ -45,6 +46,7 @@ public static class TodoEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageTodos")
         .Produces<CreateTodoCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status400BadRequest);
 
@@ -61,6 +63,7 @@ public static class TodoEndpoints
             var response = await mediator.Send(updatedCommand);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageTodos")
         .Produces<UpdateTodoCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest);
@@ -76,6 +79,7 @@ public static class TodoEndpoints
             var response = await mediator.Send(new DeleteTodoCommand(id));
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageTodos")
         .Produces<DeleteTodoCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound)
         .Produces(StatusCodes.Status400BadRequest);

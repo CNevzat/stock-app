@@ -19,6 +19,7 @@ public static class DashboardEndpoints
             await hubContext.Clients.All.SendAsync("DashboardStatsUpdated", result);
             return Results.Ok(result);
         })
+        .RequireAuthorization("CanViewDashboard")
         .Produces<DashboardStatsDto>(StatusCodes.Status200OK);
     }
 }

@@ -9,6 +9,18 @@ const getApiBaseUrl = () => {
   return 'http://localhost:5134';
 };
 
+// Helper function to add authorization header
+import { authService } from './authService';
+
+const getAuthHeaders = () => {
+  const token = authService.getToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export const stockMovementService = {
   getAll: async (params: {
     pageNumber?: number
@@ -25,7 +37,10 @@ export const stockMovementService = {
         ...(params.productId && { productId: params.productId.toString() }),
         ...(params.categoryId && { categoryId: params.categoryId.toString() }),
         ...(params.type && { type: params.type.toString() }),
-      })}`
+      })}`,
+      {
+        headers: getAuthHeaders(),
+      }
     )
     return response.json()
   },
@@ -34,6 +49,7 @@ export const stockMovementService = {
     const API_BASE_URL = getApiBaseUrl();
     const response = await fetch(`${API_BASE_URL}/api/stock-movements/export/excel`, {
       method: 'GET',
+      headers: getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -76,6 +92,7 @@ export const stockMovementService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(data),
     })

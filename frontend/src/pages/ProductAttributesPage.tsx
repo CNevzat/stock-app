@@ -5,6 +5,21 @@ import { productService } from '../services/productService'
 import { signalRService } from '../services/signalRService'
 import type { CreateProductAttributeCommand, UpdateProductAttributeCommand } from '../Api'
 
+// Product ID'ye göre renk döndüren helper fonksiyon
+const getProductColor = (productId: number) => {
+  const colors = [
+    { bg: 'bg-blue-100', text: 'text-blue-800', ring: 'ring-blue-600/20' },
+    { bg: 'bg-green-100', text: 'text-green-800', ring: 'ring-green-600/20' },
+    { bg: 'bg-purple-100', text: 'text-purple-800', ring: 'ring-purple-600/20' },
+    { bg: 'bg-pink-100', text: 'text-pink-800', ring: 'ring-pink-600/20' },
+    { bg: 'bg-yellow-100', text: 'text-yellow-800', ring: 'ring-yellow-600/20' },
+    { bg: 'bg-indigo-100', text: 'text-indigo-800', ring: 'ring-indigo-600/20' },
+    { bg: 'bg-red-100', text: 'text-red-800', ring: 'ring-red-600/20' },
+    { bg: 'bg-cyan-100', text: 'text-cyan-800', ring: 'ring-cyan-600/20' },
+  ];
+  return colors[productId % colors.length];
+};
+
 export default function ProductAttributesPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
@@ -101,7 +116,7 @@ export default function ProductAttributesPage() {
   })
 
   // Fetch attributes
-  const { data: attributesData, isLoading } = useQuery({
+  const { data: attributesData, isLoading, error } = useQuery({
     queryKey: ['product-attributes', page, pageSize, searchKey],
     queryFn: () => {
       return productAttributeService.getAll({
@@ -112,6 +127,13 @@ export default function ProductAttributesPage() {
     },
     enabled: true, // Her zaman aktif
   })
+
+  // Hata durumunu logla
+  useEffect(() => {
+    if (error) {
+      console.error('ProductAttributes fetch error:', error);
+    }
+  }, [error])
 
   // Seçilen ürüne ait öznitelikleri getir
   const { data: existingAttributes } = useQuery({
@@ -270,6 +292,30 @@ export default function ProductAttributesPage() {
     return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
   }
 
+  if (error) {
+    return (
+      <div className="px-2 sm:px-4 lg:px-6">
+        <div className="rounded-md bg-red-50 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Veriler yüklenirken bir hata oluştu
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>Lütfen sayfayı yenileyin veya daha sonra tekrar deneyin.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="px-2 sm:px-4 lg:px-6">
       <div className="sm:flex sm:items-center">
@@ -350,7 +396,8 @@ export default function ProductAttributesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200/20 backdrop-blur-md">
-                {attributesData?.items?.map((attribute, index) => (
+                {attributesData?.items && attributesData.items.length > 0 ? (
+                  attributesData.items.map((attribute, index) => (
                   <tr key={attribute.id} className="hover:bg-gray-50 transition-colors duration-150">
                     <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
                       <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-semibold">
@@ -412,7 +459,14 @@ export default function ProductAttributesPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                      {isLoading ? 'Yükleniyor...' : 'Öznitelik bulunamadı'}
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

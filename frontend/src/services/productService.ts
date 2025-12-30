@@ -1,5 +1,6 @@
 import api, {type PaginationQuery} from "./api.ts";
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
+import { authService } from './authService';
 
 // API base URL helper - hem dev hem production'da 5134 portunu kullan
 const getApiBaseUrl = () => {
@@ -10,6 +11,16 @@ const getApiBaseUrl = () => {
     return `http://${window.location.hostname}:5134`;
   }
   return 'http://localhost:5134';
+};
+
+// Helper function to add authorization header
+const getAuthHeaders = () => {
+  const token = authService.getToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 };
 
 export const productService = {
@@ -23,7 +34,9 @@ export const productService = {
     if (params.categoryId) queryParams.append('categoryId', params.categoryId.toString());
     if (params.locationId) queryParams.append('locationId', params.locationId.toString());
     
-    const response = await fetch(`${API_BASE_URL}/api/products?${queryParams}`);
+    const response = await fetch(`${API_BASE_URL}/api/products?${queryParams}`, {
+      headers: getAuthHeaders(),
+    });
     if (!response.ok) throw new Error('Failed to fetch products');
     return response.json();
   },
@@ -71,6 +84,7 @@ export const productService = {
     
     const response = await fetch(`${API_BASE_URL}/api/products`, {
       method: 'POST',
+      headers: getAuthHeaders(),
       body: formData,
     });
     
@@ -127,6 +141,7 @@ export const productService = {
     
     const response = await fetch(`${API_BASE_URL}/api/products`, {
       method: 'PUT',
+      headers: getAuthHeaders(),
       body: formData,
     });
     
@@ -155,6 +170,7 @@ export const productService = {
     const API_BASE_URL = getApiBaseUrl();
     const response = await fetch(`${API_BASE_URL}/api/products/export/excel`, {
       method: 'GET',
+      headers: getAuthHeaders(),
     });
     
     if (!response.ok) {

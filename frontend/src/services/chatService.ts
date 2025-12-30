@@ -8,6 +8,18 @@ const getApiBaseUrl = () => {
   return 'http://localhost:5134';
 };
 
+// Helper function to add authorization header
+import { authService } from './authService';
+
+const getAuthHeaders = () => {
+  const token = authService.getToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export interface ChatAskRequest {
   question: string;
 }
@@ -25,6 +37,7 @@ export const chatService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify({ question }),
     });

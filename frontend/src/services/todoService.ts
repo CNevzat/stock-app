@@ -9,6 +9,18 @@ const getApiBaseUrl = () => {
   return 'http://localhost:5134';
 };
 
+// Helper function to add authorization header
+import { authService } from './authService';
+
+const getAuthHeaders = () => {
+  const token = authService.getToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 export const todoService = {
   getAll: async (params: {
     pageNumber?: number
@@ -23,7 +35,9 @@ export const todoService = {
     if (params.status !== undefined) searchParams.append('status', params.status.toString())
     if (params.priority !== undefined) searchParams.append('priority', params.priority.toString())
     
-    const response = await fetch(`${API_BASE_URL}/api/todos?${searchParams}`)
+    const response = await fetch(`${API_BASE_URL}/api/todos?${searchParams}`, {
+      headers: getAuthHeaders(),
+    })
     return response.json()
   },
 
@@ -38,6 +52,7 @@ export const todoService = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(data),
     })
@@ -59,6 +74,7 @@ export const todoService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
+        ...getAuthHeaders(),
       },
       body: JSON.stringify(data),
     })
@@ -73,6 +89,7 @@ export const todoService = {
     const API_BASE_URL = getApiBaseUrl();
     const response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
       method: 'DELETE',
+      headers: getAuthHeaders(),
     })
     if (!response.ok) {
       const error = await response.json()

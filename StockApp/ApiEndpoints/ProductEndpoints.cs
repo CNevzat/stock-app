@@ -35,7 +35,9 @@ public static class ProductEndpoints
             };
             var products = await mediator.Send(query);
             return Results.Ok(products);
-        }).Produces<PaginatedList<ProductDto>>(StatusCodes.Status200OK);
+        })
+        .RequireAuthorization("CanViewProducts")
+        .Produces<PaginatedList<ProductDto>>(StatusCodes.Status200OK);
 
         #endregion
 
@@ -55,6 +57,7 @@ public static class ProductEndpoints
 
                 return Results.Ok(product);
             })
+            .RequireAuthorization("CanViewProducts")
             .Produces<ProductDetailDto>(StatusCodes.Status200OK)
             .Produces(StatusCodes.Status404NotFound);
 
@@ -130,6 +133,7 @@ public static class ProductEndpoints
 
                 return Results.Ok(response);
             })
+            .RequireAuthorization("CanManageProducts")
             .DisableAntiforgery() // Minimal API'de multipart için gerekli
             .Produces<CreateProductCommandResponse>(StatusCodes.Status200OK);
 
@@ -243,6 +247,7 @@ public static class ProductEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageProducts")
         .DisableAntiforgery() // Minimal API'de multipart için gerekli
         .Produces<UpdateProductCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
@@ -259,6 +264,7 @@ public static class ProductEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageProducts")
         .Produces<DeleteProductCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -282,6 +288,7 @@ public static class ProductEndpoints
                 fileName,
                 enableRangeProcessing: false);
         })
+        .RequireAuthorization("CanViewProducts")
         .Produces(StatusCodes.Status200OK);
 
         #endregion

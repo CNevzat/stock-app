@@ -29,6 +29,7 @@ public static class CategoryEndpoints
             var categories = await mediator.Send(query);
             return Results.Ok(categories);
         })
+        .RequireAuthorization("CanViewCategories")
         .Produces<PaginatedList<CategoryDto>>(StatusCodes.Status200OK);
 
         #endregion
@@ -49,6 +50,7 @@ public static class CategoryEndpoints
 
             return Results.Ok(category);
         })
+        .RequireAuthorization("CanViewCategories")
         .Produces<CategoryDetailDto>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -63,6 +65,7 @@ public static class CategoryEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageCategories")
         .Produces<CreateCategoryCommandResponse>(StatusCodes.Status200OK);
 
         #endregion
@@ -76,6 +79,7 @@ public static class CategoryEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageCategories")
         .Produces<UpdateCategoryCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 
@@ -91,6 +95,7 @@ public static class CategoryEndpoints
             var response = await mediator.Send(command);
             return Results.Ok(response);
         })
+        .RequireAuthorization("CanManageCategories")
         .Produces<DeleteCategoryCommandResponse>(StatusCodes.Status200OK)
         .Produces(StatusCodes.Status404NotFound);
 

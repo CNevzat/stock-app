@@ -1,5 +1,16 @@
 import api, {type PaginationQuery} from "./api.ts";
 import type {CreateProductAttributeCommand, UpdateProductAttributeCommand} from "../Api";
+import { authService } from './authService';
+
+// Helper function to add authorization header
+const getAuthHeaders = () => {
+  const token = authService.getToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 export const productAttributeService = {
   getAll: async (params: PaginationQuery & { searchKey?: string; productId?: number }) => {
@@ -48,6 +59,7 @@ export const productAttributeService = {
     const API_BASE_URL = getApiBaseUrl();
     const response = await fetch(`${API_BASE_URL}/api/product-attributes/export/excel`, {
       method: 'GET',
+      headers: getAuthHeaders(),
     });
     
     if (!response.ok) {

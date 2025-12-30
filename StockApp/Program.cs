@@ -2,6 +2,7 @@ using StockApp;
 using StockApp.ApiEndpoints;
 using StockApp.Hub;
 using StockApp.Middleware;
+using StockApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,31 @@ builder.Services.AddSwaggerGen(options =>
     
     // Use fully qualified names to avoid schema ID conflicts for types with the same name
     options.CustomSchemaIds(type => type.FullName?.Replace("+", ".") ?? type.Name);
+
+    // Add JWT Authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
 });
 
 // Configure CORS
@@ -75,6 +101,10 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 
+// Authentication & Authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
 // Use exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
@@ -99,6 +129,20 @@ else
 {
     // Development'ta sadece images için static files
     app.UseStaticFiles();
+}
+
+// Seed veritabanı (sadece development'ta ve veri yoksa)
+if (app.Environment.IsDevelopment())
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var seeder = new DatabaseSeeder(
+            scope.ServiceProvider.GetRequiredService<ApplicationDbContext>(),
+            scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<StockApp.Entities.ApplicationUser>>(),
+            scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>()
+        );
+        await seeder.SeedAsync();
+    }
 }
 
 app.Run();

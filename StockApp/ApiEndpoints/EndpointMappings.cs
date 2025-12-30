@@ -4,6 +4,9 @@ public static class EndpointMappings
 {
     public static void MapApiEndpoints(this WebApplication app)
     {
+        // ==================== AUTH ====================
+        app.MapAuthEndpoints();
+
         // ==================== CATEGORIES ====================
         app.MapCategories();
 
