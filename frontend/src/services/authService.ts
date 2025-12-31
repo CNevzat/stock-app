@@ -1,3 +1,6 @@
+import { handleResponseError } from '../utils/errorHandler';
+import { getApiBaseUrl } from '../utils/apiConfig';
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -113,18 +116,8 @@ export interface RefreshTokenRequest {
 }
 
 class AuthService {
-  private getApiBaseUrl = () => {
-    if (import.meta.env.VITE_API_BASE_URL) {
-      return import.meta.env.VITE_API_BASE_URL;
-    }
-    if (import.meta.env.PROD) {
-      return `http://${window.location.hostname}:5134`;
-    }
-    return 'http://localhost:5134';
-  };
-
   async login(request: LoginRequest): Promise<AuthResponse> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/login`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -141,7 +134,7 @@ class AuthService {
   }
 
   async createUser(request: CreateUserRequest, token: string): Promise<UserDto> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/users`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -151,15 +144,14 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'User creation failed' }));
-      throw new Error(error.message || 'User creation failed');
+      await handleResponseError(response, 'Kullanıcı oluşturulamadı');
     }
 
     return response.json();
   }
 
   async changePassword(request: ChangePasswordRequest, token: string): Promise<void> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/change-password`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -175,7 +167,7 @@ class AuthService {
   }
 
   async forceChangePassword(request: ForceChangePasswordRequest, token: string): Promise<void> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/force-change-password`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/force-change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -191,7 +183,7 @@ class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthResponse> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/refresh-token`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/refresh-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -212,7 +204,7 @@ class AuthService {
       throw new Error('No token available');
     }
 
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/me`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/me`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -228,7 +220,7 @@ class AuthService {
   }
 
   async getUsers(token: string): Promise<UserListDto[]> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/users`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/users`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -237,8 +229,7 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to get users' }));
-      throw new Error(error.message || 'Failed to get users');
+      await handleResponseError(response, 'Kullanıcılar yüklenirken bir hata oluştu');
     }
 
     return response.json();
@@ -294,7 +285,7 @@ class AuthService {
   }
 
   async getRoles(token: string): Promise<RoleDto[]> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/roles`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/roles`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -303,15 +294,14 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to get roles' }));
-      throw new Error(error.message || 'Failed to get roles');
+      await handleResponseError(response, 'Roller yüklenirken bir hata oluştu');
     }
 
     return response.json();
   }
 
   async createRole(request: CreateRoleRequest, token: string): Promise<RoleDto> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/roles`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/roles`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -321,15 +311,14 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to create role' }));
-      throw new Error(error.message || 'Failed to create role');
+      await handleResponseError(response, 'Rol oluşturulamadı');
     }
 
     return response.json();
   }
 
   async updateRole(request: UpdateRoleRequest, token: string): Promise<RoleDto> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/roles`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/roles`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -339,15 +328,14 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to update role' }));
-      throw new Error(error.message || 'Failed to update role');
+      await handleResponseError(response, 'Rol güncellenemedi');
     }
 
     return response.json();
   }
 
   async deleteRole(roleId: string, token: string): Promise<void> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/roles/${roleId}`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/roles/${roleId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -356,13 +344,12 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to delete role' }));
-      throw new Error(error.message || 'Failed to delete role');
+      await handleResponseError(response, 'Rol silinemedi');
     }
   }
 
   async updateUser(request: UpdateUserRequest, token: string): Promise<UserListDto> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/users`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/users`, {
       method: 'PUT',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -372,15 +359,14 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to update user' }));
-      throw new Error(error.message || 'Failed to update user');
+      await handleResponseError(response, 'Kullanıcı güncellenemedi');
     }
 
     return response.json();
   }
 
   async deleteUser(userId: string, token: string): Promise<void> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/auth/users/${userId}`, {
+    const response = await fetch(`${getApiBaseUrl()}/api/auth/users/${userId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -389,8 +375,7 @@ class AuthService {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Failed to delete user' }));
-      throw new Error(error.message || 'Failed to delete user');
+      await handleResponseError(response, 'Kullanıcı silinemedi');
     }
   }
 }

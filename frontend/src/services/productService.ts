@@ -1,17 +1,8 @@
 import api, {type PaginationQuery} from "./api.ts";
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
 import { authService } from './authService';
-
-// API base URL helper - hem dev hem production'da 5134 portunu kullan
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (import.meta.env.PROD) {
-    return `http://${window.location.hostname}:5134`;
-  }
-  return 'http://localhost:5134';
-};
+import { handleResponseError } from '../utils/errorHandler';
+import { getApiBaseUrl } from '../utils/apiConfig';
 
 // Helper function to add authorization header
 const getAuthHeaders = () => {
@@ -37,7 +28,9 @@ export const productService = {
     const response = await fetch(`${API_BASE_URL}/api/products?${queryParams}`, {
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to fetch products');
+    if (!response.ok) {
+      await handleResponseError(response, 'Ürünler yüklenirken bir hata oluştu');
+    }
     return response.json();
   },
 
@@ -89,8 +82,7 @@ export const productService = {
     });
     
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Bir hata oluştu' }));
-      throw new Error(error.message || 'Ürün oluşturulamadı');
+      await handleResponseError(response, 'Ürün oluşturulamadı');
     }
     
     const data = await response.json();
@@ -146,8 +138,7 @@ export const productService = {
     });
     
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Bir hata oluştu' }));
-      throw new Error(error.message || 'Ürün güncellenemedi');
+      await handleResponseError(response, 'Ürün güncellenemedi');
     }
     
     const data = await response.json();
@@ -174,7 +165,7 @@ export const productService = {
     });
     
     if (!response.ok) {
-      throw new Error('Excel export başarısız oldu');
+      await handleResponseError(response, 'Excel export başarısız oldu');
     }
     
     // Blob'dan dosya oluştur ve indir

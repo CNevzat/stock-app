@@ -1,6 +1,8 @@
 import api, {type PaginationQuery} from "./api.ts";
 import type {CreateProductAttributeCommand, UpdateProductAttributeCommand} from "../Api";
 import { authService } from './authService';
+import { getApiBaseUrl } from '../utils/apiConfig';
+import { handleResponseError } from '../utils/errorHandler';
 
 // Helper function to add authorization header
 const getAuthHeaders = () => {
@@ -47,15 +49,6 @@ export const productAttributeService = {
   },
 
   exportExcel: async () => {
-    const getApiBaseUrl = () => {
-      if (import.meta.env.VITE_API_BASE_URL) {
-        return import.meta.env.VITE_API_BASE_URL;
-      }
-      if (import.meta.env.PROD) {
-        return `http://${window.location.hostname}:5134`;
-      }
-      return 'http://localhost:5134';
-    };
     const API_BASE_URL = getApiBaseUrl();
     const response = await fetch(`${API_BASE_URL}/api/product-attributes/export/excel`, {
       method: 'GET',
@@ -63,7 +56,7 @@ export const productAttributeService = {
     });
     
     if (!response.ok) {
-      throw new Error('Excel export başarısız oldu');
+      await handleResponseError(response, 'Excel export başarısız oldu');
     }
     
     // Blob'dan dosya oluştur ve indir

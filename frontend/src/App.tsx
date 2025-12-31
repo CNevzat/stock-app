@@ -13,6 +13,7 @@ import UsersPage from './pages/UsersPage'
 import RolesPage from './pages/RolesPage'
 import ProtectedRoute from './components/ProtectedRoute'
 import { ChatWidget } from './components/ChatWidget'
+import { ToastContainer } from './components/Toast'
 import { authService } from './services/authService'
 
 function NavLink({ to, onClick, children }: { to: string; onClick: () => void; children: React.ReactNode }) {
@@ -46,18 +47,45 @@ function App() {
   const [user, setUser] = useState(authService.getUser())
 
   useEffect(() => {
-    // Check authentication on mount
+    // Check authentication on mount and on location change
+    const checkAuth = () => {
+      const authenticated = authService.isAuthenticated()
+      const currentUser = authService.getUser()
+      setIsAuthenticated(authenticated)
+      setUser(currentUser)
+      
+      // Check if password change is required
+      if (authenticated && currentUser?.mustChangePassword) {
+        // Redirect to password change (or show modal)
+        // For now, we'll handle this in the login flow
+      }
+    }
+    
+    // Initial check
+    checkAuth()
+    
+    // Listen for storage changes (when login happens in another tab)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'token' || e.key === 'user') {
+        checkAuth()
+      }
+    }
+    
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+    }
+  }, [])
+  
+  // Also check auth when location changes (e.g., after login/logout)
+  const location = useLocation()
+  useEffect(() => {
     const authenticated = authService.isAuthenticated()
     const currentUser = authService.getUser()
     setIsAuthenticated(authenticated)
     setUser(currentUser)
-    
-    // Check if password change is required
-    if (authenticated && currentUser?.mustChangePassword) {
-      // Redirect to password change (or show modal)
-      // For now, we'll handle this in the login flow
-    }
-  }, [])
+  }, [location.pathname])
 
   const handleNavClick = () => {
     // Tüm query'leri invalidate et (sayfalar arası geçişte fresh data için)
@@ -343,6 +371,7 @@ function App() {
       </div>
 
       <ChatWidget />
+      <ToastContainer />
     </div>
   )
 }

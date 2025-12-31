@@ -1,18 +1,9 @@
-// API base URL helper - hem dev hem production'da 5134 portunu kullan
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (import.meta.env.PROD) {
-    return `http://${window.location.hostname}:5134`;
-  }
-  return 'http://localhost:5134';
-};
-
-const API_BASE_URL = getApiBaseUrl();
-
 // Helper function to add authorization header
 import { authService } from './authService';
+import { getApiBaseUrl } from '../utils/apiConfig';
+
+const API_BASE_URL = getApiBaseUrl();
+import { handleResponseError } from '../utils/errorHandler';
 
 const getAuthHeaders = () => {
   const token = authService.getToken();
@@ -65,7 +56,9 @@ export const locationService = {
         headers: getAuthHeaders(),
       }
     );
-    if (!response.ok) throw new Error('Failed to fetch locations');
+    if (!response.ok) {
+      await handleResponseError(response, 'Lokasyonlar yüklenirken bir hata oluştu');
+    }
     return response.json();
   },
 
@@ -73,7 +66,9 @@ export const locationService = {
     const response = await fetch(`${API_BASE_URL}/api/locations/by-id?id=${id}`, {
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to fetch location');
+    if (!response.ok) {
+      await handleResponseError(response, 'Lokasyon bilgisi yüklenirken bir hata oluştu');
+    }
     return response.json();
   },
 
@@ -86,7 +81,9 @@ export const locationService = {
       },
       body: JSON.stringify(dto)
     });
-    if (!response.ok) throw new Error('Failed to create location');
+    if (!response.ok) {
+      await handleResponseError(response, 'Lokasyon oluşturulamadı');
+    }
     const data = await response.json();
     return data.locationId;
   },
@@ -100,7 +97,9 @@ export const locationService = {
       },
       body: JSON.stringify({ ...dto, locationId: id })
     });
-    if (!response.ok) throw new Error('Failed to update location');
+    if (!response.ok) {
+      await handleResponseError(response, 'Lokasyon güncellenemedi');
+    }
     return response.json();
   },
 
@@ -109,6 +108,8 @@ export const locationService = {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
-    if (!response.ok) throw new Error('Failed to delete location');
+    if (!response.ok) {
+      await handleResponseError(response, 'Lokasyon silinemedi');
+    }
   }
 };

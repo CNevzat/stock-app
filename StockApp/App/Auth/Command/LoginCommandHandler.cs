@@ -1,6 +1,5 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using StockApp.Common.Models;
 using StockApp.Entities;
 using StockApp.Services;
@@ -12,18 +11,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenService _jwtTokenService;
-    private readonly ApplicationDbContext _context;
+    private readonly RoleManager<IdentityRole> _roleManager;
 
     public LoginCommandHandler(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         IJwtTokenService jwtTokenService,
-        ApplicationDbContext context)
+        RoleManager<IdentityRole> roleManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _jwtTokenService = jwtTokenService;
-        _context = context;
+        _roleManager = roleManager;
     }
 
     public async Task<AuthResponse> Handle(LoginCommand request, CancellationToken cancellationToken)
@@ -43,7 +42,47 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         }
 
         var roles = await _userManager.GetRolesAsync(user);
-        var accessToken = _jwtTokenService.GenerateAccessToken(user, roles);
+        
+        // Get all user claims (both direct user claims and role claims)
+        var userClaims = await _userManager.GetClaimsAsync(user);
+        
+        // Get role claims
+        var roleClaims = new List<System.Security.Claims.Claim>();
+        foreach (var roleName in roles)
+        {
+            var role = await _roleManager.FindByNameAsync(roleName);
+            if (role != null)
+            {
+                var claims = await _roleManager.GetClaimsAsync(role);
+                roleClaims.AddRange(claims);
+            }
+        }
+        
+        // Combine user claims and role claims (avoid duplicates)
+        var allClaims = new List<System.Security.Claims.Claim>();
+        var addedClaims = new HashSet<string>(); // Track added claims by "Type:Value"
+        
+        foreach (var claim in userClaims)
+        {
+            var key = $"{claim.Type}:{claim.Value}";
+            if (!addedClaims.Contains(key))
+            {
+                allClaims.Add(claim);
+                addedClaims.Add(key);
+            }
+        }
+        
+        foreach (var claim in roleClaims)
+        {
+            var key = $"{claim.Type}:{claim.Value}";
+            if (!addedClaims.Contains(key))
+            {
+                allClaims.Add(claim);
+                addedClaims.Add(key);
+            }
+        }
+        
+        var accessToken = _jwtTokenService.GenerateAccessToken(user, roles, allClaims);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
         var refreshTokenExpiration = _jwtTokenService.GetRefreshTokenExpiration();
 
@@ -56,7 +95,7 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, AuthResponse>
         {
             AccessToken = accessToken,
             RefreshToken = refreshToken,
-            ExpiresAt = DateTime.UtcNow.AddMinutes(60), // JWT expiration
+            ExpiresAt = refreshTokenExpiration,
             User = new UserDto
             {
                 Id = user.Id,

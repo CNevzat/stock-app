@@ -6,16 +6,6 @@ public class LoginRequest
     public string Password { get; set; } = string.Empty;
 }
 
-public class RegisterRequest
-{
-    public string Email { get; set; } = string.Empty;
-    public string Password { get; set; } = string.Empty;
-    public string ConfirmPassword { get; set; } = string.Empty;
-    public string FirstName { get; set; } = string.Empty;
-    public string LastName { get; set; } = string.Empty;
-    public string? UserName { get; set; }
-}
-
 public class AuthResponse
 {
     public string AccessToken { get; set; } = string.Empty;
@@ -95,12 +85,6 @@ public class AssignClaimRequest
     public string ClaimValue { get; set; } = string.Empty;
 }
 
-public class RemoveClaimRequest
-{
-    public string UserId { get; set; } = string.Empty;
-    public string ClaimType { get; set; } = string.Empty;
-}
-
 public class RoleDto
 {
     public string Id { get; set; } = string.Empty;
@@ -125,10 +109,5 @@ public class UpdateRoleRequest
     public string Id { get; set; } = string.Empty;
     public string? Name { get; set; }
     public List<ClaimDto>? Claims { get; set; }
-}
-
-public class DeleteRoleRequest
-{
-    public string Id { get; set; } = string.Empty;
 }
 

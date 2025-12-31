@@ -18,7 +18,7 @@ public class JwtTokenService : IJwtTokenService
         _jwtOptions = jwtOptions.Value;
     }
 
-    public string GenerateAccessToken(ApplicationUser user, IList<string> roles)
+    public string GenerateAccessToken(ApplicationUser user, IList<string> roles, IList<Claim>? userClaims = null)
     {
         var claims = new List<Claim>
         {
@@ -33,6 +33,19 @@ public class JwtTokenService : IJwtTokenService
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        // Add user claims (both direct user claims and role claims)
+        if (userClaims != null && userClaims.Any())
+        {
+            foreach (var claim in userClaims)
+            {
+                // Avoid duplicate claims
+                if (!claims.Any(c => c.Type == claim.Type && c.Value == claim.Value))
+                {
+                    claims.Add(claim);
+                }
+            }
         }
 
         // Add custom claims

@@ -1,6 +1,7 @@
 // API base URL - mobil ve web için
 import { getApiBaseUrl } from '../utils/apiConfig';
 import { authService } from './authService';
+import { showToast } from '../components/Toast';
 
 const API_BASE_URL = getApiBaseUrl();
 
@@ -31,11 +32,17 @@ api.instance.interceptors.request.use(
   }
 );
 
-// Handle 401 errors (unauthorized)
+// Handle 401 errors (unauthorized) and 403 errors (forbidden)
 api.instance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Handle 403 Forbidden - show permission error message
+    if (error.response?.status === 403) {
+      showToast('Bu işlemi yapmanız için yetkiniz yoktur.', 'error');
+      return Promise.reject(error);
+    }
 
     // If 401 and we haven't tried to refresh yet
     if (error.response?.status === 401 && !originalRequest._retry) {

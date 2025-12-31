@@ -1,16 +1,7 @@
-// API base URL helper - hem dev hem production'da 5134 portunu kullan
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (import.meta.env.PROD) {
-    return `http://${window.location.hostname}:5134`;
-  }
-  return 'http://localhost:5134';
-};
-
 // Helper function to add authorization header
 import { authService } from './authService';
+import { getApiBaseUrl } from '../utils/apiConfig';
+import { handleResponseError } from '../utils/errorHandler';
 
 const getAuthHeaders = () => {
   const token = authService.getToken();
@@ -57,8 +48,7 @@ export const todoService = {
       body: JSON.stringify(data),
     })
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Bir hata oluştu')
+      await handleResponseError(response, 'Yapılacak oluşturulamadı');
     }
     return response.json()
   },
@@ -79,8 +69,7 @@ export const todoService = {
       body: JSON.stringify(data),
     })
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Bir hata oluştu')
+      await handleResponseError(response, 'Yapılacak oluşturulamadı');
     }
     return response.json()
   },
@@ -92,8 +81,7 @@ export const todoService = {
       headers: getAuthHeaders(),
     })
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Bir hata oluştu')
+      await handleResponseError(response, 'Yapılacak oluşturulamadı');
     }
     return response.json()
   },

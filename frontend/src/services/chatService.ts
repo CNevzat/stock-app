@@ -1,15 +1,7 @@
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (import.meta.env.PROD) {
-    return `http://${window.location.hostname}:5134`;
-  }
-  return 'http://localhost:5134';
-};
-
 // Helper function to add authorization header
 import { authService } from './authService';
+import { getApiBaseUrl } from '../utils/apiConfig';
+import { handleResponseError } from '../utils/errorHandler';
 
 const getAuthHeaders = () => {
   const token = authService.getToken();
@@ -43,8 +35,7 @@ export const chatService = {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      throw new Error(error.message || 'Sohbet isteği başarısız oldu.');
+      await handleResponseError(response, 'Sohbet isteği başarısız oldu');
     }
 
     const data = await response.json();
