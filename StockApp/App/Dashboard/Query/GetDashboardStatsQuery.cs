@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using StockApp.Entities;
+using StockApp.Services;
+using StockApp.Common.Constants;
 using System.Globalization;
 using System.Linq;
 
@@ -117,14 +119,24 @@ public record MostActiveProductDto
 internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStatsQuery, DashboardStatsDto>
 {
     private readonly ApplicationDbContext _context;
+    private readonly ICacheService _cacheService;
 
-    public GetDashboardStatsQueryHandler(ApplicationDbContext context)
+    public GetDashboardStatsQueryHandler(ApplicationDbContext context, ICacheService cacheService)
     {
         _context = context;
+        _cacheService = cacheService;
     }
 
     public async Task<DashboardStatsDto> Handle(GetDashboardStatsQuery request, CancellationToken cancellationToken)
     {
+        // Önce cache'den kontrol et
+        var cachedStats = await _cacheService.GetAsync<DashboardStatsDto>(CacheKeys.DashboardStats, cancellationToken);
+        if (cachedStats != null)
+        {
+            return cachedStats; // Cache'den dön, veritabanına gitme
+        }
+
+        // Cache'de yok, veritabanından hesapla
         // Temel istatistikler
         var totalCategories = await _context.Categories.CountAsync(cancellationToken);
         var totalProducts = await _context.Products.CountAsync(cancellationToken);
@@ -394,7 +406,7 @@ internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStats
             .Take(5)
             .ToListAsync(cancellationToken);
 
-        return new DashboardStatsDto
+        var stats = new DashboardStatsDto
         {
             TotalCategories = totalCategories,
             TotalProducts = totalProducts,
@@ -423,6 +435,11 @@ internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStats
             LastYearStockMovementTrend = lastYearTrend,
             MostActiveProducts = mostActiveProducts
         };
+
+        // Cache'e yaz (60 saniye TTL)
+        await _cacheService.SetAsync(CacheKeys.DashboardStats, stats, TimeSpan.FromSeconds(60), cancellationToken);
+
+        return stats;
     }
 }
 

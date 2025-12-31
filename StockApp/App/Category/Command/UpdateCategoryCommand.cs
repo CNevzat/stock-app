@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using StockApp.App.Category.Query;
 using StockApp.App.Dashboard.Query;
 using StockApp.Hub;
+using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.Category.Command;
 
@@ -23,12 +25,14 @@ internal class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComm
     private readonly ApplicationDbContext _context;
     private readonly IMediator _mediator;
     private readonly IHubContext<StockHub> _hubContext;
+    private readonly ICacheService _cacheService;
 
-    public UpdateCategoryCommandHandler(ApplicationDbContext context, IMediator mediator, IHubContext<StockHub> hubContext)
+    public UpdateCategoryCommandHandler(ApplicationDbContext context, IMediator mediator, IHubContext<StockHub> hubContext, ICacheService cacheService)
     {
         _context = context;
         _mediator = mediator;
         _hubContext = hubContext;
+        _cacheService = cacheService;
     }
 
     public async Task<UpdateCategoryCommandResponse> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
@@ -52,6 +56,9 @@ internal class UpdateCategoryCommandHandler : IRequestHandler<UpdateCategoryComm
         category.UpdatedAt = DateTime.UtcNow;
         _context.Categories.Update(category);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

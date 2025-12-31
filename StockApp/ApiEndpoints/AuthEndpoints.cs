@@ -161,7 +161,7 @@ public static class AuthEndpoints
             var result = await mediator.Send(command);
             return Results.Ok(result);
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return Results.Unauthorized();
         }

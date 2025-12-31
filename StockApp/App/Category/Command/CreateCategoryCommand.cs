@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.SignalR;
 using StockApp.App.Category.Query;
 using StockApp.App.Dashboard.Query;
 using StockApp.Hub;
+using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.Category.Command;
 
@@ -21,12 +23,14 @@ internal class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComm
     private readonly ApplicationDbContext _context;
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
+    private readonly ICacheService _cacheService;
 
-    public CreateCategoryCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator)
+    public CreateCategoryCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
+        _cacheService = cacheService;
     }
 
     public async Task<CreateCategoryCommandResponse> Handle(CreateCategoryCommand request, CancellationToken cancellationToken)
@@ -39,6 +43,9 @@ internal class CreateCategoryCommandHandler : IRequestHandler<CreateCategoryComm
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

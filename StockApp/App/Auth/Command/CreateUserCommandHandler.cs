@@ -1,17 +1,21 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using StockApp.Common.Models;
 using StockApp.Entities;
+using StockApp.Hub;
 
 namespace StockApp.App.Auth.Command;
 
 public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserDto>
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IHubContext<StockHub> _hubContext;
 
-    public CreateUserCommandHandler(UserManager<ApplicationUser> userManager)
+    public CreateUserCommandHandler(UserManager<ApplicationUser> userManager, IHubContext<StockHub> hubContext)
     {
         _userManager = userManager;
+        _hubContext = hubContext;
     }
 
     public async Task<UserDto> Handle(CreateUserCommand request, CancellationToken cancellationToken)
@@ -55,7 +59,7 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
         var roles = await _userManager.GetRolesAsync(user);
         var claims = await _userManager.GetClaimsAsync(user);
 
-        return new UserDto
+        var userDto = new UserDto
         {
             Id = user.Id,
             Email = user.Email ?? string.Empty,
@@ -64,6 +68,31 @@ public class CreateUserCommandHandler : IRequestHandler<CreateUserCommand, UserD
             LastName = user.LastName,
             Roles = roles.ToList()
         };
+
+        // SignalR ile yeni kullanıcıyı tüm client'lara gönder
+        try
+        {
+            var userListDto = new UserListDto
+            {
+                Id = user.Id,
+                Email = user.Email ?? string.Empty,
+                UserName = user.UserName ?? string.Empty,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                IsActive = user.IsActive,
+                MustChangePassword = user.MustChangePassword,
+                CreatedAt = user.CreatedAt,
+                Roles = roles.ToList(),
+                Claims = claims.Select(c => $"{c.Type}:{c.Value}").ToList()
+            };
+            await _hubContext.Clients.All.SendAsync("UserCreated", userListDto, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR user created gönderim hatası: {ex.Message}");
+        }
+
+        return userDto;
     }
 }
 

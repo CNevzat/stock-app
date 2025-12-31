@@ -1,6 +1,8 @@
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using StockApp.Entities;
+using StockApp.Hub;
 
 namespace StockApp.App.Todo.Command;
 
@@ -18,10 +20,12 @@ public record UpdateTodoCommandResponse(int Id);
 internal class UpdateTodoCommandHandler : IRequestHandler<UpdateTodoCommand, UpdateTodoCommandResponse>
 {
     private readonly ApplicationDbContext _context;
+    private readonly IHubContext<StockHub> _hubContext;
 
-    public UpdateTodoCommandHandler(ApplicationDbContext context)
+    public UpdateTodoCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     public async Task<UpdateTodoCommandResponse> Handle(UpdateTodoCommand request, CancellationToken cancellationToken)
@@ -56,6 +60,26 @@ internal class UpdateTodoCommandHandler : IRequestHandler<UpdateTodoCommand, Upd
         todoItem.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // SignalR ile güncellenmiş todo'yu tüm client'lara gönder
+        try
+        {
+            var todoDetail = new App.Todo.Query.TodoDto
+            {
+                Id = todoItem.Id,
+                Title = todoItem.Title,
+                Description = todoItem.Description,
+                Status = todoItem.Status,
+                Priority = todoItem.Priority,
+                CreatedAt = todoItem.CreatedAt,
+                UpdatedAt = todoItem.UpdatedAt
+            };
+            await _hubContext.Clients.All.SendAsync("TodoUpdated", todoDetail, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR todo updated gönderim hatası: {ex.Message}");
+        }
 
         return new UpdateTodoCommandResponse(todoItem.Id);
     }

@@ -1,11 +1,30 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { stockMovementService } from '../services/stockMovementService'
+import { signalRService } from '../services/signalRService'
 
 export default function StockMovementsPage() {
+  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
   const [isExporting, setIsExporting] = useState(false)
+
+  // SignalR setup
+  useEffect(() => {
+    signalRService.startConnection().catch((error) => {
+      console.error('SignalR bağlantı hatası:', error)
+    })
+
+    const handleStockMovementCreated = () => {
+      queryClient.invalidateQueries({ queryKey: ['stock-movements'] })
+    }
+
+    signalRService.onStockMovementCreated(handleStockMovementCreated)
+
+    return () => {
+      signalRService.offStockMovementCreated(handleStockMovementCreated)
+    }
+  }, [queryClient])
 
   // Fetch stock movements
   const { data: movementsData, isLoading } = useQuery({

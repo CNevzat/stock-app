@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { todoService } from '../services/todoService'
+import { signalRService } from '../services/signalRService'
 
 const STATUS_OPTIONS = [
   { value: 1, label: 'Yapılacak', color: 'bg-gray-100 text-gray-800' },
@@ -34,6 +35,35 @@ export default function TodosPage() {
   useEffect(() => {
     setPage(1)
   }, [activeTab])
+
+  // SignalR setup
+  useEffect(() => {
+    signalRService.startConnection().catch((error) => {
+      console.error('SignalR bağlantı hatası:', error)
+    })
+
+    const handleTodoCreated = () => {
+      queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+    }
+
+    const handleTodoUpdated = () => {
+      queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+    }
+
+    const handleTodoDeleted = () => {
+      queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+    }
+
+    signalRService.onTodoCreated(handleTodoCreated)
+    signalRService.onTodoUpdated(handleTodoUpdated)
+    signalRService.onTodoDeleted(handleTodoDeleted)
+
+    return () => {
+      signalRService.offTodoCreated(handleTodoCreated)
+      signalRService.offTodoUpdated(handleTodoUpdated)
+      signalRService.offTodoDeleted(handleTodoDeleted)
+    }
+  }, [queryClient])
   
   // Tab'a göre status filtresi - Aktif görevler için tamamlanmamış olanları al
   // Backend'den tüm verileri alıp frontend'de filtrelemek yerine, backend'e doğru filter gönderelim

@@ -5,6 +5,9 @@ using StockApp.App.Dashboard.Query;
 using StockApp.Entities;
 using StockApp.Hub;
 using StockApp.App.Product.Query;
+using StockApp.App.StockMovement.Query;
+using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.StockMovement.Command;
 
@@ -24,12 +27,14 @@ internal class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMo
     private readonly ApplicationDbContext _context;
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
+    private readonly ICacheService _cacheService;
 
-    public CreateStockMovementCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator)
+    public CreateStockMovementCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
+        _cacheService = cacheService;
     }
 
     public async Task<CreateStockMovementCommandResponse> Handle(CreateStockMovementCommand request, CancellationToken cancellationToken)
@@ -114,6 +119,9 @@ internal class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMo
 
         await _context.SaveChangesAsync(cancellationToken);
         
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
+        
         // SignalR ile Gerçek zamanlı bildirim gönder
         try
         {
@@ -136,6 +144,41 @@ internal class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMo
         catch (Exception ex)
         {
             Console.WriteLine($"SignalR product updated gönderim hatası: {ex.Message}");
+        }
+
+        // SignalR ile yeni stok hareketini tüm client'lara gönder
+        try
+        {
+            var stockMovementDetail = await _context.StockMovements
+                .Include(sm => sm.Product)
+                .Include(sm => sm.Category)
+                .Where(sm => sm.Id == stockMovement.Id)
+                .Select(sm => new StockMovementDto
+                {
+                    Id = sm.Id,
+                    ProductId = sm.ProductId,
+                    ProductName = sm.Product.Name,
+                    CategoryId = sm.CategoryId,
+                    CategoryName = sm.Category.Name,
+                    Type = sm.Type,
+                    Quantity = sm.Quantity,
+                    UnitPrice = sm.UnitPrice,
+                    TotalValue = sm.UnitPrice * sm.Quantity,
+                    Description = sm.Description,
+                    CreatedAt = sm.CreatedAt,
+                    CurrentStockQuantity = sm.Product.StockQuantity,
+                    LowStockThreshold = sm.Product.LowStockThreshold
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (stockMovementDetail != null)
+            {
+                await _hubContext.Clients.All.SendAsync("StockMovementCreated", stockMovementDetail, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR stock movement created gönderim hatası: {ex.Message}");
         }
 
         return new CreateStockMovementCommandResponse(stockMovement.Id);

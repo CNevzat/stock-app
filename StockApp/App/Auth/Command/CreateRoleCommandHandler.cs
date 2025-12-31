@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using StockApp.Common.Models;
 using StockApp.Services;
+using StockApp.Hub;
 
 namespace StockApp.App.Auth.Command;
 
@@ -9,11 +11,13 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, RoleD
 {
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly RolePermissionService _rolePermissionService;
+    private readonly IHubContext<StockHub> _hubContext;
 
-    public CreateRoleCommandHandler(RoleManager<IdentityRole> roleManager, RolePermissionService rolePermissionService)
+    public CreateRoleCommandHandler(RoleManager<IdentityRole> roleManager, RolePermissionService rolePermissionService, IHubContext<StockHub> hubContext)
     {
         _roleManager = roleManager;
         _rolePermissionService = rolePermissionService;
+        _hubContext = hubContext;
     }
 
     public async Task<RoleDto> Handle(CreateRoleCommand request, CancellationToken cancellationToken)
@@ -52,7 +56,7 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, RoleD
         // Get all claims for the role
         var allClaims = await _roleManager.GetClaimsAsync(role);
 
-        return new RoleDto
+        var roleDto = new RoleDto
         {
             Id = role.Id,
             Name = role.Name ?? string.Empty,
@@ -62,6 +66,18 @@ public class CreateRoleCommandHandler : IRequestHandler<CreateRoleCommand, RoleD
                 Value = c.Value
             }).ToList()
         };
+
+        // SignalR ile yeni rolü tüm client'lara gönder
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("RoleCreated", roleDto, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR role created gönderim hatası: {ex.Message}");
+        }
+
+        return roleDto;
     }
 }
 

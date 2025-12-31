@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.IdentityModel.Tokens;
 using StockApp.Entities;
 using StockApp.Services;
@@ -230,6 +232,22 @@ public static class DependencyInjection
             cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly());
         });
 
+        // Configure Redis Cache
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrEmpty(redisConnectionString))
+        {
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = redisConnectionString;
+                options.InstanceName = "StockApp:"; // Key prefix
+            });
+        }
+        else
+        {
+            // Redis yoksa in-memory cache kullan (development için)
+            services.AddDistributedMemoryCache();
+        }
+
         // Register application services
         services.AddScoped<IMarkdownService, MarkdownService>();
         services.AddScoped<IPdfService, PdfService>();
@@ -239,6 +257,7 @@ public static class DependencyInjection
         services.AddScoped<IGeminiIntentClassifier, GeminiIntentClassifier>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<RolePermissionService>();
+        services.AddScoped<ICacheService, CacheService>();
 
         services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
         services.AddScoped<IGeminiService, GeminiService>();

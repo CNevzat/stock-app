@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using StockApp.App.Dashboard.Query;
 using StockApp.Hub;
 using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.Product.Command;
 
@@ -24,13 +25,15 @@ internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductComman
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly IImageService _imageService;
+    private readonly ICacheService _cacheService;
 
-    public DeleteProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, IImageService imageService)
+    public DeleteProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, IImageService imageService, ICacheService cacheService)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _imageService = imageService;
+        _cacheService = cacheService;
     }
 
     public async Task<DeleteProductCommandResponse> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
@@ -71,6 +74,9 @@ internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductComman
         await _context.SaveChangesAsync(cancellationToken);
 
         var deletedProductId = product.Id;
+
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

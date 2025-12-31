@@ -1,17 +1,21 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using StockApp.Common.Models;
 using StockApp.Entities;
+using StockApp.Hub;
 
 namespace StockApp.App.Auth.Command;
 
 public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserListDto>
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IHubContext<StockHub> _hubContext;
 
-    public UpdateUserCommandHandler(UserManager<ApplicationUser> userManager)
+    public UpdateUserCommandHandler(UserManager<ApplicationUser> userManager, IHubContext<StockHub> hubContext)
     {
         _userManager = userManager;
+        _hubContext = hubContext;
     }
 
     public async Task<UserListDto> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
@@ -79,7 +83,7 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserL
         var updatedRoles = await _userManager.GetRolesAsync(user);
         var updatedClaims = await _userManager.GetClaimsAsync(user);
 
-        return new UserListDto
+        var userListDto = new UserListDto
         {
             Id = user.Id,
             Email = user.Email ?? string.Empty,
@@ -92,6 +96,18 @@ public class UpdateUserCommandHandler : IRequestHandler<UpdateUserCommand, UserL
             Roles = updatedRoles.ToList(),
             Claims = updatedClaims.Select(c => $"{c.Type}:{c.Value}").ToList()
         };
+
+        // SignalR ile güncellenmiş kullanıcıyı tüm client'lara gönder
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("UserUpdated", userListDto, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR user updated gönderim hatası: {ex.Message}");
+        }
+
+        return userListDto;
     }
 }
 

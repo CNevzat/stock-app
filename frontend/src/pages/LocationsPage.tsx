@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { locationService, type CreateLocationCommand, type UpdateLocationCommand, type LocationDto } from '../services/locationService'
+import { signalRService } from '../services/signalRService'
 
 export default function LocationsPage() {
   const queryClient = useQueryClient()
@@ -44,6 +45,35 @@ export default function LocationsPage() {
     queryKey: ['locations', page, pageSize, searchTerm],
     queryFn: () => locationService.getAll({ pageNumber: page, pageSize, searchTerm: searchTerm || undefined }),
   })
+
+  // SignalR setup
+  useEffect(() => {
+    signalRService.startConnection().catch((error) => {
+      console.error('SignalR bağlantı hatası:', error)
+    })
+
+    const handleLocationCreated = (location: LocationDto) => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] })
+    }
+
+    const handleLocationUpdated = (location: LocationDto) => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] })
+    }
+
+    const handleLocationDeleted = (locationId: number) => {
+      queryClient.invalidateQueries({ queryKey: ['locations'] })
+    }
+
+    signalRService.onLocationCreated(handleLocationCreated)
+    signalRService.onLocationUpdated(handleLocationUpdated)
+    signalRService.onLocationDeleted(handleLocationDeleted)
+
+    return () => {
+      signalRService.offLocationCreated(handleLocationCreated)
+      signalRService.offLocationUpdated(handleLocationUpdated)
+      signalRService.offLocationDeleted(handleLocationDeleted)
+    }
+  }, [queryClient])
 
   // Create mutation
   const createMutation = useMutation({

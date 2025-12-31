@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import type { RoleDto, ClaimDto } from '../services/authService';
+import { signalRService } from '../services/signalRService';
 
 // Yetki kategorileri ve yetkiler
 interface Permission {
@@ -192,6 +193,35 @@ export default function RolesPage() {
 
   const token = authService.getToken() || '';
   const currentUser = authService.getUser();
+
+  // SignalR setup
+  useEffect(() => {
+    signalRService.startConnection().catch((error) => {
+      console.error('SignalR bağlantı hatası:', error);
+    });
+
+    const handleRoleCreated = () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    };
+
+    const handleRoleUpdated = () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    };
+
+    const handleRoleDeleted = () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+    };
+
+    signalRService.onRoleCreated(handleRoleCreated);
+    signalRService.onRoleUpdated(handleRoleUpdated);
+    signalRService.onRoleDeleted(handleRoleDeleted);
+
+    return () => {
+      signalRService.offRoleCreated(handleRoleCreated);
+      signalRService.offRoleUpdated(handleRoleUpdated);
+      signalRService.offRoleDeleted(handleRoleDeleted);
+    };
+  }, [queryClient]);
 
   // Check permissions
   const canView = currentUser?.roles ? (currentUser.roles.includes('Admin') || currentUser.roles.includes('Manager')) : false;

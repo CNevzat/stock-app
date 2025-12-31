@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import type { UserListDto } from '../services/authService';
+import { signalRService } from '../services/signalRService';
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -20,6 +21,35 @@ export default function UsersPage() {
   });
 
   const token = authService.getToken() || '';
+
+  // SignalR setup
+  useEffect(() => {
+    signalRService.startConnection().catch((error) => {
+      console.error('SignalR bağlantı hatası:', error);
+    });
+
+    const handleUserCreated = () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    };
+
+    const handleUserUpdated = () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    };
+
+    const handleUserDeleted = () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    };
+
+    signalRService.onUserCreated(handleUserCreated);
+    signalRService.onUserUpdated(handleUserUpdated);
+    signalRService.onUserDeleted(handleUserDeleted);
+
+    return () => {
+      signalRService.offUserCreated(handleUserCreated);
+      signalRService.offUserUpdated(handleUserUpdated);
+      signalRService.offUserDeleted(handleUserDeleted);
+    };
+  }, [queryClient]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

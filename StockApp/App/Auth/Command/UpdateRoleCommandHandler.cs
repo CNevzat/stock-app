@@ -1,7 +1,9 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using StockApp.Common.Models;
 using StockApp.Services;
+using StockApp.Hub;
 
 namespace StockApp.App.Auth.Command;
 
@@ -9,11 +11,13 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, RoleD
 {
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly RolePermissionService _rolePermissionService;
+    private readonly IHubContext<StockHub> _hubContext;
 
-    public UpdateRoleCommandHandler(RoleManager<IdentityRole> roleManager, RolePermissionService rolePermissionService)
+    public UpdateRoleCommandHandler(RoleManager<IdentityRole> roleManager, RolePermissionService rolePermissionService, IHubContext<StockHub> hubContext)
     {
         _roleManager = roleManager;
         _rolePermissionService = rolePermissionService;
+        _hubContext = hubContext;
     }
 
     public async Task<RoleDto> Handle(UpdateRoleCommand request, CancellationToken cancellationToken)
@@ -121,7 +125,7 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, RoleD
         // Get updated role with claims
         var updatedClaims = await _roleManager.GetClaimsAsync(role);
 
-        return new RoleDto
+        var roleDto = new RoleDto
         {
             Id = role.Id,
             Name = role.Name ?? string.Empty,
@@ -131,6 +135,18 @@ public class UpdateRoleCommandHandler : IRequestHandler<UpdateRoleCommand, RoleD
                 Value = c.Value
             }).ToList()
         };
+
+        // SignalR ile güncellenmiş rolü tüm client'lara gönder
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("RoleUpdated", roleDto, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR role updated gönderim hatası: {ex.Message}");
+        }
+
+        return roleDto;
     }
 }
 

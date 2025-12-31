@@ -2,7 +2,10 @@ using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using StockApp.App.Dashboard.Query;
+using StockApp.App.Location.Query;
 using StockApp.Hub;
+using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.Location.Command;
 
@@ -23,12 +26,14 @@ internal class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComm
     private readonly ApplicationDbContext _context;
     private readonly IMediator _mediator;
     private readonly IHubContext<StockHub> _hubContext;
+    private readonly ICacheService _cacheService;
 
-    public UpdateLocationCommandHandler(ApplicationDbContext context, IMediator mediator, IHubContext<StockHub> hubContext)
+    public UpdateLocationCommandHandler(ApplicationDbContext context, IMediator mediator, IHubContext<StockHub> hubContext, ICacheService cacheService)
     {
         _context = context;
         _mediator = mediator;
         _hubContext = hubContext;
+        _cacheService = cacheService;
     }
 
     public async Task<UpdateLocationCommandResponse> Handle(UpdateLocationCommand request, CancellationToken cancellationToken)
@@ -56,6 +61,9 @@ internal class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComm
         _context.Locations.Update(location);
         await _context.SaveChangesAsync(cancellationToken);
 
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
+
         // SignalR ile dashboard stats gönder
         try
         {
@@ -65,6 +73,20 @@ internal class UpdateLocationCommandHandler : IRequestHandler<UpdateLocationComm
         catch (Exception ex)
         {
             Console.WriteLine($"SignalR gönderim hatası: {ex.Message}");
+        }
+
+        // SignalR ile güncellenmiş lokasyonu tüm client'lara gönder
+        try
+        {
+            var locationDetail = await _mediator.Send(new App.Location.Query.GetLocationByIdQuery { Id = location.Id }, cancellationToken);
+            if (locationDetail != null)
+            {
+                await _hubContext.Clients.All.SendAsync("LocationUpdated", locationDetail, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR location updated gönderim hatası: {ex.Message}");
         }
 
         return new UpdateLocationCommandResponse

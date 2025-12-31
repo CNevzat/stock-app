@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using StockApp.App.Dashboard.Query;
 using StockApp.App.ProductAttribute.Query;
 using StockApp.Hub;
+using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.ProductAttribute.Command;
 
@@ -24,12 +26,14 @@ internal class UpdateProductAttributeCommandHandler : IRequestHandler<UpdateProd
     private readonly ApplicationDbContext _context;
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
+    private readonly ICacheService _cacheService;
 
-    public UpdateProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator)
+    public UpdateProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
+        _cacheService = cacheService;
     }
 
     public async Task<UpdateProductAttributeCommandResponse> Handle(UpdateProductAttributeCommand request, CancellationToken cancellationToken)
@@ -55,6 +59,9 @@ internal class UpdateProductAttributeCommandHandler : IRequestHandler<UpdateProd
 
         _context.ProductAttributes.Update(productAttribute);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

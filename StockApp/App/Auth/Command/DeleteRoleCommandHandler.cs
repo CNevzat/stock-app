@@ -1,5 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
+using StockApp.Hub;
 
 namespace StockApp.App.Auth.Command;
 
@@ -7,13 +9,16 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand>
 {
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly UserManager<StockApp.Entities.ApplicationUser> _userManager;
+    private readonly IHubContext<StockHub> _hubContext;
 
     public DeleteRoleCommandHandler(
         RoleManager<IdentityRole> roleManager,
-        UserManager<StockApp.Entities.ApplicationUser> userManager)
+        UserManager<StockApp.Entities.ApplicationUser> userManager,
+        IHubContext<StockHub> hubContext)
     {
         _roleManager = roleManager;
         _userManager = userManager;
+        _hubContext = hubContext;
     }
 
     public async Task Handle(DeleteRoleCommand request, CancellationToken cancellationToken)
@@ -53,11 +58,22 @@ public class DeleteRoleCommandHandler : IRequestHandler<DeleteRoleCommand>
         }
 
         // Delete the role
+        var deletedRoleId = role.Id;
         var result = await _roleManager.DeleteAsync(role);
         if (!result.Succeeded)
         {
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
             throw new InvalidOperationException($"Failed to delete role: {errors}");
+        }
+
+        // SignalR ile silinen rol ID'sini tüm client'lara gönder
+        try
+        {
+            await _hubContext.Clients.All.SendAsync("RoleDeleted", deletedRoleId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"SignalR role deleted gönderim hatası: {ex.Message}");
         }
     }
 }

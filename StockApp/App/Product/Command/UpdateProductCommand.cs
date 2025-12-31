@@ -6,6 +6,7 @@ using StockApp.App.Product.Query;
 using StockApp.Hub;
 using StockApp.Services;
 using StockApp.Entities;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.Product.Command;
 
@@ -34,13 +35,15 @@ internal class UpdateProductCommandHandler : IRequestHandler<UpdateProductComman
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly IImageService _imageService;
+    private readonly ICacheService _cacheService;
 
-    public UpdateProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, IImageService imageService)
+    public UpdateProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, IImageService imageService, ICacheService cacheService)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _imageService = imageService;
+        _cacheService = cacheService;
     }
 
     public async Task<UpdateProductCommandResponse> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
@@ -151,6 +154,9 @@ internal class UpdateProductCommandHandler : IRequestHandler<UpdateProductComman
         }
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

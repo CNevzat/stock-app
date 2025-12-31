@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.SignalR;
 using StockApp.App.Dashboard.Query;
 using StockApp.App.ProductAttribute.Query;
 using StockApp.Hub;
+using StockApp.Services;
+using StockApp.Common.Constants;
 
 namespace StockApp.App.ProductAttribute.Command;
 
@@ -23,12 +25,14 @@ internal class CreateProductAttributeCommandHandler : IRequestHandler<CreateProd
     private readonly ApplicationDbContext _context;
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
+    private readonly ICacheService _cacheService;
 
-    public CreateProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator)
+    public CreateProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
+        _cacheService = cacheService;
     }
 
     public async Task<CreateProductAttributeCommandResponse> Handle(CreateProductAttributeCommand request, CancellationToken cancellationToken)
@@ -43,6 +47,9 @@ internal class CreateProductAttributeCommandHandler : IRequestHandler<CreateProd
 
         _context.ProductAttributes.Add(productAttribute);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Cache'i invalidate et (dashboard stats değişti)
+        await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try
