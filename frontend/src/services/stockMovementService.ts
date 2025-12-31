@@ -19,16 +19,23 @@ export const stockMovementService = {
     productId?: number
     categoryId?: number
     type?: number
+    searchTerm?: string
+    startDate?: string
+    endDate?: string
   }) => {
     const API_BASE_URL = getApiBaseUrl();
+    const searchParams = new URLSearchParams();
+    if (params.pageNumber) searchParams.append('pageNumber', params.pageNumber.toString());
+    if (params.pageSize) searchParams.append('pageSize', params.pageSize.toString());
+    if (params.productId) searchParams.append('productId', params.productId.toString());
+    if (params.categoryId) searchParams.append('categoryId', params.categoryId.toString());
+    if (params.type) searchParams.append('type', params.type.toString());
+    if (params.searchTerm) searchParams.append('searchTerm', params.searchTerm);
+    if (params.startDate) searchParams.append('startDate', params.startDate);
+    if (params.endDate) searchParams.append('endDate', params.endDate);
+    
     const response = await fetch(
-      `${API_BASE_URL}/api/stock-movements?${new URLSearchParams({
-        ...(params.pageNumber && { pageNumber: params.pageNumber.toString() }),
-        ...(params.pageSize && { pageSize: params.pageSize.toString() }),
-        ...(params.productId && { productId: params.productId.toString() }),
-        ...(params.categoryId && { categoryId: params.categoryId.toString() }),
-        ...(params.type && { type: params.type.toString() }),
-      })}`,
+      `${API_BASE_URL}/api/stock-movements?${searchParams.toString()}`,
       {
         headers: getAuthHeaders(),
       }

@@ -24,13 +24,20 @@ internal class DeleteProductAttributeCommandHandler : IRequestHandler<DeleteProd
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public DeleteProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
+    public DeleteProductAttributeCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<DeleteProductAttributeCommandResponse> Handle(DeleteProductAttributeCommand request, CancellationToken cancellationToken)
@@ -60,6 +67,19 @@ internal class DeleteProductAttributeCommandHandler : IRequestHandler<DeleteProd
         catch (Exception ex)
         {
             Console.WriteLine($"SignalR gönderim hatası: {ex.Message}");
+        }
+
+        // Elasticsearch'ten sil
+        if (_elasticsearchService != null)
+        {
+            try
+            {
+                await _elasticsearchService.DeleteProductAttributeAsync(deletedAttributeId, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Elasticsearch product attribute delete hatası: {ex.Message}");
+            }
         }
 
         // SignalR ile silinen öznitelik ID'sini tüm client'lara gönder

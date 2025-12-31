@@ -1,10 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using StockApp.App.Dashboard.Query;
 using StockApp.App.ProductAttribute.Query;
 using StockApp.Hub;
 using StockApp.Services;
 using StockApp.Common.Constants;
+using ProductAttributeDto = StockApp.App.ProductAttribute.Query.ProductAttributeDto;
 
 namespace StockApp.App.ProductAttribute.Command;
 
@@ -26,13 +28,20 @@ internal class CreateProductAttributeCommandHandler : IRequestHandler<CreateProd
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public CreateProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
+    public CreateProductAttributeCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<CreateProductAttributeCommandResponse> Handle(CreateProductAttributeCommand request, CancellationToken cancellationToken)
@@ -68,6 +77,30 @@ internal class CreateProductAttributeCommandHandler : IRequestHandler<CreateProd
             var attributeDetail = await _mediator.Send(new GetProductAttributeByIdQuery { Id = productAttribute.Id }, cancellationToken);
             if (attributeDetail != null)
             {
+                // Elasticsearch'e index et
+                if (_elasticsearchService != null)
+                {
+                    // Entity'den ProductAttributeDto oluştur
+                    var productAttributeEntity = await _context.ProductAttributes
+                        .Include(pa => pa.Product)
+                        .FirstOrDefaultAsync(pa => pa.Id == productAttribute.Id, cancellationToken);
+                    
+                    if (productAttributeEntity != null)
+                    {
+                        var productAttributeDto = new ProductAttributeDto
+                        {
+                            Id = productAttributeEntity.Id,
+                            ProductId = productAttributeEntity.ProductId,
+                            ProductName = productAttributeEntity.Product.Name,
+                            Key = productAttributeEntity.Key,
+                            Value = productAttributeEntity.Value,
+                            CreatedAt = productAttributeEntity.CreatedAt,
+                            UpdatedAt = productAttributeEntity.UpdatedAt
+                        };
+                        await _elasticsearchService.IndexProductAttributeAsync(productAttributeDto, cancellationToken);
+                    }
+                }
+
                 await _hubContext.Clients.All.SendAsync("ProductAttributeCreated", attributeDetail, cancellationToken);
             }
         }

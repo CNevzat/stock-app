@@ -7,6 +7,7 @@ import { locationService } from '../services/locationService'
 import { stockMovementService } from '../services/stockMovementService'
 import { productAttributeService } from '../services/productAttributeService'
 import { signalRService } from '../services/signalRService'
+import { TechnologyInfo } from '../components/TechnologyInfo'
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts'
 
@@ -41,6 +42,7 @@ export default function ProductsPage() {
   const [showLocationDropdownInModal, setShowLocationDropdownInModal] = useState(false)
   const [locationSearchInputInModal, setLocationSearchInputInModal] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const isTypingRef = useRef(false)
 
   // URL parametrelerinden categoryId ve locationId'yi oku
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function ProductsPage() {
     }
   }, [searchParams])
 
-  // Debounce search input - Preserve focus and cursor position
+  // Debounce search input - Preserve focus during debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       const input = searchInputRef.current
@@ -64,17 +66,21 @@ export default function ProductsPage() {
       setSearchTerm(searchInput)
       setPage((prevPage) => prevPage !== 1 ? 1 : prevPage)
       
-      // Restore focus and cursor position if input was focused
+      // Restore focus after state update if input was focused
       if (wasFocused && input) {
-        // Use requestAnimationFrame to ensure DOM is updated
+        // Use requestAnimationFrame + setTimeout to ensure it runs after React's render cycle
         requestAnimationFrame(() => {
-          input.focus()
-          if (cursorPosition !== null && cursorPosition <= (input.value?.length ?? 0)) {
-            input.setSelectionRange(cursorPosition, cursorPosition)
-          }
+          setTimeout(() => {
+            if (input && document.body.contains(input)) {
+              input.focus()
+              if (cursorPosition !== null && cursorPosition <= (input.value?.length ?? 0)) {
+                input.setSelectionRange(cursorPosition, cursorPosition)
+              }
+            }
+          }, 0)
         })
       }
-    }, 800) // Increased debounce time to 800ms for better UX
+    }, 800) // 800ms debounce
 
     return () => clearTimeout(timer)
   }, [searchInput])
@@ -169,7 +175,7 @@ export default function ProductsPage() {
   const [isExporting, setIsExporting] = useState(false)
 
   // Fetch products
-  const { data: productsData, isLoading } = useQuery({
+  const { data: productsData, isLoading, isFetching } = useQuery({
     queryKey: ['products', page, pageSize, searchTerm, categoryFilter, locationFilter],
     queryFn: () =>
       productService.getAll({
@@ -180,6 +186,25 @@ export default function ProductsPage() {
         locationId: locationFilter,
       }),
   })
+
+  // Preserve focus during and after query - Keep cursor in input at all times during search
+  useEffect(() => {
+    const input = searchInputRef.current
+    if (input && isTypingRef.current) {
+      // User is typing, maintain focus throughout query lifecycle
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (input && document.body.contains(input) && isTypingRef.current) {
+            const cursorPosition = input.selectionStart ?? input.value.length
+            input.focus()
+            if (cursorPosition <= input.value.length) {
+              input.setSelectionRange(cursorPosition, cursorPosition)
+            }
+          }
+        }, 0)
+      })
+    }
+  }, [isFetching, productsData])
 
   // Fetch categories for dropdown
   const { data: categoriesData } = useQuery({
@@ -456,7 +481,17 @@ export default function ProductsPage() {
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-semibold text-gray-900">Ürünler</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-semibold text-gray-900">Ürünler</h1>
+            <TechnologyInfo
+              technologies={[
+                'Redis Cache (60s TTL) - Hızlı veri erişimi',
+                'Elasticsearch - Gelişmiş arama (fuzzy, case-insensitive)',
+                'SignalR - Real-time güncellemeler'
+              ]}
+              description="Arama sonuçları Redis'te cache'lenir, Elasticsearch ile hızlı ve akıllı arama yapılır."
+            />
+          </div>
           <p className="mt-2 text-sm text-gray-700">
             Stokta bulunan tüm ürünlerin listesi.
           </p>
@@ -503,7 +538,37 @@ export default function ProductsPage() {
           type="text"
           placeholder="Ürün, stok kodu, açıklama veya lokasyon ara..."
           value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          onChange={(e) => {
+            isTypingRef.current = true
+            setSearchInput(e.target.value)
+          }}
+          onFocus={() => {
+            isTypingRef.current = true
+          }}
+          onBlur={(e) => {
+            // Keep focus during query - only allow blur if query is not running
+            if (isFetching) {
+              setTimeout(() => {
+                if (searchInputRef.current && isTypingRef.current) {
+                  searchInputRef.current.focus()
+                }
+              }, 0)
+            } else {
+              // After query completes, allow blur but restore if user is still typing
+              setTimeout(() => {
+                if (document.activeElement !== searchInputRef.current && isTypingRef.current) {
+                  const wasTyping = isTypingRef.current
+                  // Reset after a delay to allow user to click elsewhere if they want
+                  setTimeout(() => {
+                    isTypingRef.current = false
+                  }, 200)
+                  if (wasTyping && searchInputRef.current) {
+                    searchInputRef.current.focus()
+                  }
+                }
+              }, 50)
+            }
+          }}
           className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
         />
         <select

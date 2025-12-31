@@ -8,3 +8,4 @@ public class UpdateRoleCommand : IRequest<RoleDto>
     public UpdateRoleRequest Request { get; set; } = null!;
 }
 
+

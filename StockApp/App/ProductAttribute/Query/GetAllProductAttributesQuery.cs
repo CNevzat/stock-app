@@ -24,7 +24,9 @@ internal class GetAllProductAttributesQueryHandler : IRequestHandler<GetAllProdu
                 ProductId = pa.ProductId,
                 ProductName = pa.Product.Name,
                 Key = pa.Key,
-                Value = pa.Value
+                Value = pa.Value,
+                CreatedAt = pa.CreatedAt,
+                UpdatedAt = pa.UpdatedAt
             })
             .OrderBy(pa => pa.ProductName)
             .ThenBy(pa => pa.Key)

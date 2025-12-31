@@ -1,8 +1,8 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using StockApp.Common.Extensions;
+using Microsoft.Extensions.Logging;
 using StockApp.Common.Models;
-using System.Globalization;
+using StockApp.Common.Constants;
+using StockApp.Services;
 
 namespace StockApp.App.ProductAttribute.Query;
 
@@ -27,72 +27,59 @@ public record ProductAttributeDto
 
 internal class GetProductAttributesQueryHandler : IRequestHandler<GetProductAttributesQuery, PaginatedList<ProductAttributeDto>>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IElasticsearchService _elasticsearchService;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<GetProductAttributesQueryHandler> _logger;
 
-    public GetProductAttributesQueryHandler(ApplicationDbContext context)
+    public GetProductAttributesQueryHandler(
+        ICacheService cacheService,
+        ILogger<GetProductAttributesQueryHandler> logger,
+        IElasticsearchService elasticsearchService)
     {
-        _context = context;
+        _cacheService = cacheService;
+        _logger = logger;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<PaginatedList<ProductAttributeDto>> Handle(GetProductAttributesQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.ProductAttributes
-            .Include(pa => pa.Product)
-            .AsQueryable();
-
-        // Filter by product if provided
-        if (request.ProductId.HasValue)
-        {
-            query = query.Where(pa => pa.ProductId == request.ProductId.Value);
-        }
-
-        // First, get all data for filtering (needed for Turkish culture-aware comparison)
-        var allAttributes = await query.Select(pa => new ProductAttributeDto
-        {
-            Id = pa.Id,
-            ProductId = pa.ProductId,
-            ProductName = pa.Product.Name,
-            Key = pa.Key,
-            Value = pa.Value,
-            CreatedAt = pa.CreatedAt,
-            UpdatedAt = pa.UpdatedAt
-        }).ToListAsync(cancellationToken);
-
-        // Apply search filter with Turkish culture-aware comparison (C# side filtering)
-        var filteredAttributes = allAttributes;
-        if (!string.IsNullOrWhiteSpace(request.SearchKey))
-        {
-            var searchKey = request.SearchKey.Trim();
-            
-            // For Turkish characters, use CultureInfo with CompareOptions
-            var turkishCulture = new CultureInfo("tr-TR");
-            var compareOptions = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
-            
-            filteredAttributes = allAttributes.Where(pa =>
-                turkishCulture.CompareInfo.IndexOf(pa.Key, searchKey, compareOptions) >= 0 ||
-                turkishCulture.CompareInfo.IndexOf(pa.Value, searchKey, compareOptions) >= 0 ||
-                turkishCulture.CompareInfo.IndexOf(pa.ProductName, searchKey, compareOptions) >= 0
-            ).ToList();
-        }
-
-        // En son güncellenen veya oluşturulan kayıt en üstte sırala (UpdatedAt varsa onu, yoksa CreatedAt'i kullan)
-        var sortedAttributes = filteredAttributes
-            .OrderByDescending(pa => pa.UpdatedAt ?? pa.CreatedAt)
-            .ToList();
-
-        // Apply pagination manually
-        var totalCount = sortedAttributes.Count;
-        var totalPages = (int)Math.Ceiling(totalCount / (double)request.PageSize);
-        var items = sortedAttributes
-            .Skip((request.PageNumber - 1) * request.PageSize)
-            .Take(request.PageSize)
-            .ToList();
-
-        return new PaginatedList<ProductAttributeDto>(
-            items,
-            totalCount,
+        // Cache key oluştur
+        var cacheKey = CacheKeys.ProductAttributesList(
             request.PageNumber,
-            request.PageSize);
+            request.PageSize,
+            request.ProductId,
+            request.SearchKey);
+
+        // Cache'den oku
+        var cachedResult = await _cacheService.GetAsync<PaginatedList<ProductAttributeDto>>(cacheKey, cancellationToken);
+        if (cachedResult != null)
+        {
+            return cachedResult;
+        }
+
+        // Elasticsearch zorunlu - tüm aramalar Elasticsearch üzerinden yapılır
+        _logger.LogInformation("Using Elasticsearch for product attribute search. SearchKey: {SearchKey}, ProductId: {ProductId}", 
+            request.SearchKey ?? "(all)", request.ProductId);
+
+        var searchResult = await _elasticsearchService.SearchProductAttributesAsync(
+            request.SearchKey ?? string.Empty, // Empty string = MatchAll
+            request.PageNumber,
+            request.PageSize,
+            request.ProductId,
+            cancellationToken);
+
+        var result = new PaginatedList<ProductAttributeDto>(
+            searchResult.Items,
+            (int)searchResult.TotalCount,
+            searchResult.Page,
+            searchResult.PageSize);
+        
+        _logger.LogInformation("Elasticsearch returned {Count} results", searchResult.Items.Count);
+
+        // Cache'e yaz (60 saniye TTL)
+        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromSeconds(60), cancellationToken);
+
+        return result;
     }
 }
 

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import type { RoleDto, ClaimDto } from '../services/authService';
 import { signalRService } from '../services/signalRService';
+import { TechnologyInfo } from '../components/TechnologyInfo';
 
 // Yetki kategorileri ve yetkiler
 interface Permission {

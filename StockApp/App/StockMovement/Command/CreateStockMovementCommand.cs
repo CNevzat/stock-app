@@ -28,13 +28,20 @@ internal class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMo
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public CreateStockMovementCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
+    public CreateStockMovementCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<CreateStockMovementCommandResponse> Handle(CreateStockMovementCommand request, CancellationToken cancellationToken)
@@ -173,6 +180,12 @@ internal class CreateStockMovementCommandHandler : IRequestHandler<CreateStockMo
 
             if (stockMovementDetail != null)
             {
+                // Elasticsearch'e index et
+                if (_elasticsearchService != null)
+                {
+                    await _elasticsearchService.IndexStockMovementAsync(stockMovementDetail, cancellationToken);
+                }
+
                 await _hubContext.Clients.All.SendAsync("StockMovementCreated", stockMovementDetail, cancellationToken);
             }
         }

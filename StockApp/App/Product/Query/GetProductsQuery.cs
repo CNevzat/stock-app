@@ -1,7 +1,8 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using StockApp.Common.Extensions;
+using Microsoft.Extensions.Logging;
 using StockApp.Common.Models;
+using StockApp.Common.Constants;
+using StockApp.Services;
 
 namespace StockApp.App.Product.Query;
 
@@ -35,65 +36,61 @@ public record ProductDto
 
 internal class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, PaginatedList<ProductDto>>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IElasticsearchService _elasticsearchService;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<GetProductsQueryHandler> _logger;
 
-    public GetProductsQueryHandler(ApplicationDbContext context)
+    public GetProductsQueryHandler(
+        ICacheService cacheService,
+        ILogger<GetProductsQueryHandler> logger,
+        IElasticsearchService elasticsearchService)
     {
-        _context = context;
+        _cacheService = cacheService;
+        _logger = logger;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<PaginatedList<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.Products
-            .Include(p => p.Category)
-            .Include(p => p.Location)
-            .AsQueryable();
+        // Cache key oluştur
+        var cacheKey = CacheKeys.ProductsList(
+            request.PageNumber,
+            request.PageSize,
+            request.CategoryId,
+            request.LocationId,
+            request.SearchTerm);
 
-        // Filter by category if provided
-        if (request.CategoryId.HasValue)
+        // Cache'den oku
+        var cachedResult = await _cacheService.GetAsync<PaginatedList<ProductDto>>(cacheKey, cancellationToken);
+        if (cachedResult != null)
         {
-            query = query.Where(p => p.CategoryId == request.CategoryId.Value);
+            return cachedResult;
         }
 
-        // Filter by location if provided
-        if (request.LocationId.HasValue)
-        {
-            query = query.Where(p => p.LocationId == request.LocationId.Value);
-        }
+        // Elasticsearch zorunlu - tüm aramalar Elasticsearch üzerinden yapılır
+        _logger.LogInformation("Using Elasticsearch for product search. SearchTerm: {SearchTerm}, CategoryId: {CategoryId}, LocationId: {LocationId}", 
+            request.SearchTerm ?? "(all)", request.CategoryId, request.LocationId);
 
-        // Search by name, description, stock code, or location name if provided (case-insensitive)
-        if (!string.IsNullOrWhiteSpace(request.SearchTerm))
-        {
-            var searchTermLower = request.SearchTerm.ToLower();
-            query = query.Where(p => 
-                p.Name.ToLower().Contains(searchTermLower) || 
-                p.Description.ToLower().Contains(searchTermLower) ||
-                p.StockCode.ToLower().Contains(searchTermLower) ||
-                (p.Location != null && p.Location.Name.ToLower().Contains(searchTermLower)));
-        }
+        var searchResult = await _elasticsearchService.SearchProductsAsync(
+            request.SearchTerm ?? string.Empty, // Empty string = MatchAll
+            request.PageNumber,
+            request.PageSize,
+            request.CategoryId,
+            request.LocationId,
+            cancellationToken);
 
-        var productQuery = query.Select(p => new ProductDto
-        {
-            Id = p.Id,
-            Name = p.Name,
-            StockCode = p.StockCode,
-            Description = p.Description,
-            StockQuantity = p.StockQuantity,
-            LowStockThreshold = p.LowStockThreshold,
-            CategoryId = p.CategoryId,
-            CategoryName = p.Category.Name,
-            LocationId = p.LocationId,
-            LocationName = p.Location != null ? p.Location.Name : null,
-            ImagePath = p.ImagePath,
-            CreatedAt = p.CreatedAt,
-            UpdatedAt = p.UpdatedAt,
-            CurrentPurchasePrice = p.CurrentPurchasePrice,
-            CurrentSalePrice = p.CurrentSalePrice
-        })
-        // En son güncellenen veya oluşturulan kayıt en üstte (UpdatedAt varsa onu, yoksa CreatedAt'i kullan)
-        .OrderByDescending(p => p.UpdatedAt ?? p.CreatedAt);
+        var result = new PaginatedList<ProductDto>(
+            searchResult.Items,
+            (int)searchResult.TotalCount,
+            searchResult.Page,
+            searchResult.PageSize);
+        
+        _logger.LogInformation("Elasticsearch returned {Count} results", searchResult.Items.Count);
 
-        return await productQuery.ToPaginatedListAsync(request.PageNumber, request.PageSize, cancellationToken);
+        // Cache'e yaz (60 saniye TTL)
+        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromSeconds(60), cancellationToken);
+
+        return result;
     }
 }
 

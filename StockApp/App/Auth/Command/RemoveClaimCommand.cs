@@ -8,3 +8,4 @@ public class RemoveClaimCommand : IRequest
     public string ClaimType { get; set; } = string.Empty;
 }
 
+

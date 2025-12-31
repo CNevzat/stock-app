@@ -2,6 +2,7 @@ using MediatR;
 using StockApp.App.StockMovement.Command;
 using StockApp.App.StockMovement.Query;
 using StockApp.Common.Models;
+using StockApp.Common.Constants;
 using StockApp.Entities;
 using StockApp.Services;
 
@@ -21,7 +22,10 @@ public static class StockMovementEndpoints
             int pageSize = 10,
             int? productId = null,
             int? categoryId = null,
-            StockMovementType? type = null) =>
+            StockMovementType? type = null,
+            string? searchTerm = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null) =>
         {
             var query = new GetStockMovementsQuery
             {
@@ -29,7 +33,10 @@ public static class StockMovementEndpoints
                 PageSize = pageSize,
                 ProductId = productId,
                 CategoryId = categoryId,
-                Type = type
+                Type = type,
+                SearchTerm = searchTerm,
+                StartDate = startDate,
+                EndDate = endDate
             };
             var movements = await mediator.Send(query);
             return Results.Ok(movements);
@@ -72,6 +79,84 @@ public static class StockMovementEndpoints
         })
         .RequireAuthorization("CanViewStockMovements")
         .Produces(StatusCodes.Status200OK);
+
+        #endregion
+
+        #region Reindex to Elasticsearch
+
+        group.MapPost("/reindex-elasticsearch", async (
+            IMediator mediator,
+            IElasticsearchService? elasticsearchService,
+            ICacheService cacheService) =>
+        {
+            if (elasticsearchService == null)
+            {
+                return Results.BadRequest("Elasticsearch service is not available");
+            }
+
+            try
+            {
+                // Önce mevcut index'leri sil (yeni mapping için)
+                await elasticsearchService.DeleteStockMovementsIndexAsync();
+                
+                // Index'leri yeniden oluştur
+                var indicesCreated = await elasticsearchService.EnsureIndicesExistAsync();
+                if (!indicesCreated)
+                {
+                    return Results.Problem(
+                        detail: "Failed to create Elasticsearch indices. Check backend logs for details.",
+                        statusCode: 400,
+                        title: "Index Creation Failed");
+                }
+
+                // Tüm stock movements'leri getir
+                var getAllStockMovementsQuery = new GetAllStockMovementsQuery();
+                var stockMovements = await mediator.Send(getAllStockMovementsQuery);
+
+                // Her stock movement'ı Elasticsearch'e index et
+                int indexedCount = 0;
+                foreach (var stockMovement in stockMovements)
+                {
+                    await elasticsearchService.IndexStockMovementAsync(stockMovement);
+                    indexedCount++;
+                }
+
+                // Cache'i temizle (reindex sonrası eski cache verilerini sil)
+                try
+                {
+                    for (int page = 1; page <= 10; page++)
+                    {
+                        for (int size = 10; size <= 100; size += 10)
+                        {
+                            // Temel kombinasyonlar (tarih filtreleri olmadan)
+                            await cacheService.RemoveAsync(CacheKeys.StockMovementsList(page, size, null));
+                            await cacheService.RemoveAsync(CacheKeys.StockMovementsList(page, size, ""));
+                        }
+                    }
+                }
+                catch
+                {
+                    // Cache temizleme hatası kritik değil, devam et
+                }
+
+                return Results.Ok(new { 
+                    message = "Stock movements reindexed successfully", 
+                    indexedCount = indexedCount,
+                    totalStockMovements = stockMovements.Count 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    detail: ex.Message,
+                    statusCode: 500,
+                    title: "Reindexing failed");
+            }
+        })
+        .RequireAuthorization("CanManageStockMovements")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError);
 
         #endregion
     }

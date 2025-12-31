@@ -25,3 +25,4 @@ export async function handleResponseError(response: Response, defaultMessage: st
   throw new Error(errorMessage);
 }
 
+

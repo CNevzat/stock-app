@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { authService } from '../services/authService';
 import type { UserListDto } from '../services/authService';
 import { signalRService } from '../services/signalRService';
+import { TechnologyInfo } from '../components/TechnologyInfo';
 
 export default function UsersPage() {
   const queryClient = useQueryClient();

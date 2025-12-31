@@ -23,3 +23,4 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   return <>{children}</>;
 }
 
+

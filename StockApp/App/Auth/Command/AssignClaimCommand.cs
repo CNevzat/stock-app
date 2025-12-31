@@ -9,3 +9,4 @@ public class AssignClaimCommand : IRequest
     public string ClaimValue { get; set; } = string.Empty;
 }
 
+

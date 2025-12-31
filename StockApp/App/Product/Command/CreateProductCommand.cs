@@ -33,13 +33,20 @@ internal class CreateProductCommandHandler : IRequestHandler<CreateProductComman
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public CreateProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
+    public CreateProductCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<CreateProductCommandResponse> Handle(CreateProductCommand request, CancellationToken cancellationToken)
@@ -124,6 +131,30 @@ internal class CreateProductCommandHandler : IRequestHandler<CreateProductComman
             var productDetail = await _mediator.Send(new GetProductByIdQuery { Id = product.Id }, cancellationToken);
             if (productDetail != null)
             {
+                // Elasticsearch'e index et
+                if (_elasticsearchService != null)
+                {
+                    var productDto = new ProductDto
+                    {
+                        Id = productDetail.Id,
+                        Name = productDetail.Name,
+                        StockCode = productDetail.StockCode,
+                        Description = productDetail.Description,
+                        StockQuantity = productDetail.StockQuantity,
+                        LowStockThreshold = productDetail.LowStockThreshold,
+                        CategoryId = productDetail.CategoryId,
+                        CategoryName = productDetail.CategoryName,
+                        LocationId = productDetail.LocationId,
+                        LocationName = productDetail.LocationName,
+                        ImagePath = productDetail.ImagePath,
+                        CreatedAt = productDetail.CreatedAt,
+                        UpdatedAt = productDetail.UpdatedAt,
+                        CurrentPurchasePrice = productDetail.CurrentPurchasePrice,
+                        CurrentSalePrice = productDetail.CurrentSalePrice
+                    };
+                    await _elasticsearchService.IndexProductAsync(productDto, cancellationToken);
+                }
+
                 await _hubContext.Clients.All.SendAsync("ProductCreated", productDetail, cancellationToken);
             }
         }

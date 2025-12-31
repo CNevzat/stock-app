@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { categoryService } from '../services/categoryService'
 import { signalRService } from '../services/signalRService'
+import { TechnologyInfo } from '../components/TechnologyInfo'
 import type { CreateCategoryCommand, UpdateCategoryCommand } from '../Api'
 
 export default function CategoriesPage() {
@@ -17,8 +18,9 @@ export default function CategoriesPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [formData, setFormData] = useState({ name: '' })
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const isTypingRef = useRef(false)
 
-  // Debounce search input - Preserve focus and cursor position
+  // Debounce search input - Preserve focus during debounce
   useEffect(() => {
     const timer = setTimeout(() => {
       const input = searchInputRef.current
@@ -28,13 +30,18 @@ export default function CategoriesPage() {
       setSearchTerm(searchInput)
       setPage((prevPage) => prevPage !== 1 ? 1 : prevPage)
       
-      // Restore focus and cursor position if input was focused
+      // Restore focus after state update if input was focused
       if (wasFocused && input) {
+        // Use requestAnimationFrame + setTimeout to ensure it runs after React's render cycle
         requestAnimationFrame(() => {
-          input.focus()
-          if (cursorPosition !== null && cursorPosition <= (input.value?.length ?? 0)) {
-            input.setSelectionRange(cursorPosition, cursorPosition)
-          }
+          setTimeout(() => {
+            if (input && document.body.contains(input)) {
+              input.focus()
+              if (cursorPosition !== null && cursorPosition <= (input.value?.length ?? 0)) {
+                input.setSelectionRange(cursorPosition, cursorPosition)
+              }
+            }
+          }, 0)
         })
       }
     }, 800) // 800ms debounce
@@ -78,10 +85,29 @@ export default function CategoriesPage() {
   }, [queryClient])
 
   // Fetch categories
-  const { data: categoriesData, isLoading } = useQuery({
+  const { data: categoriesData, isLoading, isFetching } = useQuery({
     queryKey: ['categories', page, pageSize, searchTerm],
     queryFn: () => categoryService.getAll({ pageNumber: page, pageSize, searchTerm: searchTerm || undefined }),
   })
+
+  // Preserve focus during and after query - Keep cursor in input at all times during search
+  useEffect(() => {
+    const input = searchInputRef.current
+    if (input && isTypingRef.current) {
+      // User is typing, maintain focus throughout query lifecycle
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (input && document.body.contains(input) && isTypingRef.current) {
+            const cursorPosition = input.selectionStart ?? input.value.length
+            input.focus()
+            if (cursorPosition <= input.value.length) {
+              input.setSelectionRange(cursorPosition, cursorPosition)
+            }
+          }
+        }, 0)
+      })
+    }
+  }, [isFetching, categoriesData])
 
   // Create mutation
   const createMutation = useMutation({
@@ -142,7 +168,16 @@ export default function CategoriesPage() {
     <div className="px-2 sm:px-4 lg:px-6">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-semibold text-gray-900">Kategoriler</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-semibold text-gray-900">Kategoriler</h1>
+            <TechnologyInfo
+              technologies={[
+                'SignalR - Real-time güncellemeler',
+                'Redis Cache - Dashboard istatistikleri invalidate edilir'
+              ]}
+              description="Kategori değişiklikleri tüm client'lara anlık bildirilir ve dashboard cache'i güncellenir."
+            />
+          </div>
           <p className="mt-2 text-sm text-gray-700">
             Stokta bulunan tüm kategorilerin listesi.
           </p>
@@ -167,7 +202,36 @@ export default function CategoriesPage() {
           type="text"
           placeholder="Kategori ara..."
           value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
+          onChange={(e) => {
+            isTypingRef.current = true
+            setSearchInput(e.target.value)
+          }}
+          onFocus={() => {
+            isTypingRef.current = true
+          }}
+          onBlur={(e) => {
+            // Keep focus during query - only allow blur if query is not running
+            if (isFetching) {
+              setTimeout(() => {
+                if (searchInputRef.current && isTypingRef.current) {
+                  searchInputRef.current.focus()
+                }
+              }, 0)
+            } else {
+              // After query completes, allow blur but restore if user is still typing
+              setTimeout(() => {
+                if (document.activeElement !== searchInputRef.current && isTypingRef.current) {
+                  const wasTyping = isTypingRef.current
+                  setTimeout(() => {
+                    isTypingRef.current = false
+                  }, 200)
+                  if (wasTyping && searchInputRef.current) {
+                    searchInputRef.current.focus()
+                  }
+                }
+              }, 50)
+            }
+          }}
           className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
         />
       </div>

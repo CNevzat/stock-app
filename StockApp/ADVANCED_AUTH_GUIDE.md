@@ -131,3 +131,4 @@ dotnet ef database update
 4. Role/Claim management - Dinamik yetki yönetimi
 5. Protected routes - Yetki kontrolü
 
+

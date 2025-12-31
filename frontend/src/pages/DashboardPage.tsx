@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { dashboardService } from '../services/dashboardService'
 import { useSignalR } from '../hooks/useSignalR'
+import { TechnologyInfo } from '../components/TechnologyInfo'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, LabelList, ComposedChart, Line } from 'recharts'
 
 export default function DashboardPage() {
@@ -91,7 +92,17 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="sm:flex sm:items-center sm:justify-between">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <TechnologyInfo
+              technologies={[
+                'Redis Cache (60s TTL) - İstatistikler cache\'lenir',
+                'Cache Invalidation - Veri değiştiğinde otomatik güncelleme',
+                'SignalR - Real-time istatistik güncellemeleri'
+              ]}
+              description="Dashboard istatistikleri Redis'te cache'lenir. Her veri değişikliğinde cache invalidate edilir ve yeni veriler hesaplanır."
+            />
+          </div>
           <p className="mt-2 text-sm text-gray-700">
             Stok yönetim sisteminizin genel durumu ve istatistikleri
           </p>

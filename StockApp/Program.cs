@@ -23,11 +23,12 @@ builder.Services.AddSwaggerGen(options =>
     // Add JWT Authentication to Swagger
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+        Description = "JWT Authorization header using the Bearer scheme. Enter your token in the text input below (without 'Bearer' prefix - it will be added automatically).",
         Name = "Authorization",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-        Scheme = "Bearer"
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT"
     });
 
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
@@ -142,6 +143,21 @@ if (app.Environment.IsDevelopment())
             scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>()
         );
         await seeder.SeedAsync();
+
+        // Elasticsearch index'lerini oluştur
+        var elasticsearchService = scope.ServiceProvider.GetService<IElasticsearchService>();
+        if (elasticsearchService != null)
+        {
+            try
+            {
+                await elasticsearchService.EnsureIndicesExistAsync();
+                Console.WriteLine("Elasticsearch indices created successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Elasticsearch index creation failed: {ex.Message}");
+            }
+        }
     }
 }
 

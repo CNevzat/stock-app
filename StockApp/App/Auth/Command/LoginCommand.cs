@@ -8,3 +8,4 @@ public class LoginCommand : IRequest<AuthResponse>
     public LoginRequest Request { get; set; } = null!;
 }
 
+

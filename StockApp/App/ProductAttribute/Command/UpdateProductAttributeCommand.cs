@@ -6,6 +6,7 @@ using StockApp.App.ProductAttribute.Query;
 using StockApp.Hub;
 using StockApp.Services;
 using StockApp.Common.Constants;
+using ProductAttributeDto = StockApp.App.ProductAttribute.Query.ProductAttributeDto;
 
 namespace StockApp.App.ProductAttribute.Command;
 
@@ -27,13 +28,20 @@ internal class UpdateProductAttributeCommandHandler : IRequestHandler<UpdateProd
     private readonly IHubContext<StockHub> _hubContext;
     private readonly IMediator _mediator;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public UpdateProductAttributeCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, ICacheService cacheService)
+    public UpdateProductAttributeCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<UpdateProductAttributeCommandResponse> Handle(UpdateProductAttributeCommand request, CancellationToken cancellationToken)
@@ -80,6 +88,30 @@ internal class UpdateProductAttributeCommandHandler : IRequestHandler<UpdateProd
             var attributeDetail = await _mediator.Send(new GetProductAttributeByIdQuery { Id = productAttribute.Id }, cancellationToken);
             if (attributeDetail != null)
             {
+                // Elasticsearch'i güncelle
+                if (_elasticsearchService != null)
+                {
+                    // Entity'den ProductAttributeDto oluştur
+                    var productAttributeEntity = await _context.ProductAttributes
+                        .Include(pa => pa.Product)
+                        .FirstOrDefaultAsync(pa => pa.Id == productAttribute.Id, cancellationToken);
+                    
+                    if (productAttributeEntity != null)
+                    {
+                        var productAttributeDto = new ProductAttributeDto
+                        {
+                            Id = productAttributeEntity.Id,
+                            ProductId = productAttributeEntity.ProductId,
+                            ProductName = productAttributeEntity.Product.Name,
+                            Key = productAttributeEntity.Key,
+                            Value = productAttributeEntity.Value,
+                            CreatedAt = productAttributeEntity.CreatedAt,
+                            UpdatedAt = productAttributeEntity.UpdatedAt
+                        };
+                        await _elasticsearchService.UpdateProductAttributeAsync(productAttributeDto, cancellationToken);
+                    }
+                }
+
                 await _hubContext.Clients.All.SendAsync("ProductAttributeUpdated", attributeDetail, cancellationToken);
             }
         }

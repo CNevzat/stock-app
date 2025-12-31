@@ -26,14 +26,22 @@ internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductComman
     private readonly IMediator _mediator;
     private readonly IImageService _imageService;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public DeleteProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, IImageService imageService, ICacheService cacheService)
+    public DeleteProductCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        IImageService imageService, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _imageService = imageService;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<DeleteProductCommandResponse> Handle(DeleteProductCommand request, CancellationToken cancellationToken)
@@ -87,6 +95,19 @@ internal class DeleteProductCommandHandler : IRequestHandler<DeleteProductComman
         catch (Exception ex)
         {
             Console.WriteLine($"SignalR gönderim hatası: {ex.Message}");
+        }
+
+        // Elasticsearch'ten sil
+        if (_elasticsearchService != null)
+        {
+            try
+            {
+                await _elasticsearchService.DeleteProductAsync(deletedProductId, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Elasticsearch product delete hatası: {ex.Message}");
+            }
         }
 
         // SignalR ile silinen ürün ID'sini tüm client'lara gönder

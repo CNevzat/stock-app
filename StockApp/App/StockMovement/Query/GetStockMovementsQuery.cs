@@ -1,8 +1,9 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using StockApp.Common.Extensions;
+using Microsoft.Extensions.Logging;
 using StockApp.Common.Models;
+using StockApp.Common.Constants;
 using StockApp.Entities;
+using StockApp.Services;
 
 namespace StockApp.App.StockMovement.Query;
 
@@ -13,6 +14,9 @@ public record GetStockMovementsQuery : IRequest<PaginatedList<StockMovementDto>>
     public int? ProductId { get; init; }
     public int? CategoryId { get; init; }
     public StockMovementType? Type { get; init; }
+    public string? SearchTerm { get; init; }
+    public DateTime? StartDate { get; init; }
+    public DateTime? EndDate { get; init; }
 }
 
 public record StockMovementDto
@@ -35,59 +39,64 @@ public record StockMovementDto
 
 internal class GetStockMovementsQueryHandler : IRequestHandler<GetStockMovementsQuery, PaginatedList<StockMovementDto>>
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IElasticsearchService _elasticsearchService;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<GetStockMovementsQueryHandler> _logger;
 
-    public GetStockMovementsQueryHandler(ApplicationDbContext context)
+    public GetStockMovementsQueryHandler(
+        ICacheService cacheService,
+        ILogger<GetStockMovementsQueryHandler> logger,
+        IElasticsearchService elasticsearchService)
     {
-        _context = context;
+        _cacheService = cacheService;
+        _logger = logger;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<PaginatedList<StockMovementDto>> Handle(GetStockMovementsQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.StockMovements
-            .Include(sm => sm.Product)
-            .Include(sm => sm.Category)
-            .AsQueryable();
+        // Cache key oluştur
+        var cacheKey = CacheKeys.StockMovementsList(
+            request.PageNumber,
+            request.PageSize,
+            request.SearchTerm,
+            request.StartDate,
+            request.EndDate);
 
-        // Filter by product if provided
-        if (request.ProductId.HasValue)
+        // Cache'den oku
+        var cachedResult = await _cacheService.GetAsync<PaginatedList<StockMovementDto>>(cacheKey, cancellationToken);
+        if (cachedResult != null)
         {
-            query = query.Where(sm => sm.ProductId == request.ProductId.Value);
+            return cachedResult;
         }
 
-        // Filter by category if provided
-        if (request.CategoryId.HasValue)
-        {
-            query = query.Where(sm => sm.CategoryId == request.CategoryId.Value);
-        }
+        // Elasticsearch zorunlu - tüm aramalar Elasticsearch üzerinden yapılır
+        _logger.LogInformation("Using Elasticsearch for stock movement search. SearchTerm: {SearchTerm}, ProductId: {ProductId}, CategoryId: {CategoryId}, Type: {Type}, StartDate: {StartDate}, EndDate: {EndDate}", 
+            request.SearchTerm ?? "(all)", request.ProductId, request.CategoryId, request.Type, request.StartDate, request.EndDate);
 
-        // Filter by type if provided
-        if (request.Type.HasValue)
-        {
-            query = query.Where(sm => sm.Type == request.Type.Value);
-        }
+        var searchResult = await _elasticsearchService.SearchStockMovementsAsync(
+            request.SearchTerm ?? string.Empty, // Empty string = MatchAll
+            request.PageNumber,
+            request.PageSize,
+            request.ProductId,
+            request.CategoryId,
+            request.Type,
+            request.StartDate,
+            request.EndDate,
+            cancellationToken);
 
-        // Order by created date descending
-        query = query.OrderByDescending(sm => sm.CreatedAt);
+        var result = new PaginatedList<StockMovementDto>(
+            searchResult.Items,
+            (int)searchResult.TotalCount,
+            searchResult.Page,
+            searchResult.PageSize);
+        
+        _logger.LogInformation("Elasticsearch returned {Count} results", searchResult.Items.Count);
 
-        var stockMovementQuery = query.Select(sm => new StockMovementDto
-        {
-            Id = sm.Id,
-            ProductId = sm.ProductId,
-            ProductName = sm.Product.Name,
-            CategoryId = sm.CategoryId,
-            CategoryName = sm.Category.Name,
-            Type = sm.Type,
-            Quantity = sm.Quantity,
-            UnitPrice = sm.UnitPrice,
-            TotalValue = sm.UnitPrice * sm.Quantity,
-            Description = sm.Description,
-            CreatedAt = sm.CreatedAt,
-            CurrentStockQuantity = sm.Product.StockQuantity,
-            LowStockThreshold = sm.Product.LowStockThreshold
-        });
+        // Cache'e yaz (60 saniye TTL)
+        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromSeconds(60), cancellationToken);
 
-        return await stockMovementQuery.ToPaginatedListAsync(request.PageNumber, request.PageSize, cancellationToken);
+        return result;
     }
 }
 

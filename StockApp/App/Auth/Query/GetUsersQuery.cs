@@ -8,3 +8,4 @@ public class GetUsersQuery : IRequest<List<UserListDto>>
     // Pagination ve filtreleme eklenebilir
 }
 
+

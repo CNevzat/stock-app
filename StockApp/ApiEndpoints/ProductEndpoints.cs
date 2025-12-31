@@ -4,6 +4,7 @@ using StockApp.App.Product;
 using StockApp.App.Product.Command;
 using StockApp.App.Product.Query;
 using StockApp.Common.Models;
+using StockApp.Common.Constants;
 using StockApp.Services;
 
 namespace StockApp.ApiEndpoints;
@@ -290,6 +291,185 @@ public static class ProductEndpoints
         })
         .RequireAuthorization("CanViewProducts")
         .Produces(StatusCodes.Status200OK);
+
+        #endregion
+
+        #region Reindex to Elasticsearch
+
+        group.MapPost("/reindex-elasticsearch", async (
+            IMediator mediator,
+            IElasticsearchService? elasticsearchService,
+            ICacheService cacheService) =>
+        {
+            if (elasticsearchService == null)
+            {
+                return Results.BadRequest("Elasticsearch service is not available");
+            }
+
+            try
+            {
+                // Önce mevcut products index'ini sil (yeni mapping için)
+                await elasticsearchService.DeleteProductsIndexAsync();
+                
+                // Index'leri yeniden oluştur
+                var indicesCreated = await elasticsearchService.EnsureIndicesExistAsync();
+                if (!indicesCreated)
+                {
+                    // Daha detaylı hata mesajı için log'ları kontrol edin
+                    return Results.Problem(
+                        detail: "Failed to create Elasticsearch indices. Check backend logs for details. Common issues: Turkish analyzer plugins not installed or incorrect analyzer configuration.",
+                        statusCode: 400,
+                        title: "Index Creation Failed");
+                }
+
+                // Tüm ürünleri getir
+                var getAllProductsQuery = new GetAllProductsQuery();
+                var products = await mediator.Send(getAllProductsQuery);
+
+                if (products == null || products.Count == 0)
+                {
+                    return Results.Ok(new { 
+                        message = "No products found in database to index", 
+                        indexedCount = 0,
+                        totalProducts = 0 
+                    });
+                }
+
+                // Her ürünü Elasticsearch'e index et
+                int indexedCount = 0;
+                int failedCount = 0;
+                var errors = new List<string>();
+
+                foreach (var product in products)
+                {
+                    try
+                    {
+                        await elasticsearchService.IndexProductAsync(product);
+                        indexedCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        failedCount++;
+                        errors.Add($"Product {product.Id} ({product.Name}): {ex.Message}");
+                        // Continue with next product
+                    }
+                }
+
+                // Cache'i temizle (reindex sonrası eski cache verilerini sil)
+                // Tüm olası cache key kombinasyonlarını temizle
+                try
+                {
+                    var categories = await mediator.Send(new StockApp.App.Category.Query.GetCategoriesQuery { PageNumber = 1, PageSize = 100 });
+                    var locations = await mediator.Send(new StockApp.App.Location.Query.GetLocationsQuery { PageNumber = 1, PageSize = 100 });
+                    
+                    int clearedCount = 0;
+                    for (int page = 1; page <= 10; page++)
+                    {
+                        for (int size = 10; size <= 100; size += 10)
+                        {
+                            // Temel kombinasyonlar
+                            await cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, null, null));
+                            await cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, null, ""));
+                            clearedCount += 2;
+                            
+                            // Her kategori için
+                            foreach (var cat in categories.Items)
+                            {
+                                await cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, cat.Id, null, null));
+                                await cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, cat.Id, null, ""));
+                                clearedCount += 2;
+                            }
+                            
+                            // Her lokasyon için
+                            foreach (var loc in locations.Items)
+                            {
+                                await cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, loc.Id, null));
+                                await cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, loc.Id, ""));
+                                clearedCount += 2;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Cache temizleme hatası kritik değil, devam et
+                }
+
+                if (failedCount > 0)
+                {
+                    return Results.Ok(new { 
+                        message = $"Reindexing completed with {failedCount} failures", 
+                        indexedCount = indexedCount,
+                        totalProducts = products.Count,
+                        failedCount = failedCount,
+                        errors = errors.Take(10).ToList() // Limit to first 10 errors
+                    });
+                }
+
+                return Results.Ok(new { 
+                    message = "Products reindexed successfully", 
+                    indexedCount = indexedCount,
+                    totalProducts = products.Count 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    detail: ex.Message,
+                    statusCode: 500,
+                    title: "Reindexing failed");
+            }
+        })
+        .RequireAuthorization("CanManageProducts")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError);
+
+        #endregion
+
+        #region Check Elasticsearch Index Status
+
+        group.MapGet("/elasticsearch-status", async (
+            IElasticsearchService? elasticsearchService) =>
+        {
+            if (elasticsearchService == null)
+            {
+                return Results.BadRequest("Elasticsearch service is not available");
+            }
+
+            try
+            {
+                var counts = await elasticsearchService.GetIndexDocumentCountsAsync();
+                
+                // Test search query
+                var testSearch = await elasticsearchService.SearchProductsAsync(string.Empty, 1, 10, null, null);
+                
+                return Results.Ok(new
+                {
+                    message = "Elasticsearch index status",
+                    indices = counts,
+                    totalDocuments = counts.Values.Sum(),
+                    testSearch = new
+                    {
+                        totalCount = testSearch.TotalCount,
+                        itemsCount = testSearch.Items.Count,
+                        page = testSearch.Page,
+                        pageSize = testSearch.PageSize
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    detail: ex.Message + "\n" + ex.StackTrace,
+                    statusCode: 500,
+                    title: "Failed to get index status");
+            }
+        })
+        .RequireAuthorization("CanViewProducts")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError);
 
         #endregion
     }

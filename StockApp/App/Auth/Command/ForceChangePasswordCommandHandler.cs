@@ -39,3 +39,4 @@ public class ForceChangePasswordCommandHandler : IRequestHandler<ForceChangePass
     }
 }
 
+

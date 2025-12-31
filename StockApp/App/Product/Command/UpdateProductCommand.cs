@@ -36,14 +36,22 @@ internal class UpdateProductCommandHandler : IRequestHandler<UpdateProductComman
     private readonly IMediator _mediator;
     private readonly IImageService _imageService;
     private readonly ICacheService _cacheService;
+    private readonly IElasticsearchService? _elasticsearchService;
 
-    public UpdateProductCommandHandler(ApplicationDbContext context, IHubContext<StockHub> hubContext, IMediator mediator, IImageService imageService, ICacheService cacheService)
+    public UpdateProductCommandHandler(
+        ApplicationDbContext context, 
+        IHubContext<StockHub> hubContext, 
+        IMediator mediator, 
+        IImageService imageService, 
+        ICacheService cacheService,
+        IElasticsearchService? elasticsearchService = null)
     {
         _context = context;
         _hubContext = hubContext;
         _mediator = mediator;
         _imageService = imageService;
         _cacheService = cacheService;
+        _elasticsearchService = elasticsearchService;
     }
 
     public async Task<UpdateProductCommandResponse> Handle(UpdateProductCommand request, CancellationToken cancellationToken)
@@ -175,6 +183,30 @@ internal class UpdateProductCommandHandler : IRequestHandler<UpdateProductComman
             var productDetail = await _mediator.Send(new GetProductByIdQuery { Id = product.Id }, cancellationToken);
             if (productDetail != null)
             {
+                // Elasticsearch'i güncelle
+                if (_elasticsearchService != null)
+                {
+                    var productDto = new ProductDto
+                    {
+                        Id = productDetail.Id,
+                        Name = productDetail.Name,
+                        StockCode = productDetail.StockCode,
+                        Description = productDetail.Description,
+                        StockQuantity = productDetail.StockQuantity,
+                        LowStockThreshold = productDetail.LowStockThreshold,
+                        CategoryId = productDetail.CategoryId,
+                        CategoryName = productDetail.CategoryName,
+                        LocationId = productDetail.LocationId,
+                        LocationName = productDetail.LocationName,
+                        ImagePath = productDetail.ImagePath,
+                        CreatedAt = productDetail.CreatedAt,
+                        UpdatedAt = productDetail.UpdatedAt,
+                        CurrentPurchasePrice = productDetail.CurrentPurchasePrice,
+                        CurrentSalePrice = productDetail.CurrentSalePrice
+                    };
+                    await _elasticsearchService.UpdateProductAsync(productDto, cancellationToken);
+                }
+
                 await _hubContext.Clients.All.SendAsync("ProductUpdated", productDetail, cancellationToken);
             }
         }

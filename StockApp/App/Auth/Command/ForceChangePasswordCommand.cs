@@ -8,3 +8,4 @@ public class ForceChangePasswordCommand : IRequest
     public string NewPassword { get; set; } = string.Empty;
 }
 
+

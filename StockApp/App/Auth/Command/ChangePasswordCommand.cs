@@ -9,3 +9,4 @@ public class ChangePasswordCommand : IRequest
     public string NewPassword { get; set; } = string.Empty;
 }
 
+

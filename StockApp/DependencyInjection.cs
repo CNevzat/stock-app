@@ -1,6 +1,9 @@
 using System;
+using System.Linq;
 using System.Reflection;
+using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -81,7 +84,40 @@ public static class DependencyInjection
                 ValidIssuer = jwtOptions.Issuer,
                 ValidAudience = jwtOptions.Audience,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
-                ClockSkew = TimeSpan.Zero // Token expiration'ı tam zamanında kontrol et
+                ClockSkew = TimeSpan.Zero, // Token expiration'ı tam zamanında kontrol et
+                
+                // Role claim mapping - JWT token'daki role claim'lerini doğru şekilde map et
+                RoleClaimType = ClaimTypes.Role,
+                NameClaimType = ClaimTypes.Name
+            };
+            
+            // JWT token'dan role'leri doğru şekilde çıkar
+            options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+            {
+                OnTokenValidated = context =>
+                {
+                    // Role claim'lerini kontrol et ve ekle
+                    var roleClaims = context.Principal?.Claims
+                        .Where(c => c.Type == ClaimTypes.Role)
+                        .ToList();
+                    
+                    if (roleClaims != null && roleClaims.Any())
+                    {
+                        var identity = context.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
+                        if (identity != null)
+                        {
+                            foreach (var roleClaim in roleClaims)
+                            {
+                                if (!identity.HasClaim(ClaimTypes.Role, roleClaim.Value))
+                                {
+                                    identity.AddClaim(new System.Security.Claims.Claim(ClaimTypes.Role, roleClaim.Value));
+                                }
+                            }
+                        }
+                    }
+                    
+                    return Task.CompletedTask;
+                }
             };
         });
 
@@ -258,6 +294,19 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<RolePermissionService>();
         services.AddScoped<ICacheService, CacheService>();
+
+        // Configure Elasticsearch (required for search functionality)
+        var elasticsearchConnectionString = configuration.GetConnectionString("Elasticsearch");
+        if (string.IsNullOrEmpty(elasticsearchConnectionString))
+        {
+            throw new InvalidOperationException("Elasticsearch connection string is required. Please configure 'ConnectionStrings:Elasticsearch' in appsettings.json");
+        }
+        
+        services.Configure<ElasticsearchOptions>(opt =>
+        {
+            opt.ConnectionString = elasticsearchConnectionString;
+        });
+        services.AddScoped<IElasticsearchService, ElasticsearchService>();
 
         services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
         services.AddScoped<IGeminiService, GeminiService>();

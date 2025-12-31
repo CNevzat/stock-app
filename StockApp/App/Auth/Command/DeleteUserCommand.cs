@@ -7,3 +7,4 @@ public class DeleteUserCommand : IRequest
     public string UserId { get; set; } = string.Empty;
 }
 
+

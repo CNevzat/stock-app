@@ -1,13 +1,49 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { stockMovementService } from '../services/stockMovementService'
 import { signalRService } from '../services/signalRService'
+import { TechnologyInfo } from '../components/TechnologyInfo'
 
 export default function StockMovementsPage() {
   const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
   const [isExporting, setIsExporting] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const isTypingRef = useRef(false)
+
+  // Debounce search input - Preserve focus during debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const input = searchInputRef.current
+      const wasFocused = document.activeElement === input
+      const cursorPosition = input?.selectionStart ?? null
+      
+      setSearchTerm(searchInput)
+      setPage((prevPage) => prevPage !== 1 ? 1 : prevPage)
+      
+      // Restore focus after state update if input was focused
+      if (wasFocused && input) {
+        // Use requestAnimationFrame + setTimeout to ensure it runs after React's render cycle
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (input && document.body.contains(input)) {
+              input.focus()
+              if (cursorPosition !== null && cursorPosition <= (input.value?.length ?? 0)) {
+                input.setSelectionRange(cursorPosition, cursorPosition)
+              }
+            }
+          }, 0)
+        })
+      }
+    }, 800) // 800ms debounce
+
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   // SignalR setup
   useEffect(() => {
@@ -27,15 +63,37 @@ export default function StockMovementsPage() {
   }, [queryClient])
 
   // Fetch stock movements
-  const { data: movementsData, isLoading } = useQuery({
-    queryKey: ['stock-movements', page, pageSize],
+  const { data: movementsData, isLoading, isFetching } = useQuery({
+    queryKey: ['stock-movements', page, pageSize, searchTerm, startDate, endDate],
     queryFn: () => {
       return stockMovementService.getAll({
         pageNumber: page,
         pageSize,
+        searchTerm: searchTerm || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       });
     }
   })
+
+  // Preserve focus during and after query - Keep cursor in input at all times during search
+  useEffect(() => {
+    const input = searchInputRef.current
+    if (input && isTypingRef.current) {
+      // User is typing, maintain focus throughout query lifecycle
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (input && document.body.contains(input) && isTypingRef.current) {
+            const cursorPosition = input.selectionStart ?? input.value.length
+            input.focus()
+            if (cursorPosition <= input.value.length) {
+              input.setSelectionRange(cursorPosition, cursorPosition)
+            }
+          }
+        }, 0)
+      })
+    }
+  }, [isFetching, movementsData])
 
   if (isLoading) {
     return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
@@ -45,7 +103,17 @@ export default function StockMovementsPage() {
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-semibold text-gray-900">Stok Hareketleri</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-3xl font-semibold text-gray-900">Stok Hareketleri</h1>
+            <TechnologyInfo
+              technologies={[
+                'Redis Cache (60s TTL) - Hızlı veri erişimi',
+                'Elasticsearch - Gelişmiş arama (ürün, kategori, açıklama)',
+                'SignalR - Real-time güncellemeler'
+              ]}
+              description="Arama sonuçları Redis'te cache'lenir, Elasticsearch ile hızlı arama yapılır."
+            />
+          </div>
           <p className="mt-2 text-sm text-gray-700">
             Tüm stok giriş ve çıkış hareketleri.
           </p>
@@ -71,6 +139,122 @@ export default function StockMovementsPage() {
             {isExporting ? 'Excel Oluşturuluyor...' : 'Excel\'e Aktar'}
           </button>
         </div>
+      </div>
+
+      {/* Search and Filter Bar */}
+      <div className="mt-6 space-y-4">
+        {/* Text Search */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={searchInput}
+            onChange={(e) => {
+              isTypingRef.current = true
+              setSearchInput(e.target.value)
+            }}
+            onFocus={() => {
+              isTypingRef.current = true
+            }}
+            onBlur={(e) => {
+              // Keep focus during query - only allow blur if query is not running
+              if (isFetching) {
+                setTimeout(() => {
+                  if (searchInputRef.current && isTypingRef.current) {
+                    searchInputRef.current.focus()
+                  }
+                }, 0)
+              } else {
+                // After query completes, allow blur but restore if user is still typing
+                setTimeout(() => {
+                  if (document.activeElement !== searchInputRef.current && isTypingRef.current) {
+                    const wasTyping = isTypingRef.current
+                    setTimeout(() => {
+                      isTypingRef.current = false
+                    }, 200)
+                    if (wasTyping && searchInputRef.current) {
+                      searchInputRef.current.focus()
+                    }
+                  }
+                }, 50)
+              }
+            }}
+            placeholder="Ürün, kategori veya açıklama ile ara..."
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+          />
+          {searchInput && (
+            <button
+              onClick={() => {
+                setSearchInput('')
+                setSearchTerm('')
+                setPage(1)
+              }}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            >
+              <svg className="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        {/* Date Range Filter */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 date-input-container">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Başlangıç Tarihi
+            </label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value)
+                if (page !== 1) {
+                  setPage(1)
+                }
+              }}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Bitiş Tarihi
+            </label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value)
+                if (page !== 1) {
+                  setPage(1)
+                }
+              }}
+              min={startDate || undefined}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+        </div>
+
+        {/* Clear Filters Button */}
+        {(startDate || endDate) && (
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setStartDate('')
+                setEndDate('')
+                setPage(1)
+              }}
+              className="text-sm text-gray-600 hover:text-gray-800 underline"
+            >
+              Tarih filtrelerini temizle
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 flow-root">

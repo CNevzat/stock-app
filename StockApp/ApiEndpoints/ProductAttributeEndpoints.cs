@@ -3,6 +3,7 @@ using StockApp.App.ProductAttribute;
 using StockApp.App.ProductAttribute.Command;
 using StockApp.App.ProductAttribute.Query;
 using StockApp.Common.Models;
+using StockApp.Common.Constants;
 using StockApp.Services;
 
 namespace StockApp.ApiEndpoints;
@@ -124,6 +125,96 @@ public static class ProductAttributeEndpoints
         })
         .RequireAuthorization("CanViewProductAttributes")
         .Produces(StatusCodes.Status200OK);
+
+        #endregion
+
+        #region Reindex to Elasticsearch
+
+        group.MapPost("/reindex-elasticsearch", async (
+            IMediator mediator,
+            IElasticsearchService? elasticsearchService,
+            ICacheService cacheService) =>
+        {
+            if (elasticsearchService == null)
+            {
+                return Results.BadRequest("Elasticsearch service is not available");
+            }
+
+            try
+            {
+                // Önce mevcut index'leri sil (yeni mapping için)
+                await elasticsearchService.DeleteProductAttributesIndexAsync();
+                
+                // Index'leri yeniden oluştur
+                var indicesCreated = await elasticsearchService.EnsureIndicesExistAsync();
+                if (!indicesCreated)
+                {
+                    return Results.Problem(
+                        detail: "Failed to create Elasticsearch indices. Check backend logs for details.",
+                        statusCode: 400,
+                        title: "Index Creation Failed");
+                }
+
+                // Tüm product attributes'leri getir
+                var getAllAttributesQuery = new GetAllProductAttributesQuery();
+                var attributes = await mediator.Send(getAllAttributesQuery);
+
+                // Her attribute'u Elasticsearch'e index et
+                int indexedCount = 0;
+                foreach (var attribute in attributes)
+                {
+                    await elasticsearchService.IndexProductAttributeAsync(attribute);
+                    indexedCount++;
+                }
+
+                // Cache'i temizle (reindex sonrası eski cache verilerini sil)
+                try
+                {
+                    var products = await mediator.Send(new StockApp.App.Product.Query.GetAllProductsQuery());
+                    
+                    int clearedCount = 0;
+                    for (int page = 1; page <= 10; page++)
+                    {
+                        for (int size = 10; size <= 100; size += 10)
+                        {
+                            // Temel kombinasyonlar
+                            await cacheService.RemoveAsync(CacheKeys.ProductAttributesList(page, size, null, null));
+                            await cacheService.RemoveAsync(CacheKeys.ProductAttributesList(page, size, null, ""));
+                            clearedCount += 2;
+                            
+                            // Her ürün için
+                            foreach (var product in products)
+                            {
+                                await cacheService.RemoveAsync(CacheKeys.ProductAttributesList(page, size, product.Id, null));
+                                await cacheService.RemoveAsync(CacheKeys.ProductAttributesList(page, size, product.Id, ""));
+                                clearedCount += 2;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Cache temizleme hatası kritik değil, devam et
+                }
+
+                return Results.Ok(new { 
+                    message = "Product attributes reindexed successfully", 
+                    indexedCount = indexedCount,
+                    totalAttributes = attributes.Count 
+                });
+            }
+            catch (Exception ex)
+            {
+                return Results.Problem(
+                    detail: ex.Message,
+                    statusCode: 500,
+                    title: "Reindexing failed");
+            }
+        })
+        .RequireAuthorization("CanManageProductAttributes")
+        .Produces(StatusCodes.Status200OK)
+        .Produces(StatusCodes.Status400BadRequest)
+        .Produces(StatusCodes.Status500InternalServerError);
 
         #endregion
     }
