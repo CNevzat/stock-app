@@ -149,5 +149,9 @@ stockapp.db
 stockapp.db-shm
 stockapp.db-wal
 
+# Configuration files with sensitive data
+StockApp/appsettings.json
+!StockApp/appsettings.example.json
+
 # Test files
 test-requests.http

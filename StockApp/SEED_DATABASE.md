@@ -122,3 +122,8 @@ SELECT * FROM Products;
 
 Seed verilerini değiştirmek için `StockApp/Services/DatabaseSeeder.cs` dosyasını düzenleyin.
 
+
+
+
+
+

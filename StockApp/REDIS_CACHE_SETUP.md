@@ -275,3 +275,8 @@ DEL StockApp:dashboard:stats
 - [.NET Distributed Caching](https://learn.microsoft.com/en-us/aspnet/core/performance/caching/distributed)
 - [Cache-Aside Pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/cache-aside)
 
+
+
+
+
+

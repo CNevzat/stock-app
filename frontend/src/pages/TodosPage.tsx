@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { todoService } from '../services/todoService'
 import { signalRService } from '../services/signalRService'
-import { TechnologyInfo } from '../components/TechnologyInfo'
 
 const STATUS_OPTIONS = [
   { value: 1, label: 'Yapılacak', color: 'bg-gray-100 text-gray-800' },
@@ -18,7 +17,7 @@ const PRIORITY_OPTIONS = [
 
 export default function TodosPage() {
   const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active')
+  const [activeTab, setActiveTab] = useState<'active' | 'completed' | 'calendar'>('active')
   const [page, setPage] = useState(1)
   const [pageSize] = useState(10)
   const [filterPriority, setFilterPriority] = useState<number | undefined>()
@@ -43,17 +42,49 @@ export default function TodosPage() {
       console.error('SignalR bağlantı hatası:', error)
     })
 
-    const handleTodoCreated = () => {
-      queryClient.invalidateQueries({ queryKey: ['todos-all'] })
-    }
+  const handleTodoCreated = (todo: any) => {
+    console.log('[DEBUG_LOG] SignalR: TodoCreated', todo);
+    queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+    queryClient.invalidateQueries({ queryKey: ['todos-calendar'] })
+    
+    // Anlık refetch
+    queryClient.refetchQueries({ queryKey: ['todos-all'] })
+    queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
 
-    const handleTodoUpdated = () => {
-      queryClient.invalidateQueries({ queryKey: ['todos-all'] })
-    }
+    // Race condition için kısa bir süre sonra tekrar dene
+    setTimeout(() => {
+      queryClient.refetchQueries({ queryKey: ['todos-all'] })
+      queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+    }, 1000);
+  }
 
-    const handleTodoDeleted = () => {
-      queryClient.invalidateQueries({ queryKey: ['todos-all'] })
-    }
+  const handleTodoUpdated = (todo: any) => {
+    console.log('[DEBUG_LOG] SignalR: TodoUpdated', todo);
+    queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+    queryClient.invalidateQueries({ queryKey: ['todos-calendar'] })
+    
+    queryClient.refetchQueries({ queryKey: ['todos-all'] })
+    queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+
+    setTimeout(() => {
+      queryClient.refetchQueries({ queryKey: ['todos-all'] })
+      queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+    }, 1000);
+  }
+
+  const handleTodoDeleted = (todoId: number) => {
+    console.log('[DEBUG_LOG] SignalR: TodoDeleted', todoId);
+    queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+    queryClient.invalidateQueries({ queryKey: ['todos-calendar'] })
+    
+    queryClient.refetchQueries({ queryKey: ['todos-all'] })
+    queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+
+    setTimeout(() => {
+      queryClient.refetchQueries({ queryKey: ['todos-all'] })
+      queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+    }, 1000);
+  }
 
     signalRService.onTodoCreated(handleTodoCreated)
     signalRService.onTodoUpdated(handleTodoUpdated)
@@ -72,22 +103,41 @@ export default function TodosPage() {
   
   // Fetch todos - backend'den tüm verileri al
   const { data: todosDataRaw, isLoading } = useQuery({
-    queryKey: ['todos-all', filterPriority, activeTab],
+    queryKey: ['todos-all', filterPriority], // activeTab bağımlılığını kaldırdım
     queryFn: () => {
+      console.log('[DEBUG_LOG] Fetching todos-all');
       return todoService.getAll({
         pageNumber: 1,
         pageSize: 1000, // Tüm görevleri al, frontend'de filtrele
         priority: filterPriority,
       });
     },
-    refetchOnMount: true, // Tab değiştiğinde yeniden fetch
+    refetchOnMount: true,
   })
+
+  const { data: calendarData, refetch: refetchCalendar } = useQuery({
+    queryKey: ['todos-calendar'],
+    queryFn: () => {
+      console.log('[DEBUG_LOG] Fetching todos-calendar');
+      return todoService.getCalendar({});
+    },
+    staleTime: 0, // Her zaman bayat kabul et
+  })
+
+  // Tab değiştiğinde veya sayfa yüklendiğinde takvim verilerini tazele
+  useEffect(() => {
+    if (activeTab === 'calendar') {
+      console.log('[DEBUG_LOG] Tab changed to calendar, refetching...');
+      refetchCalendar();
+    }
+  }, [activeTab, refetchCalendar])
 
   // Frontend'de tab'a göre filtrele ve sırala
   const todosData = todosDataRaw ? {
     ...(todosDataRaw as any),
     items: ((todosDataRaw as any).items || [])
       .filter((todo: any) => {
+        if (activeTab === 'calendar') return false; // Calendar handled separately
         if (activeTab === 'completed') {
           // Tamamlananlar sekmesi: Sadece status === 3 olanlar
           return todo.status === 3
@@ -157,8 +207,13 @@ export default function TodosPage() {
 
   // Toggle complete mutation (checkbox için)
   const toggleCompleteMutation = useMutation({
-    mutationFn: ({ id, isCompleted }: { id: number; isCompleted: boolean }) =>
-      todoService.update(id, { status: isCompleted ? 3 : 1 }),
+    mutationFn: ({ id, isCompleted }: { id: number; isCompleted: boolean }) => {
+      const data: any = { status: isCompleted ? 3 : 1 };
+      // partial update yaptığımız için Title göndermiyoruz.
+      // Backend'de Title null ise sadece gönderilen alanlar (status) güncellenecek.
+      // Backend status değişince CompletedAt'i otomatik set/reset edecek.
+      return todoService.update(id, data);
+    },
     onMutate: async ({ id, isCompleted }) => {
       // Optimistic update - hemen güncelle
       await queryClient.cancelQueries({ queryKey: ['todos-all'] })
@@ -169,7 +224,10 @@ export default function TodosPage() {
         return {
           ...old,
           items: old.items.map((todo: any) =>
-            todo.id === id ? { ...todo, status: isCompleted ? 3 : 1 } : todo
+            todo.id === id ? { 
+              ...todo, 
+              status: isCompleted ? 3 : 1
+            } : todo
           )
         }
       })
@@ -184,6 +242,7 @@ export default function TodosPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['todos-all'] })
+      queryClient.invalidateQueries({ queryKey: ['todos-calendar'] })
     },
   })
 
@@ -196,13 +255,27 @@ export default function TodosPage() {
   })
 
   const resetForm = () => {
-    setFormData({ title: '', description: '', status: 1, priority: 2 })
+    setFormData({
+      title: '',
+      description: '',
+      status: 1,
+      priority: 2,
+    })
     setSelectedTodoId(null)
   }
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault()
-    createMutation.mutate(formData)
+
+    createMutation.mutate(formData, {
+      onSuccess: () => {
+        setIsCreateModalOpen(false)
+        resetForm()
+        // Optimistik güncelleme yerine SignalR'ı beklemeden tazeleyelim
+        queryClient.refetchQueries({ queryKey: ['todos-all'] })
+        queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+      }
+    })
   }
 
   const handleUpdate = (e: React.FormEvent) => {
@@ -211,12 +284,20 @@ export default function TodosPage() {
       updateMutation.mutate({
         id: selectedTodoId,
         data: formData,
+      }, {
+        onSuccess: () => {
+          setIsEditModalOpen(false)
+          resetForm()
+          queryClient.refetchQueries({ queryKey: ['todos-all'] })
+          queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+        }
       })
     }
   }
 
   const openEditModal = (todo: any) => {
     setSelectedTodoId(todo.id)
+    
     setFormData({
       title: todo.title,
       description: todo.description || '',
@@ -302,10 +383,30 @@ export default function TodosPage() {
           >
             Tamamlanan Görevler
           </button>
+          <button
+            onClick={() => {
+              setActiveTab('calendar')
+              setPage(1)
+            }}
+            className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium flex items-center gap-2 ${
+              activeTab === 'calendar'
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            Takvim Görünümü
+          </button>
         </nav>
       </div>
 
-      {/* Filters */}
+      {activeTab === 'calendar' ? (
+        <CalendarView todos={calendarData || []} onEditTodo={openEditModal} />
+      ) : (
+        <>
+          {/* Filters */}
       {activeTab === 'active' && (
         <div className="mt-4 flex gap-4">
           <select
@@ -344,6 +445,12 @@ export default function TodosPage() {
                   <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[200px]">
                     Açıklama
                   </th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                    Oluşturulma
+                  </th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                    Tamamlanma
+                  </th>
                   {activeTab === 'completed' && (
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
                       Durum
@@ -366,7 +473,12 @@ export default function TodosPage() {
                           type="checkbox"
                           checked={false}
                           onChange={(e) => {
-                            toggleCompleteMutation.mutate({ id: todo.id, isCompleted: e.target.checked })
+                            const isChecked = e.target.checked;
+                            if (isChecked) {
+                              toggleCompleteMutation.mutate({ id: todo.id, isCompleted: true });
+                            } else {
+                              toggleCompleteMutation.mutate({ id: todo.id, isCompleted: false });
+                            }
                             // Görev tamamlandığında (status === 3) bu sekmede gösterilmemeli
                             // Filtreleme zaten status !== 3 olduğu için otomatik olarak çıkacak
                           }}
@@ -384,6 +496,24 @@ export default function TodosPage() {
                     </td>
                     <td className="px-3 py-4 text-sm text-gray-600 max-w-[200px]">
                       <div className="truncate">{todo.description || '-'}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
+                      {todo.createdAt ? new Date(todo.createdAt + (todo.createdAt.endsWith('Z') ? '' : 'Z')).toLocaleString('tr-TR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '-'}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
+                      {todo.completedAt ? new Date(todo.completedAt + (todo.completedAt.endsWith('Z') ? '' : 'Z')).toLocaleString('tr-TR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      }) : '-'}
                     </td>
                     {activeTab === 'completed' && (
                       <td className="whitespace-nowrap px-3 py-4 text-sm">
@@ -411,7 +541,12 @@ export default function TodosPage() {
                         <button
                           onClick={() => {
                             if (confirm('Silmek istediğinize emin misiniz?')) {
-                              deleteMutation.mutate(todo.id)
+                              deleteMutation.mutate(todo.id, {
+                                onSuccess: () => {
+                                  queryClient.refetchQueries({ queryKey: ['todos-all'] })
+                                  queryClient.refetchQueries({ queryKey: ['todos-calendar'] })
+                                }
+                              })
                             }
                           }}
                           className="inline-flex items-center gap-x-1.5 rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 transition-all duration-200 hover:shadow-md"
@@ -477,8 +612,10 @@ export default function TodosPage() {
           </div>
         </div>
       )}
+    </>
+  )}
 
-      {/* Create Modal */}
+  {/* Create Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
@@ -675,3 +812,85 @@ export default function TodosPage() {
   )
 }
 
+
+function CalendarView({ todos, onEditTodo }: { todos: any[], onEditTodo: (todo: any) => void }) {
+  const [currentDate, setCurrentDate] = useState(new Date())
+
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
+  const monthName = currentDate.toLocaleString('tr-TR', { month: 'long', year: 'numeric' })
+
+  const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+  const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+
+  const days = []
+  // Fill empty days for the first week
+  for (let i = 0; i < (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1); i++) {
+    days.push(<div key={`empty-${i}`} className="h-32 border border-gray-100 bg-gray-50/30"></div>)
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dayTodos = todos.filter(t => {
+      if (!t.completedAt) return false
+      const end = new Date(t.completedAt)
+      return end.getDate() === d && end.getMonth() === currentDate.getMonth() && end.getFullYear() === currentDate.getFullYear()
+    })
+
+    days.push(
+      <div key={d} className="h-32 border border-gray-100 p-2 overflow-hidden hover:bg-gray-50/50 transition-colors">
+        <div className="text-right text-sm font-semibold text-gray-500 mb-1">{d}</div>
+        <div className="space-y-1 overflow-y-auto max-h-[85px] scrollbar-hide">
+          {dayTodos.map(todo => (
+            <div
+              key={todo.id}
+              onClick={() => onEditTodo(todo)}
+              className={`text-[10px] p-1 rounded truncate cursor-pointer transition-transform hover:scale-105 ${
+                todo.status === 3 ? 'bg-green-100 text-green-800 line-through' :
+                todo.priority === 3 ? 'bg-red-100 text-red-800 border-l-2 border-red-500' :
+                todo.priority === 2 ? 'bg-yellow-100 text-yellow-800 border-l-2 border-yellow-500' :
+                'bg-blue-100 text-blue-800 border-l-2 border-blue-500'
+              }`}
+              title={todo.title}
+            >
+              {new Date(todo.completedAt + (todo.completedAt.endsWith('Z') ? '' : 'Z')).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })} {todo.title}
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mt-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-xl font-bold text-gray-800 capitalize">{monthName}</h3>
+        <div className="flex gap-2">
+          <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+            <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+        {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(day => (
+          <div key={day} className="bg-gray-50 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+            {day}
+          </div>
+        ))}
+        {days}
+      </div>
+      <div className="mt-4 flex gap-4 text-xs text-gray-500">
+        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-red-100 border-l-2 border-red-500 rounded"></span> Yüksek Öncelik</div>
+        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-yellow-100 border-l-2 border-yellow-500 rounded"></span> Orta Öncelik</div>
+        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-100 border-l-2 border-blue-500 rounded"></span> Düşük Öncelik</div>
+        <div className="flex items-center gap-1"><span className="w-3 h-3 bg-green-100 rounded"></span> Tamamlandı</div>
+      </div>
+    </div>
+  )
+}

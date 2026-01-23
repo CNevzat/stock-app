@@ -81,6 +81,11 @@ builder.Services.AddApplicationServices(builder.Configuration);
 // SignalR ekleme
 builder.Services.AddSignalR();
 
+// JSON Serileştirme ayarları
+builder.Services.ConfigureHttpJsonOptions(options => {
+    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+});
+
 // Mobil cihazlardan erişim için tüm IP adreslerinde dinle
 if (builder.Environment.IsDevelopment())
 {

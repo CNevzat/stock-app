@@ -39,6 +39,7 @@ export const todoService = {
     priority?: number
   }) => {
     const API_BASE_URL = getApiBaseUrl();
+
     const response = await fetch(`${API_BASE_URL}/api/todos`, {
       method: 'POST',
       headers: {
@@ -60,6 +61,7 @@ export const todoService = {
     priority?: number
   }) => {
     const API_BASE_URL = getApiBaseUrl();
+    
     const response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
       method: 'PUT',
       headers: {
@@ -71,6 +73,21 @@ export const todoService = {
     if (!response.ok) {
       await handleResponseError(response, 'Yapılacak oluşturulamadı');
     }
+    return response.json()
+  },
+
+  getCalendar: async (params: {
+    start?: string
+    end?: string
+  }) => {
+    const API_BASE_URL = getApiBaseUrl();
+    const searchParams = new URLSearchParams()
+    if (params.start) searchParams.append('start', params.start)
+    if (params.end) searchParams.append('end', params.end)
+
+    const response = await fetch(`${API_BASE_URL}/api/todos/calendar?${searchParams}`, {
+      headers: getAuthHeaders(),
+    })
     return response.json()
   },
 

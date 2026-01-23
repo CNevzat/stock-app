@@ -1,4 +1,5 @@
 using MediatR;
+using System.Security.Claims;
 using StockApp.App.Todo.Command;
 using StockApp.App.Todo.Query;
 using StockApp.Common.Models;
@@ -16,17 +17,22 @@ public static class TodoEndpoints
 
         group.MapGet("/", async (
             IMediator mediator,
+            ClaimsPrincipal user,
             int pageNumber = 1,
             int pageSize = 10,
             TodoStatus? status = null,
             TodoPriority? priority = null) =>
         {
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
             var query = new GetTodosQuery
             {
                 PageNumber = pageNumber,
                 PageSize = pageSize,
                 Status = status,
-                Priority = priority
+                Priority = priority,
+                UserId = userId
             };
 
             var result = await mediator.Send(query);
@@ -35,15 +41,42 @@ public static class TodoEndpoints
         .RequireAuthorization("CanViewTodos")
         .Produces<PaginatedList<TodoDto>>(StatusCodes.Status200OK);
 
+        group.MapGet("/calendar", async (
+            IMediator mediator,
+            ClaimsPrincipal user,
+            DateTime? start = null,
+            DateTime? end = null) =>
+        {
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            var query = new GetCalendarTodosQuery
+            {
+                UserId = userId,
+                Start = start,
+                End = end
+            };
+
+            var result = await mediator.Send(query);
+            return Results.Ok(result);
+        })
+        .RequireAuthorization("CanViewTodos")
+        .Produces<List<TodoDto>>(StatusCodes.Status200OK);
+
         #endregion
 
         #region Create Todo
 
         group.MapPost("/", async (
             IMediator mediator,
+            ClaimsPrincipal user,
             CreateTodoCommand command) =>
         {
-            var response = await mediator.Send(command);
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            var updatedCommand = command with { UserId = userId };
+            var response = await mediator.Send(updatedCommand);
             return Results.Ok(response);
         })
         .RequireAuthorization("CanManageTodos")
@@ -56,10 +89,14 @@ public static class TodoEndpoints
 
         group.MapPut("/{id}", async (
             IMediator mediator,
+            ClaimsPrincipal user,
             int id,
             UpdateTodoCommand command) =>
         {
-            var updatedCommand = command with { Id = id };
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            var updatedCommand = command with { Id = id, UserId = userId };
             var response = await mediator.Send(updatedCommand);
             return Results.Ok(response);
         })
@@ -74,9 +111,13 @@ public static class TodoEndpoints
 
         group.MapDelete("/{id}", async (
             IMediator mediator,
+            ClaimsPrincipal user,
             int id) =>
         {
-            var response = await mediator.Send(new DeleteTodoCommand(id));
+            var userId = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId)) return Results.Unauthorized();
+
+            var response = await mediator.Send(new DeleteTodoCommand(id, userId));
             return Results.Ok(response);
         })
         .RequireAuthorization("CanManageTodos")

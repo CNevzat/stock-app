@@ -25,3 +25,8 @@ EXPOSE 5134
 ENTRYPOINT ["dotnet", "StockApp.dll"]
 
 
+
+
+
+
+

@@ -10,17 +10,7 @@ import { signalRService } from '../services/signalRService'
 import { TechnologyInfo } from '../components/TechnologyInfo'
 import type {CreateProductCommand, UpdateProductCommand} from "../Api";
 import { ResponsiveContainer, LineChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Line } from 'recharts'
-
-// API base URL helper - hem dev hem production'da 5134 portunu kullan
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-  if (import.meta.env.PROD) {
-    return `http://${window.location.hostname}:5134`;
-  }
-  return 'http://localhost:5134';
-};
+import { getApiBaseUrl } from '../utils/apiConfig'
 
 // Image URL helper
 const getImageUrl = (imagePath: string | null | undefined) => {
@@ -545,7 +535,7 @@ export default function ProductsPage() {
           onFocus={() => {
             isTypingRef.current = true
           }}
-          onBlur={(e) => {
+          onBlur={() => {
             // Keep focus during query - only allow blur if query is not running
             if (isFetching) {
               setTimeout(() => {

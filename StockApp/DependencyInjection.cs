@@ -215,15 +215,12 @@ public static class DependencyInjection
             // Todo policies
             options.AddPolicy("CanViewTodos", policy => 
                 policy.RequireAssertion(context =>
-                    context.User.IsInRole("Admin") ||
-                    context.User.HasClaim("Permission", "CanViewTodos") ||
-                    context.User.HasClaim("Permission", "CanManageTodos")
+                    context.User.Identity?.IsAuthenticated == true
                 ));
             
             options.AddPolicy("CanManageTodos", policy => 
                 policy.RequireAssertion(context =>
-                    context.User.IsInRole("Admin") ||
-                    context.User.HasClaim("Permission", "CanManageTodos")
+                    context.User.Identity?.IsAuthenticated == true
                 ));
             
             // Location policies

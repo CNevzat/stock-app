@@ -67,6 +67,13 @@ namespace StockApp
                 .WithMany()
                 .HasForeignKey(sm => sm.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // TodoItem → ApplicationUser (Kullanıcı bazlı kişiselleştirme)
+            modelBuilder.Entity<TodoItem>()
+                .HasOne(t => t.User)
+                .WithMany()
+                .HasForeignKey(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

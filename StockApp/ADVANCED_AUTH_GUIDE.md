@@ -132,3 +132,8 @@ dotnet ef database update
 5. Protected routes - Yetki kontrolü
 
 
+
+
+
+
+

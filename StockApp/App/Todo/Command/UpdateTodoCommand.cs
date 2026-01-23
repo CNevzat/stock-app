@@ -13,6 +13,7 @@ public record UpdateTodoCommand : IRequest<UpdateTodoCommandResponse>
     public string? Description { get; init; }
     public TodoStatus? Status { get; init; }
     public TodoPriority? Priority { get; init; }
+    public string UserId { get; set; } = string.Empty;
 }
 
 public record UpdateTodoCommandResponse(int Id);
@@ -30,25 +31,35 @@ internal class UpdateTodoCommandHandler : IRequestHandler<UpdateTodoCommand, Upd
 
     public async Task<UpdateTodoCommandResponse> Handle(UpdateTodoCommand request, CancellationToken cancellationToken)
     {
-        var todoItem = await _context.TodoItems.FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
+        var todoItem = await _context.TodoItems
+            .FirstOrDefaultAsync(t => t.Id == request.Id && t.UserId == request.UserId, cancellationToken);
 
         if (todoItem == null)
         {
-            throw new KeyNotFoundException($"Todo item bulunamadı: {request.Id}");
+            throw new KeyNotFoundException($"Todo item bulunamadı veya bu işlem için yetkiniz yok: {request.Id}");
         }
 
-        if (!string.IsNullOrWhiteSpace(request.Title))
+        if (request.Title != null)
         {
-            todoItem.Title = request.Title;
-        }
-
-        if (request.Description != null)
-        {
-            todoItem.Description = request.Description;
+            if (!string.IsNullOrWhiteSpace(request.Title))
+            {
+                todoItem.Title = request.Title;
+            }
         }
 
         if (request.Status.HasValue)
         {
+            // Eğer durum Tamamlandı'ya (3) çekiliyorsa ve daha önce tamamlanmamışsa CompletedAt set et
+            if (request.Status.Value == TodoStatus.Completed && todoItem.Status != TodoStatus.Completed)
+            {
+                todoItem.CompletedAt = DateTime.UtcNow;
+            }
+            // Eğer Tamamlandı'dan geri çekiliyorsa CompletedAt temizle
+            else if (request.Status.Value != TodoStatus.Completed && todoItem.Status == TodoStatus.Completed)
+            {
+                todoItem.CompletedAt = null;
+            }
+            
             todoItem.Status = request.Status.Value;
         }
 
@@ -61,7 +72,7 @@ internal class UpdateTodoCommandHandler : IRequestHandler<UpdateTodoCommand, Upd
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // SignalR ile güncellenmiş todo'yu tüm client'lara gönder
+        // SignalR ile güncellenmiş todo'yu sadece ilgili kullanıcıya gönder
         try
         {
             var todoDetail = new App.Todo.Query.TodoDto
@@ -72,9 +83,10 @@ internal class UpdateTodoCommandHandler : IRequestHandler<UpdateTodoCommand, Upd
                 Status = todoItem.Status,
                 Priority = todoItem.Priority,
                 CreatedAt = todoItem.CreatedAt,
-                UpdatedAt = todoItem.UpdatedAt
+                UpdatedAt = todoItem.UpdatedAt,
+                CompletedAt = todoItem.CompletedAt
             };
-            await _hubContext.Clients.All.SendAsync("TodoUpdated", todoDetail, cancellationToken);
+            await _hubContext.Clients.User(request.UserId).SendAsync("TodoUpdated", todoDetail, cancellationToken);
         }
         catch (Exception ex)
         {

@@ -79,15 +79,15 @@ export default function LocationsPage() {
       console.error('SignalR bağlantı hatası:', error)
     })
 
-    const handleLocationCreated = (location: LocationDto) => {
+    const handleLocationCreated = () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
     }
 
-    const handleLocationUpdated = (location: LocationDto) => {
+    const handleLocationUpdated = () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
     }
 
-    const handleLocationDeleted = (locationId: number) => {
+    const handleLocationDeleted = () => {
       queryClient.invalidateQueries({ queryKey: ['locations'] })
     }
 
@@ -209,7 +209,7 @@ export default function LocationsPage() {
           onFocus={() => {
             isTypingRef.current = true
           }}
-          onBlur={(e) => {
+          onBlur={() => {
             // Keep focus during query - only allow blur if query is not running
             if (isFetching) {
               setTimeout(() => {

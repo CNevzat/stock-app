@@ -12,6 +12,7 @@ public record GetTodosQuery : IRequest<PaginatedList<TodoDto>>
     public int PageSize { get; init; } = 10;
     public TodoStatus? Status { get; init; }
     public TodoPriority? Priority { get; init; }
+    public string UserId { get; set; } = string.Empty;
 }
 
 public record TodoDto
@@ -37,6 +38,7 @@ public record TodoDto
     };
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
+    public DateTime? CompletedAt { get; init; }
 }
 
 internal class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, PaginatedList<TodoDto>>
@@ -50,7 +52,9 @@ internal class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, PaginatedLi
 
     public async Task<PaginatedList<TodoDto>> Handle(GetTodosQuery request, CancellationToken cancellationToken)
     {
-        var query = _context.TodoItems.AsQueryable();
+        var query = _context.TodoItems
+            .Where(t => t.UserId == request.UserId)
+            .AsQueryable();
 
         // Filter by status if provided
         if (request.Status.HasValue)
@@ -78,7 +82,8 @@ internal class GetTodosQueryHandler : IRequestHandler<GetTodosQuery, PaginatedLi
             Status = t.Status,
             Priority = t.Priority,
             CreatedAt = t.CreatedAt,
-            UpdatedAt = t.UpdatedAt
+            UpdatedAt = t.UpdatedAt,
+            CompletedAt = t.CompletedAt
         });
 
         return await todoQuery.ToPaginatedListAsync(request.PageNumber, request.PageSize, cancellationToken);

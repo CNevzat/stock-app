@@ -9,6 +9,12 @@ public class TodoItem
     public TodoPriority Priority { get; set; } = TodoPriority.Medium;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    public DateTime? CompletedAt { get; set; }
+
+    // Kullanıcı bazlı kişiselleştirme için UserId alanı
+    public string? UserId { get; set; }
+    public ApplicationUser? User { get; set; }
 }
 
 public enum TodoStatus

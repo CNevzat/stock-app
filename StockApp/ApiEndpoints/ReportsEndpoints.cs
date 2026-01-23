@@ -1,6 +1,5 @@
 using MediatR;
 using StockApp.App.Product.Query;
-using StockApp.App.Reports.Query;
 using StockApp.Services;
 
 namespace StockApp.ApiEndpoints;
@@ -22,19 +21,6 @@ public static class ReportsEndpoints
         })
         .RequireAuthorization("CanViewReports")
         .Produces<byte[]>(StatusCodes.Status200OK, "application/pdf");
-
-        group.MapPost("/natural-language", async (
-            NaturalLanguageReportRequest request,
-            IMediator mediator,
-            CancellationToken cancellationToken) =>
-        {
-            var result = await mediator.Send(new GetNaturalLanguageReportQuery(request.Question ?? string.Empty), cancellationToken);
-            return Results.Ok(result);
-        })
-        .RequireAuthorization("CanViewReports")
-        .Produces<NaturalLanguageReportResponse>(StatusCodes.Status200OK);
     }
 }
-
-public record NaturalLanguageReportRequest(string Question);
 

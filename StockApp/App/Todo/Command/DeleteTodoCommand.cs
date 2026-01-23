@@ -5,7 +5,7 @@ using StockApp.Hub;
 
 namespace StockApp.App.Todo.Command;
 
-public record DeleteTodoCommand(int Id) : IRequest<DeleteTodoCommandResponse>;
+public record DeleteTodoCommand(int Id, string UserId = "") : IRequest<DeleteTodoCommandResponse>;
 
 public record DeleteTodoCommandResponse(int Id);
 
@@ -22,21 +22,22 @@ internal class DeleteTodoCommandHandler : IRequestHandler<DeleteTodoCommand, Del
 
     public async Task<DeleteTodoCommandResponse> Handle(DeleteTodoCommand request, CancellationToken cancellationToken)
     {
-        var todoItem = await _context.TodoItems.FirstOrDefaultAsync(t => t.Id == request.Id, cancellationToken);
+        var todoItem = await _context.TodoItems
+            .FirstOrDefaultAsync(t => t.Id == request.Id && t.UserId == request.UserId, cancellationToken);
 
         if (todoItem == null)
         {
-            throw new KeyNotFoundException($"Todo item bulunamadı: {request.Id}");
+            throw new KeyNotFoundException($"Todo item bulunamadı veya bu işlem için yetkiniz yok: {request.Id}");
         }
 
         var deletedTodoId = todoItem.Id;
         _context.TodoItems.Remove(todoItem);
         await _context.SaveChangesAsync(cancellationToken);
 
-        // SignalR ile silinen todo ID'sini tüm client'lara gönder
+        // SignalR ile silinen todo ID'sini sadece ilgili kullanıcıya gönder
         try
         {
-            await _hubContext.Clients.All.SendAsync("TodoDeleted", deletedTodoId, cancellationToken);
+            await _hubContext.Clients.User(request.UserId).SendAsync("TodoDeleted", deletedTodoId, cancellationToken);
         }
         catch (Exception ex)
         {

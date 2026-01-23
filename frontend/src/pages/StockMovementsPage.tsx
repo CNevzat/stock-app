@@ -161,7 +161,7 @@ export default function StockMovementsPage() {
             onFocus={() => {
               isTypingRef.current = true
             }}
-            onBlur={(e) => {
+            onBlur={() => {
               // Keep focus during query - only allow blur if query is not running
               if (isFetching) {
                 setTimeout(() => {
