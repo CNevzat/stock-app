@@ -39,7 +39,7 @@ Stock Management Application, stok yönetiminizi kolaylaştıran modern bir web 
 
 1. **Backend'i başlatın:**
    ```bash
-   cd StockApp
+   cd backend
    dotnet restore
    dotnet ef database update
    dotnet run

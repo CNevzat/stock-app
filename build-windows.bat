@@ -27,11 +27,11 @@ REM Frontend dosyalarını backend wwwroot'a kopyala
 echo [2/4] Copying frontend files to backend wwwroot...
 cd ..
 REM wwwroot içindeki dist klasörünü temizle ve yeni build'i kopyala
-if exist StockApp\wwwroot\dist (
-    rmdir /s /q StockApp\wwwroot\dist
+if exist backend\wwwroot\dist (
+    rmdir /s /q backend\wwwroot\dist
 )
 REM Frontend dist içindeki tüm dosyaları wwwroot'a kopyala
-xcopy /E /I /Y frontend\dist\* StockApp\wwwroot
+xcopy /E /I /Y frontend\dist\* backend\wwwroot
 if errorlevel 1 (
     echo Failed to copy frontend files!
     pause
@@ -42,7 +42,7 @@ echo.
 
 REM Backend publish (Windows self-contained executable)
 echo [3/4] Publishing backend as Windows executable...
-cd StockApp
+cd backend
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\publish\win-x64
 if errorlevel 1 (
     echo Backend publish failed!

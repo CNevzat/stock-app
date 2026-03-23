@@ -75,7 +75,7 @@ npm install
 Make sure backend is running on `http://localhost:5132`:
 
 ```bash
-cd ../StockApp
+cd ../backend
 dotnet run
 ```
 

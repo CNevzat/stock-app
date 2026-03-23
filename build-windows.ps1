@@ -26,17 +26,17 @@ Write-Host ""
 # Frontend dosyalarını backend wwwroot'a kopyala
 Write-Host "[2/4] Copying frontend files to backend wwwroot..." -ForegroundColor Yellow
 Set-Location ..
-if (Test-Path "StockApp\wwwroot\dist") {
-    Remove-Item -Recurse -Force "StockApp\wwwroot\dist"
+if (Test-Path "backend\wwwroot\dist") {
+    Remove-Item -Recurse -Force "backend\wwwroot\dist"
 }
 # Frontend dist içindeki tüm dosyaları wwwroot'a kopyala
-Copy-Item -Path "frontend\dist\*" -Destination "StockApp\wwwroot\" -Recurse -Force
+Copy-Item -Path "frontend\dist\*" -Destination "backend\wwwroot\" -Recurse -Force
 Write-Host "Frontend files copied successfully!" -ForegroundColor Green
 Write-Host ""
 
 # Backend publish (Windows self-contained executable)
 Write-Host "[3/4] Publishing backend as Windows executable..." -ForegroundColor Yellow
-Set-Location StockApp
+Set-Location backend
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ..\publish\win-x64
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Backend publish failed!" -ForegroundColor Red

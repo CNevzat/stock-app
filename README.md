@@ -1,6 +1,6 @@
 # 📦 Stock Management Application
 
-Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript frontend ile geliştirilmiştir.
+Modern, full-stack stok yönetim sistemi. .NET 10 backend ve React + TypeScript frontend ile geliştirilmiştir.
 
 ##  Özellikler
 
@@ -42,8 +42,8 @@ Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript f
 ##  Teknoloji Stack
 
 ### Backend
-- **.NET 9** - Web API Framework
-- **Entity Framework Core 9** - ORM
+- **.NET 10** - Web API Framework
+- **Entity Framework Core 10** - ORM
 - **SQLite** - Veritabanı
 - **MediatR 13.1.0** - CQRS Pattern
 - **SignalR** - Real-time communication
@@ -65,9 +65,11 @@ Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript f
 
 ## 📁 Proje Yapısı
 
+Monorepo: **backend** ve **frontend** ayrı klasörlerde; bağımsız geliştirilebilir ve ileride ayrı repolara taşınabilir.
+
 ```
-StockApp/
-├── StockApp/                          # Backend (.NET Web API)
+stock-app/                             # Depo kökü
+├── backend/                           # Backend (.NET Web API, proje adı: StockApp)
 │   ├── App/                           # CQRS Handlers
 │   │   ├── Category/
 │   │   │   ├── Command/               # Create, Update, Delete
@@ -78,7 +80,7 @@ StockApp/
 │   │   ├── StockMovement/
 │   │   ├── Todo/
 │   │   └── Dashboard/
-│   ├── ApiEndpoints/                   # Minimal API Endpoints
+│   ├── Controllers/                   # API controllers
 │   ├── Common/
 │   │   ├── Extensions/
 │   │   └── Models/                    # DTOs, PaginatedList
@@ -123,7 +125,7 @@ StockApp/
 
 ### Gereksinimler
 
-- **.NET 9 SDK** ([İndir](https://dotnet.microsoft.com/download/dotnet/9.0))
+- **.NET 10 SDK** ([İndir](https://dotnet.microsoft.com/download/dotnet/10.0))
 - **Node.js 20+** ve **npm** ([İndir](https://nodejs.org/))
 
 
@@ -131,13 +133,13 @@ StockApp/
 
 ```bash
 git clone <repository-url>
-cd StockApp
+cd stock-app
 ```
 
 ### 2. Backend Kurulumu
 
 ```bash
-cd StockApp
+cd backend
 dotnet restore
 dotnet ef database update  # Veritabanını oluştur
 dotnet run
@@ -270,7 +272,7 @@ npm run dev
 ### Backend Geliştirme
 
 ```bash
-cd StockApp
+cd backend
 dotnet watch run
 dotnet build
 dotnet test

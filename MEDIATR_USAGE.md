@@ -7,7 +7,7 @@ MediatR, CQRS (Command Query Responsibility Segregation) pattern'ini implement e
 ## Proje Yapısı
 
 ```
-StockApp/
+backend/
 ├── App/
 │   ├── Category/
 │   │   ├── Command/
@@ -416,7 +416,7 @@ app.MapPost("/api/products", async (IMediator mediator, CreateProductCommand com
 ## Çalıştırma
 
 ```bash
-cd StockApp
+cd backend
 dotnet run
 ```
 

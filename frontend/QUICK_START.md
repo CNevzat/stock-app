@@ -10,7 +10,7 @@ npm install
 ## Adım 2: Backend'i Başlat (Başka bir terminalde)
 
 ```bash
-cd ../StockApp
+cd ../backend
 dotnet run
 ```
 
