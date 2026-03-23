@@ -1,5 +1,4 @@
 using StockApp;
-using StockApp.ApiEndpoints;
 using StockApp.Hub;
 using StockApp.Middleware;
 using StockApp.Services;
@@ -7,6 +6,11 @@ using StockApp.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -81,11 +85,6 @@ builder.Services.AddApplicationServices(builder.Configuration);
 // SignalR ekleme
 builder.Services.AddSignalR();
 
-// JSON Serileştirme ayarları
-builder.Services.ConfigureHttpJsonOptions(options => {
-    options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
-});
-
 // Mobil cihazlardan erişim için tüm IP adreslerinde dinle
 if (builder.Environment.IsDevelopment())
 {
@@ -117,8 +116,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 // SignalR Hub mapping
 app.MapHub<StockHub>("/hubs/stock");
 
-// Map all API endpoints
-app.MapApiEndpoints();
+app.MapControllers();
 
 // Static files serving (images ve frontend için)
 // Production'da frontend dosyalarını serve et (SPA fallback)

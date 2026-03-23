@@ -63,7 +63,6 @@ public class CacheService : ICacheService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Cache'e veri yazılırken hata oluştu. Key: {Key}", key);
-            // Cache hatası durumunda exception fırlatma, uygulama çalışmaya devam etsin
         }
     }
 
