@@ -2,44 +2,44 @@
 
 Modern, full-stack stok yönetim sistemi. .NET 9 backend ve React + TypeScript frontend ile geliştirilmiştir.
 
-## 🌟 Özellikler
+##  Özellikler
 
 ### Backend API
-- ✅ **CQRS Pattern** - MediatR ile komut/sorgu ayrımı
-- ✅ **Pagination** - Tüm listeleme endpoint'lerinde sayfalama desteği
-- ✅ **Partial Update** - Sadece değişen alanları güncelleme
-- ✅ **Filtering & Search** - Gelişmiş filtreleme ve arama
-- ✅ **Swagger UI** - API test ve dokümantasyon
-- ✅ **SignalR** - Real-time güncellemeler
-- ✅ **SQLite Database** - Kolay geliştirme ortamı
-- ✅ **Excel Export** - Ürün ve öznitelik verilerini Excel'e aktarma
-- ✅ **Stock Movement Export** - Tüm stok hareketlerini Excel'e aktarma
-- ✅ **Image Upload** - Ürün resimlerini yükleme ve yönetme
-- ✅ **Exception Handling** - Merkezi hata yönetimi
-- ✅ **Fiyat Yönetimi** - Ürün bazlı alış/satış fiyatı takibi, geçmiş saklama, SignalR ile canlı güncellemeler
-- ✅ **Doğal Dil Raporlama** - Gemini API ile soru-cevap tabanlı rapor üretimi
+- **CQRS Pattern** - MediatR ile komut/sorgu ayrımı
+- **Pagination** - Tüm listeleme endpoint'lerinde sayfalama desteği
+- **Partial Update** - Sadece değişen alanları güncelleme
+- **Filtering & Search** - Gelişmiş filtreleme ve arama
+- **Swagger UI** - API test ve dokümantasyon
+- **SignalR** - Real-time güncellemeler
+- **SQLite Database** - Kolay geliştirme ortamı
+- **Excel Export** - Ürün ve öznitelik verilerini Excel'e aktarma
+- **Stock Movement Export** - Tüm stok hareketlerini Excel'e aktarma
+- **Image Upload** - Ürün resimlerini yükleme ve yönetme
+- **Exception Handling** - Merkezi hata yönetimi
+- **Fiyat Yönetimi** - Ürün bazlı alış/satış fiyatı takibi, geçmiş saklama, SignalR ile canlı güncellemeler
+- **Doğal Dil Raporlama** - Gemini API ile soru-cevap tabanlı rapor üretimi
 
 ### Frontend
-- ✅ **Complete CRUD Operations** - Tüm varlıklar için tam CRUD
-- ✅ **Pagination** - Sayfa navigasyonu ile sayfalama
-- ✅ **Filtering** - Kategori, lokasyon ve ürün bazlı filtreleme
-- ✅ **Search** - Gelişmiş arama fonksiyonları
-- ✅ **Modal Forms** - Create/Edit işlemleri için modal formlar
-- ✅ **Responsive Design** - Tailwind CSS ile responsive tasarım
-- ✅ **Real-time Updates** - React Query ile otomatik güncelleme
-- ✅ **Dashboard** - İstatistikler ve grafiklerle dashboard
-- ✅ **SignalR Integration** - Real-time stok güncellemeleri
-- ✅ **Fiyat Kartları & Grafikler** - Alış/satış fiyatı, ortalama ve geçmiş grafikleri
-- ✅ **Excel Export Geliştirmeleri** - Fiyat bilgilerini de içeren ürün, öznitelik ve stok hareketi çıktı dosyaları
+- **Complete CRUD Operations** - Tüm varlıklar için tam CRUD
+- **Pagination** - Sayfa navigasyonu ile sayfalama
+- **Filtering** - Kategori, lokasyon ve ürün bazlı filtreleme
+- **Search** - Gelişmiş arama fonksiyonları
+- **Modal Forms** - Create/Edit işlemleri için modal formlar
+- **Responsive Design** - Tailwind CSS ile responsive tasarım
+- **Real-time Updates** - React Query ile otomatik güncelleme
+- **Dashboard** - İstatistikler ve grafiklerle dashboard
+- **SignalR Integration** - Real-time stok güncellemeleri
+- **Fiyat Kartları & Grafikler** - Alış/satış fiyatı, ortalama ve geçmiş grafikleri
+- **Excel Export Geliştirmeleri** - Fiyat bilgilerini de içeren ürün, öznitelik ve stok hareketi çıktı dosyaları
 
 ### Mobil (React Native)
-- ✅ **Drawer Menü** - Kategorilere ayrılmış yan menü ve stack navigasyon
-- ✅ **Web ile Parite** - Dashboard, Ürün, Kategori, Lokasyon, Stok Hareketi, Öznitelik ve Yapılacaklar ekranları
-- ✅ **Ürün Fiyat Yönetimi** - Ürün oluşturma/düzenlemede alış/satış fiyatı, stok hareketlerinde birim fiyat zorunluluğu
-- ✅ **Görsel Yükleme** - Ürün oluşturma ve düzenlemede medya seçimi ile görsel ekleme
-- ✅ **SignalR Senkronizasyonu** - Dashboard metrikleri ve ürün detayları için canlı veri akışı
+- **Drawer Menü** - Kategorilere ayrılmış yan menü ve stack navigasyon
+- **Web ile Parite** - Dashboard, Ürün, Kategori, Lokasyon, Stok Hareketi, Öznitelik ve Yapılacaklar ekranları
+- **Ürün Fiyat Yönetimi** - Ürün oluşturma/düzenlemede alış/satış fiyatı, stok hareketlerinde birim fiyat zorunluluğu
+- **Görsel Yükleme** - Ürün oluşturma ve düzenlemede medya seçimi ile görsel ekleme
+- **SignalR Senkronizasyonu** - Dashboard metrikleri ve ürün detayları için canlı veri akışı
 
-## 🚀 Teknoloji Stack
+##  Teknoloji Stack
 
 ### Backend
 - **.NET 9** - Web API Framework
@@ -125,7 +125,7 @@ StockApp/
 
 - **.NET 9 SDK** ([İndir](https://dotnet.microsoft.com/download/dotnet/9.0))
 - **Node.js 20+** ve **npm** ([İndir](https://nodejs.org/))
-- **Git** (Opsiyonel)
+
 
 ### 1. Projeyi Klonlama
 
@@ -143,13 +143,7 @@ dotnet ef database update  # Veritabanını oluştur
 dotnet run
 ```
 
-Backend çalışacak:
-- **API**: `http://localhost:5132/api`
-- **Swagger UI**: `http://localhost:5132/`
-
 ### 3. Frontend Kurulumu
-
-Yeni bir terminal açın:
 
 ```bash
 cd frontend
@@ -157,24 +151,7 @@ npm install
 npm run dev
 ```
 
-Frontend çalışacak: `http://localhost:5173`
-
-### 4. Gemini Yapılandırması (Opsiyonel fakat doğal dil raporları için gerekli)
-
-1. Google AI Studio üzerinden bir API anahtarı oluşturun.
-2. Anahtarı `.env` veya çalıştırdığınız ortamın gizli değişkenlerine `GEMINI_API_KEY` adıyla ekleyin.
-3. `appsettings.json` içerisinde dilerseniz modeli özelleştirebilirsiniz:
-
-```json
-"Gemini": {
-  "Model": "gemini-1.5-flash",
-  "BaseUrl": "https://generativelanguage.googleapis.com/v1beta"
-}
-```
-
-> Not: `Gemini:ApiKey` alanını dosyaya yazmayın; anahtar ortam değişkenlerinden okunacaktır.
-
-## 📊 Veritabanı
+##  Veritabanı
 
 ### Entity'ler
 
@@ -234,30 +211,10 @@ Frontend çalışacak: `http://localhost:5173`
 - `CreatedAt` (DateTime) - Oluşturulma tarihi
 - `UpdatedAt` (DateTime?) - Güncellenme tarihi
 
-### Migration Komutları
 
-```bash
-cd StockApp
+##  API Endpoints
 
-# Migration oluştur
-dotnet ef migrations add MigrationName
-
-# Migration uygula
-dotnet ef database update
-
-# Son migration'ı geri al
-dotnet ef migrations remove
-
-# Veritabanını sıfırla ve yeniden oluştur
-dotnet ef database drop
-dotnet ef database update
-```
-
-## 🔌 API Endpoints
-
-Detaylı API dokümantasyonu için [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) dosyasına bakın.
-
-### Özet Endpoint'ler
+### Endpoint'ler
 
 #### Categories
 - `GET /api/categories` - Kategorileri listele
@@ -307,86 +264,6 @@ Detaylı API dokümantasyonu için [API_DOCUMENTATION.md](./API_DOCUMENTATION.md
 #### Dashboard
 - `GET /api/dashboard/stats` - Dashboard istatistikleri
 
-## 🎯 Önemli Özellikler
-
-### 1. Pagination (Sayfalama)
-
-Tüm listeleme endpoint'leri paginated response döner:
-
-```json
-{
-  "items": [...],
-  "pageNumber": 1,
-  "pageSize": 10,
-  "totalCount": 50,
-  "totalPages": 5,
-  "hasPreviousPage": false,
-  "hasNextPage": true
-}
-```
-
-### 2. Partial Update (Kısmi Güncelleme)
-
-Sadece değişen alanları gönderin:
-
-```json
-// Sadece stok miktarını güncelle
-PUT /api/products
-{
-  "id": 1,
-  "stockQuantity": 50
-}
-```
-
-### 3. Filtering & Search (Filtreleme ve Arama)
-
-```
-// Kategoriye göre filtrele
-GET /api/products?categoryId=1
-
-// Arama yap
-GET /api/products?searchTerm=laptop
-
-// Kombine filtreler
-GET /api/products?pageNumber=1&categoryId=1&locationId=2&searchTerm=gaming
-```
-
-### 4. Real-time Updates (SignalR)
-
-Dashboard istatistikleri ve stok güncellemeleri real-time olarak tüm bağlı client'lara gönderilir.
-
-## 📚 Dokümantasyon
-
-- **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)** - Kapsamlı API dokümantasyonu
-- **[KULLANICI_KILAVUZU.md](./KULLANICI_KILAVUZU.md)** - Kullanıcı kılavuzu
-- **[MEDIATR_USAGE.md](./MEDIATR_USAGE.md)** - MediatR & CQRS dokümantasyonu
-- **[PAGINATION_GUIDE.md](./PAGINATION_GUIDE.md)** - Pagination detaylı rehberi
-- **[PARTIAL_UPDATE_GUIDE.md](./PARTIAL_UPDATE_GUIDE.md)** - Partial update örnekleri
-
-## 🧪 Test Etme
-
-### Swagger UI ile Test
-
-1. Backend'i çalıştırın: `dotnet run`
-2. Tarayıcıda açın: `http://localhost:5132/`
-3. Swagger UI'da endpoint'leri test edin
-
-### HTTP Client ile Test
-
-`StockApp/test-requests.http` dosyasını IDE'nizin HTTP client'ı ile kullanabilirsiniz.
-
-## 🔒 CORS Yapılandırması
-
-Backend şu origin'lerden gelen isteklere izin verir:
-- `http://localhost:5173` (Vite default)
-- `http://localhost:5174` (Vite alternatif)
-- `http://localhost:3000` (Create React App default)
-
-Yeni origin eklemek için `StockApp/Program.cs` dosyasını düzenleyin:
-
-```csharp
-policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://yourdomain.com")
-```
 
 ## 🛠️ Geliştirme
 
@@ -394,14 +271,8 @@ policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "https://yo
 
 ```bash
 cd StockApp
-
-# Watch mode (otomatik rebuild)
 dotnet watch run
-
-# Build
 dotnet build
-
-# Test
 dotnet test
 ```
 
@@ -409,82 +280,7 @@ dotnet test
 
 ```bash
 cd frontend
-
-# Development server
 npm run dev
-
-# Production build
 npm run build
-
-# Preview production build
 npm run preview
-
-# Lint
-npm run lint
 ```
-
-## 📈 Performans
-
-- **Backend**: EF Core eager loading ve projection ile optimize edilmiş sorgular
-- **Frontend**: React Query ile otomatik caching ve refetching
-- **Pagination**: Veri transferini azaltır ve response sürelerini iyileştirir
-- **Partial Updates**: Sadece değişen veriler gönderilir
-
-## 🐛 Sorun Giderme
-
-### Backend Port Zaten Kullanımda
-
-```bash
-# macOS/Linux
-lsof -ti:5132 | xargs kill -9
-
-# Windows
-netstat -ano | findstr :5132
-taskkill /PID <PID> /F
-```
-
-### Frontend CORS Hatası
-
-Kontrol edin:
-1. Backend çalışıyor mu?
-2. CORS policy frontend URL'inizi içeriyor mu?
-3. `Program.cs`'de `UseCors()` `UseHttpsRedirection()`'dan önce çağrılıyor mu?
-
-### Veritabanı Sorunları
-
-```bash
-# Veritabanını sil ve yeniden oluştur
-rm StockApp/stockapp.db
-cd StockApp
-dotnet ef database update
-```
-
-### Migration Sorunları
-
-```bash
-# Tüm migration'ları geri al
-dotnet ef database drop
-
-# Migration'ları yeniden uygula
-dotnet ef database update
-```
-
-## 📝 Lisans
-
-MIT License
-
-## 👥 Katkıda Bulunma
-
-1. Repository'yi fork edin
-2. Feature branch oluşturun (`git checkout -b feature/AmazingFeature`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Add some AmazingFeature'`)
-4. Branch'inizi push edin (`git push origin feature/AmazingFeature`)
-5. Pull Request açın
-
-## 📞 İletişim
-
-Sorularınız veya destek için lütfen GitHub'da issue açın.
-
-## 🙏 Teşekkürler
-
-Bu projeyi kullandığınız için teşekkürler! ⭐
