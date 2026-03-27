@@ -31,48 +31,26 @@ public class GeminiService : IGeminiService
             return new GeminiTextResult(false, "İstek metni boş olamaz.");
         }
 
-        var apiKey = ResolveApiKey();
+        var o = _options.Value;
+        var apiKey = string.IsNullOrWhiteSpace(o.ApiKey)
+            ? System.Environment.GetEnvironmentVariable("GEMINI_API_KEY")
+            : o.ApiKey;
+
         if (string.IsNullOrWhiteSpace(apiKey))
         {
-            _logger.LogWarning("Gemini API anahtarı bulunamadı. Ortam değişkeni 'GEMINI_API_KEY' veya konfigürasyondaki Gemini:ApiKey ayarını sağlayın.");
+            _logger.LogWarning("Gemini API anahtarı bulunamadı. Konfigürasyonda Gemini:ApiKey veya ortam değişkeni GEMINI_API_KEY tanımlayın.");
             return new GeminiTextResult(false, "Yapay zekâ raporu oluşturmak için Gemini API anahtarı yapılandırılmamış.", null, false);
         }
 
-        var optionsSnapshot = _options.Value;
-
-        string? previousGeminiKey = null;
-        string? previousGoogleKey = null;
-        string? previousBaseUrl = null;
-        var geminiKeyOverridden = false;
-        var googleKeyOverridden = false;
-        var baseUrlOverridden = false;
+        HttpOptions? httpOptions = string.IsNullOrWhiteSpace(o.ApiEndpoint)
+            ? null
+            : new HttpOptions { BaseUrl = o.ApiEndpoint };
 
         try
         {
-            previousGeminiKey = System.Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-            if (string.IsNullOrWhiteSpace(previousGeminiKey))
-            {
-                System.Environment.SetEnvironmentVariable("GEMINI_API_KEY", apiKey);
-                geminiKeyOverridden = true;
-            }
-
-            previousGoogleKey = System.Environment.GetEnvironmentVariable("GOOGLE_API_KEY");
-            if (string.IsNullOrWhiteSpace(previousGoogleKey))
-            {
-                System.Environment.SetEnvironmentVariable("GOOGLE_API_KEY", apiKey);
-                googleKeyOverridden = true;
-            }
-
-            if (!string.IsNullOrWhiteSpace(optionsSnapshot.ApiEndpoint))
-            {
-                previousBaseUrl = System.Environment.GetEnvironmentVariable("GOOGLE_API_BASE_URL");
-                System.Environment.SetEnvironmentVariable("GOOGLE_API_BASE_URL", optionsSnapshot.ApiEndpoint);
-                baseUrlOverridden = true;
-            }
-
-            var client = new Client();
+            using var client = new Client(apiKey: apiKey, httpOptions: httpOptions);
             var response = await client.Models.GenerateContentAsync(
-                model: optionsSnapshot.Model,
+                model: o.Model,
                 contents: prompt);
 
             var text = response?.Candidates?
@@ -83,43 +61,15 @@ public class GeminiService : IGeminiService
             if (string.IsNullOrWhiteSpace(text))
             {
                 _logger.LogWarning("Gemini API yanıtında metin bulunamadı. Response: {@Response}", response);
-                return new GeminiTextResult(false, "Gemini modelinden anlamlı bir yanıt alınamadı.", optionsSnapshot.Model);
+                return new GeminiTextResult(false, "Gemini modelinden anlamlı bir yanıt alınamadı.", o.Model);
             }
 
-            return new GeminiTextResult(true, text.Trim(), optionsSnapshot.Model);
+            return new GeminiTextResult(true, text.Trim(), o.Model);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Gemini API çağrısı sırasında beklenmeyen bir hata oluştu.");
             return new GeminiTextResult(false, "Gemini servisine bağlanırken beklenmeyen bir hata oluştu.");
         }
-        finally
-        {
-            if (geminiKeyOverridden)
-            {
-                System.Environment.SetEnvironmentVariable("GEMINI_API_KEY", previousGeminiKey);
-            }
-
-            if (googleKeyOverridden)
-            {
-                System.Environment.SetEnvironmentVariable("GOOGLE_API_KEY", previousGoogleKey);
-            }
-
-            if (baseUrlOverridden)
-            {
-                System.Environment.SetEnvironmentVariable("GOOGLE_API_BASE_URL", previousBaseUrl);
-            }
-        }
-    }
-
-    private string? ResolveApiKey()
-    {
-        var configured = _options.Value.ApiKey;
-        if (!string.IsNullOrWhiteSpace(configured))
-        {
-            return configured;
-        }
-
-        return System.Environment.GetEnvironmentVariable("GEMINI_API_KEY");
     }
 }

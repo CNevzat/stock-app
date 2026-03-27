@@ -4,10 +4,16 @@ using Microsoft.Extensions.Caching.Distributed;
 
 namespace StockApp.Services;
 
-/// <summary>
-/// Redis cache implementasyonu
-/// IDistributedCache kullanarak Redis ile cache işlemleri yapar
-/// </summary>
+// Redis
+public interface ICacheService
+{
+    Task<T?> GetAsync<T>(string key, CancellationToken cancellationToken = default) where T : class;
+
+    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class;
+
+    Task RemoveAsync(string key, CancellationToken cancellationToken = default);
+}
+
 public class CacheService : ICacheService
 {
     private readonly IDistributedCache _distributedCache;
@@ -52,7 +58,6 @@ public class CacheService : ICacheService
             }
             else
             {
-                // Default: 60 saniye
                 options.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(60);
             }
 
@@ -77,29 +82,6 @@ public class CacheService : ICacheService
         {
             _logger.LogWarning(ex, "Cache'den veri silinirken hata oluştu. Key: {Key}", key);
         }
-    }
-
-    public async Task<bool> ExistsAsync(string key, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            var cachedData = await _distributedCache.GetStringAsync(key, cancellationToken);
-            return !string.IsNullOrEmpty(cachedData);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Cache kontrolü yapılırken hata oluştu. Key: {Key}", key);
-            return false;
-        }
-    }
-
-    public async Task RemoveByPatternAsync(string pattern, CancellationToken cancellationToken = default)
-    {
-        // IDistributedCache pattern matching desteklemiyor
-        // Bu özellik için StackExchange.Redis kullanılmalı
-        // Şimdilik sadece log atıyoruz
-        _logger.LogInformation("Pattern-based cache removal is not supported with IDistributedCache. Pattern: {Pattern}", pattern);
-        await Task.CompletedTask;
     }
 }
 

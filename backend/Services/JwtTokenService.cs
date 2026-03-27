@@ -9,6 +9,13 @@ using StockApp.Options;
 
 namespace StockApp.Services;
 
+public interface IJwtTokenService
+{
+    string GenerateAccessToken(ApplicationUser user, IList<string> roles, IList<Claim>? userClaims = null);
+    string GenerateRefreshToken();
+    DateTime GetRefreshTokenExpiration();
+}
+
 public class JwtTokenService : IJwtTokenService
 {
     private readonly JwtOptions _jwtOptions;
@@ -29,13 +36,13 @@ public class JwtTokenService : IJwtTokenService
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
         };
 
-        // Add roles as claims
+        // Rolleri claim olarak ekle
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
-        // Add user claims (both direct user claims and role claims)
+        // Kullanıcı claim'lerini ve role claim'lerini ekle --both
         if (userClaims != null && userClaims.Any())
         {
             foreach (var claim in userClaims)
@@ -48,7 +55,7 @@ public class JwtTokenService : IJwtTokenService
             }
         }
 
-        // Add custom claims
+        // Özel claim'ler
         if (!string.IsNullOrEmpty(user.FirstName))
         {
             claims.Add(new Claim("FirstName", user.FirstName));

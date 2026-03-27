@@ -1,3 +1,6 @@
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+
 namespace StockApp.Services;
 
 public interface IImageService
@@ -17,6 +20,8 @@ public class ImageService : IImageService
         ".pjp", ".jpe", ".jif", ".jp2", ".j2k", ".jpf"
     };
     private const long _maxFileSize = 5 * 1024 * 1024; // 5MB
+    /// <summary>Uzun kenar (px); oran korunur, büyük görseller bu sınırın içine sığdırılır.</summary>
+    private const int MaxImageDimension = 1600;
 
     public ImageService(IWebHostEnvironment environment)
     {
@@ -53,10 +58,37 @@ public class ImageService : IImageService
         var fileName = $"product_{productId}_{Guid.NewGuid():N}{extension}";
         var filePath = Path.Combine(_imagesPath, fileName);
 
-        // Dosyayı kaydet
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        await using (var ms = new MemoryStream())
         {
-            await imageFile.CopyToAsync(stream);
+            await imageFile.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            try
+            {
+                using var loadStream = new MemoryStream(bytes);
+                using var image = await Image.LoadAsync(loadStream);
+
+                var needsResize = image.Width > MaxImageDimension || image.Height > MaxImageDimension;
+                if (!needsResize)
+                {
+                    await File.WriteAllBytesAsync(filePath, bytes);
+                }
+                else
+                {
+                    image.Mutate(ctx => ctx.Resize(new ResizeOptions
+                    {
+                        Size = new Size(MaxImageDimension, MaxImageDimension),
+                        Mode = ResizeMode.Max,
+                    }));
+
+                    await image.SaveAsync(filePath);
+                }
+            }
+            catch (UnknownImageFormatException)
+            {
+                throw new InvalidOperationException(
+                    "Görüntü dosyası okunamadı. Desteklenen raster formatları kullanın (ör. JPEG, PNG, WebP). SVG vektör dosyaları bu işlem için uygun değildir.");
+            }
         }
 
         // Relative path döndür (/images/filename)
@@ -82,7 +114,6 @@ public class ImageService : IImageService
         }
         catch (Exception ex)
         {
-            // Log hatası ama işlemi durdurma
             Console.WriteLine($"Resim silme hatası: {ex.Message}");
         }
     }

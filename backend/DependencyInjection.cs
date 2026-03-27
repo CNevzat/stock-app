@@ -282,7 +282,6 @@ public static class DependencyInjection
         }
 
         // Register application services
-        services.AddScoped<IMarkdownService, MarkdownService>();
         services.AddScoped<IPdfService, PdfService>();
         services.AddScoped<IExcelService, ExcelService>();
         services.AddScoped<IImageService, ImageService>();

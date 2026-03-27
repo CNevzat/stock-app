@@ -91,8 +91,7 @@ stock-app/                             # Depo kökü
 │   ├── Services/                      # Business Services
 │   │   ├── ExcelService.cs
 │   │   ├── ImageService.cs
-│   │   ├── PdfService.cs
-│   │   └── MarkdownService.cs
+│   │   └── PdfService.cs
 │   └── Program.cs
 │
 ├── frontend/                          # Frontend (React + TypeScript)

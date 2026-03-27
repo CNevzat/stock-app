@@ -3,10 +3,9 @@ using System.Security.Claims;
 
 namespace StockApp.Services;
 
-/// <summary>
-/// Rol yetki yönetimi için yardımcı servis
-/// Tüm yetkileri Admin rolüne otomatik atar
-/// </summary>
+// Rol yetki yönetimi için yardımcı servis
+// Tüm yetkileri Admin rolüne otomatik atar, manual eklemeye gerek kalınmaması için
+
 public class RolePermissionService
 {
     private readonly RoleManager<IdentityRole> _roleManager;
@@ -51,9 +50,7 @@ public class RolePermissionService
         _roleManager = roleManager;
     }
 
-    /// <summary>
-    /// Tüm yetkileri Admin rolüne atar
-    /// </summary>
+    // Tüm yetkileri admin rolüne atar
     public async Task EnsureAdminHasAllPermissionsAsync()
     {
         var adminRole = await _roleManager.FindByNameAsync("Admin");
@@ -77,9 +74,9 @@ public class RolePermissionService
         }
     }
 
-    /// <summary>
-    /// Yeni bir yetki eklendiğinde Admin rolüne otomatik atar
-    /// </summary>
+    
+    // Yeni bir yetki eklendiğinde Admin rolüne otomatik atar
+    
     public async Task AddPermissionToAdminAsync(string permissionValue)
     {
         var adminRole = await _roleManager.FindByNameAsync("Admin");
@@ -97,14 +94,11 @@ public class RolePermissionService
         }
     }
 
-    /// <summary>
-    /// Sistemdeki tüm yetkileri döndürür
-    /// </summary>
+    // Sistemdeki tüm yetkileri döndürür
     public static List<string> GetAllPermissions() => AllPermissions.ToList();
 
-    /// <summary>
-    /// Yeni bir yetki ekler (gelecekte kullanım için)
-    /// </summary>
+    
+    // Yeni bir yetki ekler
     public static void AddPermission(string permission)
     {
         if (!AllPermissions.Contains(permission))
