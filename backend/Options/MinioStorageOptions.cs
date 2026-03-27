@@ -5,7 +5,7 @@ public class MinioStorageOptions
 {
     public const string SectionName = "Minio";
 
-    // Yerel disk kullanılsın mı; false iken wwwroot/images.
+    // MinIO nesne depolama aktif mi. Görsel yükleme için zorunludur.
     public bool Enabled { get; set; }
 
     // Örn: localhost:9000 veya minio:9000 (şema yok).

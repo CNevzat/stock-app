@@ -1,150 +1,135 @@
-# 📦 Stock Management Application
+# Stock Management Application
 
 Modern, full-stack stok yönetim sistemi. .NET 10 backend ve React + TypeScript frontend ile geliştirilmiştir.
 
-##  Özellikler
-
-### Backend API
-- **CQRS Pattern** - MediatR ile komut/sorgu ayrımı
-- **Pagination** - Tüm listeleme endpoint'lerinde sayfalama desteği
-- **Partial Update** - Sadece değişen alanları güncelleme
-- **Filtering & Search** - Gelişmiş filtreleme ve arama
-- **Swagger UI** - API test ve dokümantasyon
-- **SignalR** - Real-time güncellemeler
-- **SQLite Database** - Kolay geliştirme ortamı
-- **Excel Export** - Ürün ve öznitelik verilerini Excel'e aktarma
-- **Stock Movement Export** - Tüm stok hareketlerini Excel'e aktarma
-- **Image Upload** - Ürün resimleri (yerel `wwwroot/images` veya yapılandırılmış MinIO)
-- **Exception Handling** - Merkezi hata yönetimi
-- **Fiyat Yönetimi** - Ürün bazlı alış/satış fiyatı takibi, geçmiş saklama, SignalR ile canlı güncellemeler
-- **Doğal Dil Raporlama** - Gemini API ile soru-cevap tabanlı rapor üretimi
-
-### Frontend
-- **Complete CRUD Operations** - Tüm varlıklar için tam CRUD
-- **Pagination** - Sayfa navigasyonu ile sayfalama
-- **Filtering** - Kategori, lokasyon ve ürün bazlı filtreleme
-- **Search** - Gelişmiş arama fonksiyonları
-- **Modal Forms** - Create/Edit işlemleri için modal formlar
-- **Responsive Design** - Tailwind CSS ile responsive tasarım
-- **Real-time Updates** - React Query ile otomatik güncelleme
-- **Dashboard** - İstatistikler ve grafiklerle dashboard
-- **SignalR Integration** - Real-time stok güncellemeleri
-- **Fiyat Kartları & Grafikler** - Alış/satış fiyatı, ortalama ve geçmiş grafikleri
-- **Excel Export Geliştirmeleri** - Fiyat bilgilerini de içeren ürün, öznitelik ve stok hareketi çıktı dosyaları
-
-### Mobil (React Native)
-- **Drawer Menü** - Kategorilere ayrılmış yan menü ve stack navigasyon
-- **Web ile Parite** - Dashboard, Ürün, Kategori, Lokasyon, Stok Hareketi, Öznitelik ve Yapılacaklar ekranları
-- **Ürün Fiyat Yönetimi** - Ürün oluşturma/düzenlemede alış/satış fiyatı, stok hareketlerinde birim fiyat zorunluluğu
-- **Görsel Yükleme** - Ürün oluşturma ve düzenlemede medya seçimi ile görsel ekleme
-- **SignalR Senkronizasyonu** - Dashboard metrikleri ve ürün detayları için canlı veri akışı
-
-##  Teknoloji Stack
+## Özellikler
 
 ### Backend
-- **.NET 10** - Web API Framework
-- **Entity Framework Core 10** - ORM
-- **SQLite** - Veritabanı
-- **MediatR 13.1.0** - CQRS Pattern
-- **SignalR** - Real-time communication
-- **Swagger/OpenAPI** - API Dokümantasyonu
-- **PuppeteerSharp** - PDF oluşturma
-- **ClosedXML** - Excel export
-- **Markdig** - Markdown işleme
-- **MinIO (Minio 6.x)** - Ürün görselleri için isteğe bağlı nesne depolama
+- **CQRS Pattern** — MediatR ile komut/sorgu ayrımı
+- **PostgreSQL** — Ana veritabanı; EF Core 10 + Npgsql
+- **Redis** — Liste ve dashboard önbellekleme; nesil (generation) tabanlı cache geçersizleştirme
+- **Elasticsearch** — Ürün, stok hareketi ve öznitelik araması; ürün listesi arama varsa ES, yoksa DB
+- **MinIO** — Ürün görselleri için nesne depolama (S3 uyumlu); wwwroot kullanılmaz
+- **Hangfire** — Arka plan işleri; kategori güncellemesi sonrası ES toplu yeniden indeksleme, PostgreSQL ile dayanıklı kuyruk
+- **SignalR** — Gerçek zamanlı ürün ve dashboard güncellemeleri
+- **JWT Kimlik Doğrulama** — Role dayalı yetkilendirme (Admin / Manager / User)
+- **Swagger UI** — Geliştirme ortamında otomatik etkin
+- **Pagination** — Tüm listeleme endpoint'lerinde sayfalama
+- **Partial Update** — Sadece değişen alanları güncelleme
+- **Excel Export** — Ürün, öznitelik ve stok hareketi çıktıları
+- **PDF Rapor** — Kritik stok seviyesi raporu
+- **Doğal Dil Raporlama** — Gemini API ile soru-cevap tabanlı rapor üretimi
 
 ### Frontend
-- **React 19** - UI Framework
-- **TypeScript** - Type Safety
-- **Vite 7** - Build Tool
-- **TanStack Query (React Query)** - State Management & Data Fetching
-- **React Router** - Routing
-- **Tailwind CSS** - Styling
-- **Axios** - HTTP Client
-- **SignalR Client** - Real-time communication
-- **Recharts** - Grafik ve görselleştirme
+- **React 19 + TypeScript** — UI
+- **TanStack Query** — Sunucu durumu ve önbellekleme
+- **Tailwind CSS** — Responsive tasarım
+- **Recharts** — Fiyat geçmişi ve trend grafikleri
+- **SignalR** — Gerçek zamanlı stok ve dashboard senkronizasyonu
+- **Yönetim menüsü** — Admin paneli; Hangfire Dashboard bağlantısı dahil
 
-## 📁 Proje Yapısı
+### Mobil (React Native / Capacitor)
+- Dashboard, Ürün, Kategori, Lokasyon, Stok Hareketi, Öznitelik ve Yapılacaklar ekranları
+- Görsel yükleme (MinIO üzerinden)
+- SignalR senkronizasyonu
 
-Monorepo: **backend** ve **frontend** ayrı klasörlerde; bağımsız geliştirilebilir ve ileride ayrı repolara taşınabilir.
+---
+
+## Teknoloji Stack
+
+| Katman | Teknoloji |
+|--------|-----------|
+| Runtime | .NET 10 |
+| ORM | Entity Framework Core 10 + Npgsql |
+| Veritabanı | PostgreSQL 16 |
+| Önbellek | Redis 7 |
+| Arama | Elasticsearch 7.17 (NEST) |
+| Görsel depolama | MinIO (S3 uyumlu) |
+| Arka plan işler | Hangfire 1.8 + Hangfire.PostgreSql |
+| Gerçek zamanlı | ASP.NET Core SignalR |
+| Auth | ASP.NET Core Identity + JWT Bearer |
+| UI | React 19, Vite 7, Tailwind CSS |
+| Grafik | Recharts |
+| HTTP | TanStack Query (React Query) |
+
+---
+
+## Proje Yapısı
 
 ```
-stock-app/                             # Depo kökü
-├── backend/                           # Backend (.NET Web API, proje adı: StockApp)
-│   ├── App/                           # CQRS Handlers
-│   │   ├── Category/
-│   │   │   ├── Command/               # Create, Update, Delete
-│   │   │   └── Query/                 # Get, List
-│   │   ├── Product/
-│   │   ├── ProductAttribute/
-│   │   ├── Location/
-│   │   ├── StockMovement/
-│   │   ├── Todo/
-│   │   └── Dashboard/
-│   ├── Controllers/                   # API controllers
-│   ├── Common/
-│   │   ├── Extensions/
-│   │   └── Models/                    # DTOs, PaginatedList
-│   ├── Entities/                      # Domain Models
-│   ├── Hub/                           # SignalR Hubs
-│   ├── Middleware/                    # Exception Handling
-│   ├── Migrations/                    # EF Core Migrations
-│   ├── Services/                      # Business Services
+stock-app/
+├── backend/
+│   ├── App/                        # CQRS Handlers (MediatR)
+│   │   ├── Category/Command|Query
+│   │   ├── Product/Command|Query
+│   │   ├── ProductAttribute/Command|Query
+│   │   ├── StockMovement/Command|Query
+│   │   ├── Elasticsearch/Command   # Reindex komutları
+│   │   ├── Dashboard/Query
+│   │   └── Todo/Command|Query
+│   ├── Controllers/                # API endpoint'leri
+│   ├── Common/Constants|Models     # CacheKeys, PaginatedList vb.
+│   ├── Database/                   # ApplicationDbContext
+│   ├── Entities/                   # Domain modelleri
+│   ├── Hub/                        # SignalR Hub
+│   ├── Infrastructure/             # HangfireAdminAuthorizationFilter
+│   ├── Middleware/                  # Merkezi hata yönetimi
+│   ├── Migrations/                 # EF Core migrations (PostgreSQL)
+│   ├── Options/                    # Yapılandırma sınıfları (JWT, MinIO vb.)
+│   ├── Services/
+│   │   ├── CacheService.cs         # Redis önbellekleme
+│   │   ├── CategoryElasticsearchReindexService.cs  # Hangfire job servisi
+│   │   ├── DatabaseSeeder.cs
+│   │   ├── ElasticsearchService.cs # ES arama + bulk index
 │   │   ├── ExcelService.cs
-│   │   ├── ImageService.cs
-│   │   ├── MinioFileService.cs
+│   │   ├── ImageService.cs         # MinIO görsel yükleme/silme
+│   │   ├── MinioFileService.cs     # MinIO S3 istemcisi
 │   │   └── PdfService.cs
+│   ├── docker-compose.yml          # PostgreSQL, Redis, ES, MinIO, API
+│   ├── appsettings.json
+│   ├── appsettings.Development.json
 │   └── Program.cs
 │
-├── frontend/                          # Frontend (React + TypeScript)
-│   ├── src/
-│   │   ├── pages/                     # Sayfa bileşenleri
-│   │   │   ├── DashboardPage.tsx
-│   │   │   ├── CategoriesPage.tsx
-│   │   │   ├── LocationsPage.tsx
-│   │   │   ├── ProductsPage.tsx
-│   │   │   ├── ProductAttributesPage.tsx
-│   │   │   ├── StockMovementsPage.tsx
-│   │   │   └── TodosPage.tsx
-│   │   ├── services/                  # API servisleri
-│   │   ├── hooks/                     # Custom hooks
-│   │   │   └── useSignalR.ts
-│   │   ├── App.tsx
-│   │   ├── Api.ts                     # Axios configuration
-│   │   └── main.tsx
-│   └── package.json
-│
-├── API_DOCUMENTATION.md               # API Dokümantasyonu
-├── KULLANICI_KILAVUZU.md             # Kullanıcı Kılavuzu
-├── MEDIATR_USAGE.md                  # MediatR Kullanım Kılavuzu
-├── PAGINATION_GUIDE.md               # Pagination Rehberi
-├── PARTIAL_UPDATE_GUIDE.md           # Partial Update Rehberi
-└── README.md                          # Bu dosya
+└── frontend/
+    └── src/
+        ├── pages/
+        ├── services/
+        ├── utils/
+        ├── components/
+        ├── App.tsx
+        └── main.tsx
 ```
 
-## 🛠️ Kurulum
+---
+
+## Kurulum
 
 ### Gereksinimler
 
-- **.NET 10 SDK** ([İndir](https://dotnet.microsoft.com/download/dotnet/10.0))
-- **Node.js 20+** ve **npm** ([İndir](https://nodejs.org/))
+- **.NET 10 SDK**
+- **Node.js 20+** ve **npm**
+- **Docker Desktop** (PostgreSQL, Redis, Elasticsearch, MinIO için)
 
-
-### 1. Projeyi Klonlama
+### 1. Projeyi Klonla
 
 ```bash
 git clone <repository-url>
 cd stock-app
 ```
 
-### 2. Backend Kurulumu
+### 2. Altyapıyı Başlat (Docker)
 
 ```bash
 cd backend
-dotnet restore
-dotnet ef database update  # Veritabanını oluştur
-dotnet run
+docker compose up -d
 ```
+
+Bu komut şunları başlatır:
+- **PostgreSQL 16** — `localhost:5432`
+- **Redis 7** — `localhost:6379`
+- **Elasticsearch 7.17** — `localhost:9200`
+- **MinIO** — API `localhost:9000`, Console `localhost:9001`
+- **Backend API** — `localhost:5134`
 
 ### 3. Frontend Kurulumu
 
@@ -154,136 +139,173 @@ npm install
 npm run dev
 ```
 
-##  Veritabanı
+Frontend `http://localhost:5173` adresinde açılır.
 
-### Entity'ler
+---
 
-#### Category (Kategori)
-- `Id` (int) - Primary Key
-- `Name` (string) - Kategori adı
-- `CreatedAt` (DateTime) - Oluşturulma tarihi
-- `UpdatedAt` (DateTime?) - Güncellenme tarihi
-- `Products` (List<Product>) - İlişkili ürünler
+## Yapılandırma
 
-#### Location (Lokasyon)
-- `Id` (int) - Primary Key
-- `Name` (string) - Lokasyon adı
-- `Description` (string?) - Açıklama
-- `CreatedAt` (DateTime) - Oluşturulma tarihi
-- `UpdatedAt` (DateTime?) - Güncellenme tarihi
-- `Products` (List<Product>) - İlişkili ürünler
+### appsettings.Development.json (örnek)
 
-#### Product (Ürün)
-- `Id` (int) - Primary Key
-- `Name` (string) - Ürün adı
-- `StockCode` (string) - Benzersiz stok kodu (örn: ABC433)
-- `Description` (string) - Açıklama
-- `StockQuantity` (int) - Stok miktarı
-- `LowStockThreshold` (int) - Düşük stok eşiği (varsayılan: 5)
-- `ImagePath` (string?) - Ürün resmi yolu
-- `CreatedAt` (DateTime) - Oluşturulma tarihi
-- `UpdatedAt` (DateTime?) - Güncellenme tarihi
-- `CategoryId` (int) - Foreign Key
-- `LocationId` (int?) - Foreign Key (opsiyonel)
-- `Category` (Category) - Navigation property
-- `Location` (Location?) - Navigation property
-- `Attributes` (List<ProductAttribute>) - Ürün öznitelikleri
-
-#### ProductAttribute (Ürün Özniteliği)
-- `Id` (int) - Primary Key
-- `ProductId` (int) - Foreign Key
-- `Key` (string) - Öznitelik anahtarı (örn: "RAM", "Ekran Boyutu")
-- `Value` (string) - Öznitelik değeri (örn: "16GB", "15.6 inç")
-- `Product` (Product) - Navigation property
-
-#### StockMovement (Stok Hareketi)
-- `Id` (int) - Primary Key
-- `ProductId` (int) - Foreign Key
-- `CategoryId` (int) - Foreign Key
-- `Type` (StockMovementType) - Hareket tipi (In/Out)
-- `Quantity` (int) - Miktar
-- `Description` (string?) - Açıklama
-- `CreatedAt` (DateTime) - Oluşturulma tarihi
-
-#### TodoItem (Yapılacaklar)
-- `Id` (int) - Primary Key
-- `Title` (string) - Başlık
-- `Description` (string?) - Açıklama
-- `Status` (TodoStatus) - Durum (Todo/InProgress/Completed)
-- `Priority` (TodoPriority) - Öncelik (Low/Medium/High)
-- `CreatedAt` (DateTime) - Oluşturulma tarihi
-- `UpdatedAt` (DateTime?) - Güncellenme tarihi
-
-
-##  API Endpoints
-
-### Endpoint'ler
-
-#### Categories
-- `GET /api/categories` - Kategorileri listele
-- `GET /api/categories/by-id?id={id}` - Kategori detayı
-- `POST /api/categories` - Yeni kategori oluştur
-- `PUT /api/categories` - Kategori güncelle
-- `DELETE /api/categories?id={id}` - Kategori sil
-
-#### Locations
-- `GET /api/locations` - Lokasyonları listele
-- `GET /api/locations/by-id?id={id}` - Lokasyon detayı
-- `POST /api/locations` - Yeni lokasyon oluştur
-- `PUT /api/locations` - Lokasyon güncelle
-- `DELETE /api/locations?id={id}` - Lokasyon sil
-
-#### Products
-- `GET /api/products` - Ürünleri listele
-- `GET /api/products/by-id?id={id}` - Ürün detayı
-- `POST /api/products` - Yeni ürün oluştur (multipart/form-data)
-- `PUT /api/products` - Ürün güncelle (multipart/form-data)
-- `DELETE /api/products?id={id}` - Ürün sil
-- `GET /api/products/export/excel` - Excel'e aktar
-
-#### Product Attributes
-- `GET /api/product-attributes` - Öznitelikleri listele
-- `GET /api/product-attributes/by-id?id={id}` - Öznitelik detayı
-- `POST /api/product-attributes` - Yeni öznitelik oluştur
-- `PUT /api/product-attributes` - Öznitelik güncelle
-- `DELETE /api/product-attributes?id={id}` - Öznitelik sil
-- `GET /api/product-attributes/export/excel` - Excel'e aktar
-
-#### Stock Movements
-- `GET /api/stock-movements` - Stok hareketlerini listele
-- `POST /api/stock-movements` - Yeni stok hareketi oluştur
-- `GET /api/stock-movements/export/excel` - Excel'e aktar
-
-#### Reports
-- `GET /api/reports/critical-stock/pdf` - Kritik stok PDF raporu
-- `POST /api/reports/natural-language` - Gemini destekli doğal dil raporu üret
-
-#### Todos
-- `GET /api/todos` - Yapılacakları listele
-- `POST /api/todos` - Yeni yapılacak oluştur
-- `PUT /api/todos/{id}` - Yapılacak güncelle
-- `DELETE /api/todos/{id}` - Yapılacak sil
-
-#### Dashboard
-- `GET /api/dashboard/stats` - Dashboard istatistikleri
-
-
-## 🛠️ Geliştirme
-
-### Backend Geliştirme
-
-```bash
-cd backend
-dotnet watch run
-dotnet build
-dotnet test
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Port=5432;Database=stockapp;Username=stockapp;Password=stockapp",
+    "Redis": "localhost:6379",
+    "Elasticsearch": "http://localhost:9200"
+  },
+  "Minio": {
+    "Enabled": true,
+    "Endpoint": "localhost:9000",
+    "AccessKey": "minioadmin",
+    "SecretKey": "minioadmin",
+    "Bucket": "stockapp-images",
+    "BaseUrl": "http://localhost:9000",
+    "UseSSL": false
+  },
+  "Jwt": {
+    "SecretKey": "<en-az-32-karakter>",
+    "Issuer": "StockApp",
+    "Audience": "StockAppUsers",
+    "ExpiryMinutes": 60
+  }
+}
 ```
 
-### Frontend Geliştirme
+> MinIO görsel yükleme için zorunludur; `Minio:Enabled` false iken görsel yükleme hata verir.
+
+---
+
+## Görsel Depolama (MinIO)
+
+Ürün görselleri MinIO nesne deposuna yüklenir; `wwwroot` kullanılmaz.
+
+- Bucket otomatik oluşturulur ve anonim okuma politikası uygulanır (tarayıcıdan doğrudan URL erişimi).
+- Görseller `<BaseUrl>/<bucket>/<dosyaadı>` şeklinde URL olarak saklanır.
+- MinIO Console: `http://localhost:9001` (kullanıcı: `minioadmin` / şifre: `minioadmin`)
+
+---
+
+## Elasticsearch
+
+### Arama Davranışı
+
+| Senaryo | Kaynak |
+|---------|--------|
+| Ürün listesi — arama metni var | Elasticsearch |
+| Ürün listesi — arama metni yok | PostgreSQL |
+| Stok hareketleri — `productId` dolu, arama yok | PostgreSQL |
+| Stok hareketleri — genel liste / arama | Elasticsearch |
+
+### İndeksleme
+
+- **Ürün ekle / güncelle / sil** → anlık ES güncellemesi
+- **Stok hareketi oluştur** → anlık ES indexleme
+- **Kategori adı güncelle** → Hangfire kuyruğuna alınır; arka planda ilgili tüm ürünler ve stok hareketleri 500'er satır (bulk) olarak yeniden indekslenir
+
+### Reindex (Manuel)
+
+```
+POST /api/elasticsearch/reindex-products
+POST /api/elasticsearch/reindex-stock-movements
+POST /api/elasticsearch/reindex-product-attributes
+```
+
+---
+
+## Hangfire
+
+Kategori gibi büyük veri kümelerini etkileyen işlemler Hangfire ile arka planda çalıştırılır:
+
+- **Storage:** PostgreSQL (ek altyapı gerektirmez; uygulama yeniden başlasa da işler kaybolmaz)
+- **Worker:** 2 thread, `category-reindex` ve `default` kuyrukları
+- **Retry:** Hata durumunda otomatik yeniden deneme
+
+### Dashboard
+
+```
+http://localhost:5134/hangfire
+```
+
+Localhost'tan erişimde giriş gerekmez. Uzaktan erişimde Admin rolü zorunludur.
+
+---
+
+## API Endpoint'leri
+
+### Categories
+- `GET /api/categories` — Listele
+- `GET /api/categories/by-id?id={id}` — Detay
+- `POST /api/categories` — Oluştur
+- `PUT /api/categories` — Güncelle
+- `DELETE /api/categories?id={id}` — Sil
+
+### Locations
+- `GET /api/locations` — Listele
+- `GET /api/locations/by-id?id={id}` — Detay
+- `POST /api/locations` — Oluştur
+- `PUT /api/locations` — Güncelle
+- `DELETE /api/locations?id={id}` — Sil
+
+### Products
+- `GET /api/products` — Listele (arama + kategori/lokasyon filtresi)
+- `GET /api/products/by-id?id={id}` — Detay (fiyat geçmişi dahil)
+- `POST /api/products` — Oluştur (`multipart/form-data`)
+- `PUT /api/products` — Güncelle (`multipart/form-data`)
+- `DELETE /api/products?id={id}` — Sil
+- `GET /api/products/export/excel` — Excel'e aktar
+
+### Product Attributes
+- `GET /api/product-attributes` — Listele
+- `POST /api/product-attributes` — Oluştur
+- `PUT /api/product-attributes` — Güncelle
+- `DELETE /api/product-attributes?id={id}` — Sil
+- `GET /api/product-attributes/export/excel` — Excel'e aktar
+
+### Stock Movements
+- `GET /api/stock-movements` — Listele (arama + filtreler)
+- `POST /api/stock-movements` — Oluştur
+- `GET /api/stock-movements/export/excel` — Excel'e aktar
+
+### Dashboard
+- `GET /api/dashboard/stats` — İstatistikler
+
+### Reports
+- `GET /api/reports/critical-stock/pdf` — Kritik stok PDF raporu
+- `POST /api/reports/natural-language` — Gemini destekli doğal dil raporu
+
+### Auth
+- `POST /api/auth/login` — Giriş
+- `POST /api/auth/refresh` — Token yenile
+- `POST /api/auth/change-password` — Şifre değiştir
+
+### Elasticsearch (Admin)
+- `POST /api/elasticsearch/reindex-products`
+- `POST /api/elasticsearch/reindex-stock-movements`
+- `POST /api/elasticsearch/reindex-product-attributes`
+- `GET /api/elasticsearch/status`
+
+---
+
+## Geliştirme
 
 ```bash
+# Backend
+cd backend
+dotnet restore
+dotnet watch run
+
+# Frontend
 cd frontend
 npm run dev
-npm run build
-npm run preview
 ```
+
+---
+
+## Varsayılan Kullanıcılar (Seed)
+
+| Kullanıcı | Şifre | Rol |
+|-----------|-------|-----|
+| admin@stockapp.com | Admin123! | Admin |
+| manager@stockapp.com | Manager123! | Manager |
+| user@stockapp.com | User123! | User |

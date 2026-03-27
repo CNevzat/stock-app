@@ -1,4 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Bmp;
@@ -20,7 +19,6 @@ public interface IImageService
 
 public class ImageService : IImageService
 {
-    private readonly string _imagesPath;
     private readonly MinioStorageOptions _minioOptions;
     private readonly MinioFileService? _minio;
 
@@ -35,18 +33,11 @@ public class ImageService : IImageService
     private const int MaxImageDimension = 1600;
 
     public ImageService(
-        IWebHostEnvironment environment,
         IOptions<MinioStorageOptions> minioOptions,
         IServiceProvider services)
     {
         _minioOptions = minioOptions.Value;
         _minio = _minioOptions.Enabled ? services.GetService<MinioFileService>() : null;
-
-        _imagesPath = Path.Combine(environment.ContentRootPath, "wwwroot", "images");
-        if (!Directory.Exists(_imagesPath))
-        {
-            Directory.CreateDirectory(_imagesPath);
-        }
     }
 
     public async Task<string?> SaveImageAsync(IFormFile? imageFile, int productId)
@@ -99,16 +90,14 @@ public class ImageService : IImageService
                 "Görüntü dosyası okunamadı. Desteklenen raster formatları kullanın (ör. JPEG, PNG, WebP). SVG vektör dosyaları bu işlem için uygun değildir.");
         }
 
-        if (_minioOptions.Enabled && _minio != null)
+        if (!_minioOptions.Enabled || _minio == null)
         {
-            var contentType = GetContentType(extension);
-            await using var upload = new MemoryStream(finalBytes);
-            return await _minio.UploadObjectAsync(upload, fileName, finalBytes.Length, contentType);
+            throw new InvalidOperationException("Görsel depolama için MinIO yapılandırılmamış. Minio:Enabled = true ve gerekli ayarları yapın.");
         }
 
-        var filePath = Path.Combine(_imagesPath, fileName);
-        await File.WriteAllBytesAsync(filePath, finalBytes);
-        return $"/images/{fileName}";
+        var contentType = GetContentType(extension);
+        await using var upload = new MemoryStream(finalBytes);
+        return await _minio.UploadObjectAsync(upload, fileName, finalBytes.Length, contentType);
     }
 
     public async Task DeleteImageAsync(string? imagePath)
@@ -120,22 +109,9 @@ public class ImageService : IImageService
 
         try
         {
-            if (_minioOptions.Enabled && _minio != null && imagePath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            if (_minio != null && imagePath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 await _minio.DeleteObjectByUrlAsync(imagePath);
-                return;
-            }
-
-            var fileName = Path.GetFileName(imagePath);
-            if (string.IsNullOrEmpty(fileName))
-            {
-                return;
-            }
-
-            var filePath = Path.Combine(_imagesPath, fileName);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
             }
         }
         catch (Exception ex)
