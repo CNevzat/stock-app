@@ -113,6 +113,7 @@ internal sealed class CreateProductCommandHandler : IRequestHandler<CreateProduc
 
         // Cache'i invalidate et (dashboard stats değişti)
         await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
+        await _cacheService.InvalidateProductsListCacheAsync(cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

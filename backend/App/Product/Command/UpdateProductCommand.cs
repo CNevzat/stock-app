@@ -138,7 +138,7 @@ internal sealed class UpdateProductCommandHandler : IRequestHandler<UpdateProduc
             // Eski resmi sil (yeni resim eklendiyse)
             if (!string.IsNullOrEmpty(product.ImagePath) && product.ImagePath != request.ImagePath)
             {
-                _imageService.DeleteImage(product.ImagePath);
+                await _imageService.DeleteImageAsync(product.ImagePath);
             }
             product.ImagePath = request.ImagePath;
         }
@@ -163,8 +163,8 @@ internal sealed class UpdateProductCommandHandler : IRequestHandler<UpdateProduc
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Cache'i invalidate et (dashboard stats değişti)
         await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
+        await _cacheService.InvalidateProductsListCacheAsync(cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

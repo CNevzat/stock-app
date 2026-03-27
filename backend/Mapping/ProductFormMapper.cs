@@ -4,9 +4,7 @@ using StockApp.Models;
 
 namespace StockApp.Mapping;
 
-/// <summary>
-/// Multipart ürün formlarını MediatR komutlarına çevirir (tek yerde doğrulama ve eşleme).
-/// </summary>
+// Multipart ürün formlarını MediatR komutlarına çevirir (tek yerde doğrulama ve eşleme).
 public static class ProductFormMapper
 {
     public static (CreateProductCommand? Command, string? Error) MapCreate(CreateProductForm form)

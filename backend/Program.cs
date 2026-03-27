@@ -1,6 +1,10 @@
+using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using StockApp;
 using StockApp.Hub;
+using StockApp.Infrastructure;
 using StockApp.Middleware;
+using StockApp.Options;
 using StockApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -92,14 +96,17 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+var swaggerEnabled = app.Environment.IsDevelopment()
+    || app.Configuration.GetValue<bool>("Swagger:Enabled");
+
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (swaggerEnabled)
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "Stock App API V1");
-        options.RoutePrefix = string.Empty; // Swagger UI root'ta açılır (http://localhost:5134/)
+        options.RoutePrefix = "swagger";
     });
 }
 
@@ -109,6 +116,15 @@ app.UseHttpsRedirection();
 // Authentication & Authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Hangfire Dashboard — sadece Admin rolü erişebilir
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+    Authorization = new[]
+    {
+        new HangfireAdminAuthorizationFilter()
+    }
+});
 
 // Use exception handling middleware
 app.UseMiddleware<ExceptionHandlingMiddleware>();
@@ -133,6 +149,34 @@ else
 {
     // Development'ta sadece images için static files
     app.UseStaticFiles();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+}
+
+// MinIO bucket varsayılanı private; tarayıcıdan doğrudan görsel URL için anonim s3:GetObject politikası
+using (var scope = app.Services.CreateScope())
+{
+    var minioOpts = app.Configuration.GetSection(MinioStorageOptions.SectionName).Get<MinioStorageOptions>();
+    if (minioOpts?.Enabled == true)
+    {
+        var minio = scope.ServiceProvider.GetService<MinioFileService>();
+        if (minio != null)
+        {
+            try
+            {
+                await minio.EnsurePublicReadPolicyAsync();
+            }
+            catch (Exception ex)
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogWarning(ex, "MinIO: anonim okuma politikası ayarlanamadı; görsel URL'leri 403 verebilir.");
+            }
+        }
+    }
 }
 
 // Seed veritabanı (sadece development'ta ve veri yoksa)

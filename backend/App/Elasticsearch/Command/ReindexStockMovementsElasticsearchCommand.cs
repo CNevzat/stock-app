@@ -1,7 +1,6 @@
 using MediatR;
 using StockApp.App.Elasticsearch;
 using StockApp.App.StockMovement.Query;
-using StockApp.Common.Constants;
 using StockApp.Services;
 
 namespace StockApp.App.Elasticsearch.Command;
@@ -58,14 +57,7 @@ internal sealed class ReindexStockMovementsElasticsearchCommandHandler
 
             try
             {
-                for (var page = 1; page <= 10; page++)
-                {
-                    for (var size = 10; size <= 100; size += 10)
-                    {
-                        await _cacheService.RemoveAsync(CacheKeys.StockMovementsList(page, size, null));
-                        await _cacheService.RemoveAsync(CacheKeys.StockMovementsList(page, size, ""));
-                    }
-                }
+                await _cacheService.InvalidateStockMovementsListCacheAsync(cancellationToken);
             }
             catch
             {

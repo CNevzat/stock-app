@@ -74,7 +74,7 @@ internal sealed class DeleteProductCommandHandler : IRequestHandler<DeleteProduc
         // Ürün resmini sil
         if (!string.IsNullOrEmpty(product.ImagePath))
         {
-            _imageService.DeleteImage(product.ImagePath);
+            await _imageService.DeleteImageAsync(product.ImagePath);
         }
 
         // Ürünü sil
@@ -85,6 +85,7 @@ internal sealed class DeleteProductCommandHandler : IRequestHandler<DeleteProduc
 
         // Cache'i invalidate et (dashboard stats değişti)
         await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
+        await _cacheService.InvalidateProductsListCacheAsync(cancellationToken);
 
         // SignalR ile dashboard stats gönder
         try

@@ -131,7 +131,7 @@ public class ProductController : ControllerBase
 
                 if (!string.IsNullOrEmpty(oldImagePath))
                 {
-                    _imageService.DeleteImage(oldImagePath);
+                    await _imageService.DeleteImageAsync(oldImagePath);
                 }
             }
             catch (Exception ex)

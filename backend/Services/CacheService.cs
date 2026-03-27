@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Caching.Distributed;
+using StockApp.Common.Constants;
 
 namespace StockApp.Services;
 
@@ -12,6 +13,17 @@ public interface ICacheService
     Task SetAsync<T>(string key, T value, TimeSpan? expiration = null, CancellationToken cancellationToken = default) where T : class;
 
     Task RemoveAsync(string key, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Ürün listesi cache anahtarındaki nesil; artırılınca tüm sayfa/filtre kombinasyonları otomatik miss olur.
+    /// </summary>
+    Task<long> GetProductsListGenerationAsync(CancellationToken cancellationToken = default);
+
+    Task InvalidateProductsListCacheAsync(CancellationToken cancellationToken = default);
+
+    Task<long> GetStockMovementsListGenerationAsync(CancellationToken cancellationToken = default);
+
+    Task InvalidateStockMovementsListCacheAsync(CancellationToken cancellationToken = default);
 }
 
 public class CacheService : ICacheService
@@ -81,6 +93,78 @@ public class CacheService : ICacheService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Cache'den veri silinirken hata oluştu. Key: {Key}", key);
+        }
+    }
+
+    public async Task<long> GetProductsListGenerationAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var raw = await _distributedCache.GetStringAsync(CacheKeys.ProductsListGenerationKey, cancellationToken);
+            return long.TryParse(raw, out var g) ? g : 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Ürün listesi nesil okunamadı; 0 kullanılıyor.");
+            return 0;
+        }
+    }
+
+    public async Task InvalidateProductsListCacheAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var raw = await _distributedCache.GetStringAsync(CacheKeys.ProductsListGenerationKey, cancellationToken);
+            var next = (long.TryParse(raw, out var g) ? g : 0) + 1;
+            await _distributedCache.SetStringAsync(
+                CacheKeys.ProductsListGenerationKey,
+                next.ToString(),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(3650)
+                },
+                cancellationToken);
+            _logger.LogInformation("Ürün listesi cache nesli artırıldı: {Generation}", next);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Ürün listesi cache nesli artırılamadı.");
+        }
+    }
+
+    public async Task<long> GetStockMovementsListGenerationAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var raw = await _distributedCache.GetStringAsync(CacheKeys.StockMovementsListGenerationKey, cancellationToken);
+            return long.TryParse(raw, out var g) ? g : 0;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Stok hareketleri listesi nesil okunamadı; 0 kullanılıyor.");
+            return 0;
+        }
+    }
+
+    public async Task InvalidateStockMovementsListCacheAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var raw = await _distributedCache.GetStringAsync(CacheKeys.StockMovementsListGenerationKey, cancellationToken);
+            var next = (long.TryParse(raw, out var g) ? g : 0) + 1;
+            await _distributedCache.SetStringAsync(
+                CacheKeys.StockMovementsListGenerationKey,
+                next.ToString(),
+                new DistributedCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(3650)
+                },
+                cancellationToken);
+            _logger.LogInformation("Stok hareketleri listesi cache nesli artırıldı: {Generation}", next);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Stok hareketleri listesi cache nesli artırılamadı.");
         }
     }
 }

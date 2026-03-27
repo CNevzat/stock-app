@@ -22,9 +22,6 @@ public class DatabaseSeeder
 
     public async Task SeedAsync()
     {
-        // Veritabanının oluşturulduğundan emin ol
-        await _context.Database.EnsureCreatedAsync();
-
         // Rolleri oluştur
         await SeedRolesAsync();
 

@@ -15,6 +15,7 @@ import { getApiBaseUrl } from '../utils/apiConfig'
 // Image URL helper
 const getImageUrl = (imagePath: string | null | undefined) => {
   if (!imagePath) return null;
+  if (/^https?:\/\//i.test(imagePath)) return imagePath;
   return `${getApiBaseUrl()}${imagePath}`;
 };
 
@@ -260,6 +261,8 @@ export default function ProductsPage() {
     mutationFn: (dto: CreateProductCommand & { image?: File }) => productService.create(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['products-all'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       setIsCreateModalOpen(false)
       resetForm()
     },
@@ -271,6 +274,9 @@ export default function ProductsPage() {
       productService.update(dto),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['products-all'] })
+      queryClient.invalidateQueries({ queryKey: ['product-detail'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       setIsEditModalOpen(false)
       resetForm()
     },
@@ -281,6 +287,9 @@ export default function ProductsPage() {
     mutationFn: (id: number) => productService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['products-all'] })
+      queryClient.invalidateQueries({ queryKey: ['product-detail'] })
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] })
     },
     onError: (error: any) => {
       const errorMessage = error?.message || 'Ürün silinirken bir hata oluştu';
@@ -291,13 +300,14 @@ export default function ProductsPage() {
   // Stock Movement mutation for product detail
   const stockMovementMutation = useMutation({
     mutationFn: (data: typeof stockMovementFormData) => stockMovementService.create(data),
-    onSuccess: () => {
-      // Tüm ilgili query'leri invalidate et
+    onSuccess: async () => {
       queryClient.invalidateQueries({ queryKey: ['stock-movements'] })
       queryClient.invalidateQueries({ queryKey: ['stock-movements-detail'] })
       queryClient.invalidateQueries({ queryKey: ['products'] })
       queryClient.invalidateQueries({ queryKey: ['products-all'] })
+      queryClient.invalidateQueries({ queryKey: ['product-detail'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      await queryClient.refetchQueries({ queryKey: ['stock-movements-detail'] })
       setIsStockMovementModalOpen(false)
       setStockMovementFormData({
         productId: detailProductId || 0,
@@ -1362,6 +1372,13 @@ export default function ProductsPage() {
                     : ''
 
                   const productImage = (baseProduct as any).imagePath
+                  const detailAttrs = (detailProductData as any)?.attributes
+                  const listAttrs = productAttributesData?.items
+                  const displayAttributes = Array.isArray(detailAttrs) && detailAttrs.length > 0
+                    ? detailAttrs
+                    : Array.isArray(listAttrs)
+                      ? listAttrs
+                      : []
                   const lastPurchasePrice = Number(baseProduct.currentPurchasePrice ?? 0)
                   const averagePurchasePrice = Number(baseProduct.averagePurchasePrice ?? lastPurchasePrice)
                   const lastSalePrice = Number(baseProduct.currentSalePrice ?? 0)
@@ -1430,6 +1447,25 @@ export default function ProductsPage() {
                             </div>
                           </div>
                         </div>
+
+                        {displayAttributes.length > 0 && (
+                          <div className="mt-4 pt-4 border-t border-gray-200">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3">Ürün öznitelikleri</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {displayAttributes.map((attribute: { id?: number; key?: string; value?: string }) => (
+                                <div
+                                  key={attribute.id ?? `${attribute.key}-${attribute.value}`}
+                                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm"
+                                >
+                                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                    {attribute.key}
+                                  </div>
+                                  <div className="mt-0.5 text-sm font-semibold text-gray-900">{attribute.value}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -1659,35 +1695,6 @@ export default function ProductsPage() {
                     </>
                   )
                 })()}
-
-                {/* Ürün Öznitelikleri */}
-                <div className="mt-6 mb-6">
-                  <h4 className="text-md font-semibold text-gray-900 mb-3">Ürün Öznitelikleri</h4>
-                  {productAttributesData?.items && productAttributesData.items.length > 0 ? (
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {productAttributesData.items.map((attribute: any) => (
-                          <div key={attribute.id} className="bg-white rounded-lg p-3 border border-gray-200 shadow-sm">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                  {attribute.key}
-                                </div>
-                                <div className="text-sm font-semibold text-gray-900">
-                                  {attribute.value}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-gray-50 rounded-lg p-4 text-center text-gray-500 text-sm">
-                      Bu ürün için henüz öznitelik tanımlanmamıştır.
-                    </div>
-                  )}
-                </div>
               </div>
               <div className="flex-shrink-0 border-t border-gray-200 px-4 py-3 flex justify-end bg-white">
                 <button

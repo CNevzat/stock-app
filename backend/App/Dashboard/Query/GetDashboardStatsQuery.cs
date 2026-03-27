@@ -302,8 +302,8 @@ internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStats
             })
             .ToListAsync(cancellationToken);
 
-        // Stok hareketleri istatistikleri
-        var today = DateTime.Today;
+        // Stok hareketleri istatistikleri (PostgreSQL timestamptz / Npgsql yalnızca UTC DateTime kabul eder)
+        var today = DateTime.SpecifyKind(DateTime.UtcNow.Date, DateTimeKind.Utc);
         var thisWeekStart = today.AddDays(-(int)today.DayOfWeek);
 
         var totalStockMovements = await _context.StockMovements.CountAsync(cancellationToken);
@@ -354,8 +354,8 @@ internal class GetDashboardStatsQueryHandler : IRequestHandler<GetDashboardStats
 
         // Son 1 yıl trend (aylık bazda) - Sağ grafik için
         var last12MonthsStart = today.AddMonths(-11);
-        var last12MonthsStartDate = new DateTime(last12MonthsStart.Year, last12MonthsStart.Month, 1);
-        var currentMonthStart = new DateTime(today.Year, today.Month, 1);
+        var last12MonthsStartDate = new DateTime(last12MonthsStart.Year, last12MonthsStart.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        var currentMonthStart = new DateTime(today.Year, today.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
         var last12MonthsData = await _context.StockMovements
             .Where(sm => sm.CreatedAt >= last12MonthsStartDate)

@@ -1,4 +1,27 @@
+name: stock-app
+
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: stockapp-postgres
+    environment:
+      POSTGRES_USER: stockapp
+      POSTGRES_PASSWORD: stockapp
+      POSTGRES_DB: stockapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - stockapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stockapp -d stockapp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
   redis:
     image: redis:7-alpine
     container_name: stockapp-redis
@@ -38,9 +61,68 @@ services:
       retries: 5
       start_period: 40s
 
+  minio:
+    image: minio/minio:latest
+    container_name: stockapp-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio-data:/data
+    restart: unless-stopped
+    networks:
+      - stockapp-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # API — Development ortamı (Swagger, seed, gevşek CORS). Aşağıdaki env’ler
+  # appsettings.Development.json içindeki localhost değerlerini override eder (postgres, redis, minio, …).
+  stockapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stockapp-api
+    ports:
+      - "5134:5134"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=stockapp;Username=stockapp;Password=stockapp
+      ConnectionStrings__Redis: redis:6379
+      ConnectionStrings__Elasticsearch: http://elasticsearch:9200
+      Minio__Enabled: "true"
+      Minio__Endpoint: minio:9000
+      Minio__AccessKey: minioadmin
+      Minio__SecretKey: minioadmin
+      Minio__Bucket: stockapp-images
+      # Tarayıcının göreceği adres; uzaktan erişimde sunucu IP veya alan adı verin (örn. http://192.168.1.10:9000)
+      Minio__BaseUrl: http://localhost:9000
+      Minio__UseSSL: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      elasticsearch:
+        condition: service_started
+      minio:
+        condition: service_started
+    networks:
+      - stockapp-network
+    restart: unless-stopped
+
 volumes:
+  postgres-data:
   redis-data:
   elasticsearch-data:
+  minio-data:
 
 networks:
   stockapp-network:

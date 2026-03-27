@@ -4,11 +4,14 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.IdentityModel.Tokens;
@@ -23,11 +26,11 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register DbContext with SQLite
         services.AddDbContext<ApplicationDbContext>(options =>
         {
-            var connectionString = configuration.GetConnectionString("DefaultConnection");
-            options.UseSqlite(connectionString);
+            var connectionString = configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
+            options.UseNpgsql(connectionString);
         });
 
         // Configure Identity
@@ -281,6 +284,19 @@ public static class DependencyInjection
             services.AddDistributedMemoryCache();
         }
 
+        services.Configure<MinioStorageOptions>(configuration.GetSection(MinioStorageOptions.SectionName));
+        var minioOpts = configuration.GetSection(MinioStorageOptions.SectionName).Get<MinioStorageOptions>();
+        if (minioOpts?.Enabled == true)
+        {
+            if (string.IsNullOrWhiteSpace(minioOpts.Endpoint))
+            {
+                throw new InvalidOperationException(
+                    "MinIO etkin: Minio:Endpoint zorunludur (örn. localhost:9000 veya minio:9000, şema yok).");
+            }
+
+            services.AddSingleton<MinioFileService>();
+        }
+
         // Register application services
         services.AddScoped<IPdfService, PdfService>();
         services.AddScoped<IExcelService, ExcelService>();
@@ -303,6 +319,21 @@ public static class DependencyInjection
             opt.ConnectionString = elasticsearchConnectionString;
         });
         services.AddScoped<IElasticsearchService, ElasticsearchService>();
+        services.AddScoped<ICategoryElasticsearchReindexService, CategoryElasticsearchReindexService>();
+
+        // Hangfire — PostgreSQL storage (ayrı tablo seti, ayrı infra yok)
+        var hangfireConnection = configuration.GetConnectionString("DefaultConnection")
+            ?? throw new InvalidOperationException("Hangfire için DefaultConnection gerekli.");
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(opt => opt.UseNpgsqlConnection(hangfireConnection)));
+        services.AddHangfireServer(opt =>
+        {
+            opt.WorkerCount = 2; // Arka plan worker thread sayısı (küçük sunucularda 2 yeterli)
+            opt.Queues = new[] { "category-reindex", "default" };
+        });
 
         services.Configure<GeminiOptions>(configuration.GetSection(GeminiOptions.SectionName));
         services.AddScoped<IGeminiService, GeminiService>();

@@ -1,8 +1,6 @@
 namespace StockApp.App.Elasticsearch;
 
-/// <summary>
-/// Elasticsearch işlemlerinin controller'a taşınmaması için ortak sonuç tipi.
-/// </summary>
+// Elasticsearch işlemlerinin controller'a taşınmaması için ortak sonuç tipi.
 public sealed record ElasticsearchOperationResult
 {
     public bool Success { get; init; }

@@ -1,3 +1,4 @@
+using System.Linq;
 using Elasticsearch.Net;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -14,10 +15,12 @@ public interface IElasticsearchService
 {
     Task IndexProductAsync(ProductDto product, CancellationToken cancellationToken = default);
     Task UpdateProductAsync(ProductDto product, CancellationToken cancellationToken = default);
+    Task BulkIndexProductsAsync(IReadOnlyList<ProductDto> products, CancellationToken cancellationToken = default);
     Task DeleteProductAsync(int productId, CancellationToken cancellationToken = default);
     Task<SearchResult<ProductDto>> SearchProductsAsync(string query, int page = 1, int pageSize = 10, int? categoryId = null, int? locationId = null, CancellationToken cancellationToken = default);
 
     Task IndexStockMovementAsync(StockMovementDto stockMovement, CancellationToken cancellationToken = default);
+    Task BulkIndexStockMovementsAsync(IReadOnlyList<StockMovementDto> stockMovements, CancellationToken cancellationToken = default);
     Task UpdateStockMovementAsync(StockMovementDto stockMovement, CancellationToken cancellationToken = default);
     Task DeleteStockMovementAsync(int stockMovementId, CancellationToken cancellationToken = default);
     Task<SearchResult<StockMovementDto>> SearchStockMovementsAsync(string query, int page = 1, int pageSize = 10, int? productId = null, int? categoryId = null, StockMovementType? type = null, DateTime? startDate = null, DateTime? endDate = null, CancellationToken cancellationToken = default);
@@ -94,6 +97,44 @@ public class ElasticsearchService : IElasticsearchService
     public async Task UpdateProductAsync(ProductDto product, CancellationToken cancellationToken = default)
     {
         await IndexProductAsync(product, cancellationToken); // Update is same as index in ES
+    }
+
+    public async Task BulkIndexProductsAsync(IReadOnlyList<ProductDto> products, CancellationToken cancellationToken = default)
+    {
+        if (products.Count == 0)
+            return;
+
+        try
+        {
+            const int chunkSize = 500;
+            for (var offset = 0; offset < products.Count; offset += chunkSize)
+            {
+                var chunk = products.Skip(offset).Take(chunkSize).ToList();
+                var bulk = new BulkDescriptor();
+                foreach (var product in chunk)
+                {
+                    bulk.Index<ProductDto>(op => op
+                        .Index(ProductsIndex)
+                        .Id(product.Id)
+                        .Document(product));
+                }
+
+                var response = await _client.BulkAsync(bulk, cancellationToken);
+                if (response.Errors)
+                {
+                    foreach (var item in response.ItemsWithErrors)
+                        _logger.LogWarning("Bulk product index error: {Id} {Error}", item.Id, item.Error);
+                }
+            }
+
+            await _client.Indices.RefreshAsync(ProductsIndex, ct: cancellationToken);
+            _logger.LogInformation("Bulk indexed {Count} products", products.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Bulk index products failed");
+            throw;
+        }
     }
 
     public async Task DeleteProductAsync(int productId, CancellationToken cancellationToken = default)
@@ -255,6 +296,44 @@ public class ElasticsearchService : IElasticsearchService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error indexing stock movement {StockMovementId}", stockMovement.Id);
+        }
+    }
+
+    public async Task BulkIndexStockMovementsAsync(IReadOnlyList<StockMovementDto> stockMovements, CancellationToken cancellationToken = default)
+    {
+        if (stockMovements.Count == 0)
+            return;
+
+        try
+        {
+            const int chunkSize = 500;
+            for (var offset = 0; offset < stockMovements.Count; offset += chunkSize)
+            {
+                var chunk = stockMovements.Skip(offset).Take(chunkSize).ToList();
+                var bulk = new BulkDescriptor();
+                foreach (var sm in chunk)
+                {
+                    bulk.Index<StockMovementDto>(op => op
+                        .Index(StockMovementsIndex)
+                        .Id(sm.Id)
+                        .Document(sm));
+                }
+
+                var response = await _client.BulkAsync(bulk, cancellationToken);
+                if (response.Errors)
+                {
+                    foreach (var item in response.ItemsWithErrors)
+                        _logger.LogWarning("Bulk stock movement index error: {Id} {Error}", item.Id, item.Error);
+                }
+            }
+
+            await _client.Indices.RefreshAsync(StockMovementsIndex, ct: cancellationToken);
+            _logger.LogInformation("Bulk indexed {Count} stock movements", stockMovements.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Bulk index stock movements failed");
+            throw;
         }
     }
 

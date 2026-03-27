@@ -1,6 +1,9 @@
+using Hangfire;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using StockApp;
 using StockApp.App.Category.Query;
 using StockApp.App.Dashboard.Query;
 using StockApp.Hub;
@@ -26,13 +29,23 @@ internal sealed class UpdateCategoryCommandHandler : IRequestHandler<UpdateCateg
     private readonly IMediator _mediator;
     private readonly IHubContext<StockHub> _hubContext;
     private readonly ICacheService _cacheService;
+    private readonly IBackgroundJobClient _backgroundJobs;
+    private readonly ILogger<UpdateCategoryCommandHandler> _logger;
 
-    public UpdateCategoryCommandHandler(ApplicationDbContext context, IMediator mediator, IHubContext<StockHub> hubContext, ICacheService cacheService)
+    public UpdateCategoryCommandHandler(
+        ApplicationDbContext context,
+        IMediator mediator,
+        IHubContext<StockHub> hubContext,
+        ICacheService cacheService,
+        IBackgroundJobClient backgroundJobs,
+        ILogger<UpdateCategoryCommandHandler> logger)
     {
         _context = context;
         _mediator = mediator;
         _hubContext = hubContext;
         _cacheService = cacheService;
+        _backgroundJobs = backgroundJobs;
+        _logger = logger;
     }
 
     public async Task<UpdateCategoryCommandResponse> Handle(UpdateCategoryCommand request, CancellationToken cancellationToken)
@@ -56,6 +69,17 @@ internal sealed class UpdateCategoryCommandHandler : IRequestHandler<UpdateCateg
         category.UpdatedAt = DateTime.UtcNow;
         _context.Categories.Update(category);
         await _context.SaveChangesAsync(cancellationToken);
+
+        // Kategori adı değiştiyse: Redis listeleri hemen temizle; ES reindex Hangfire kuyruğuna gönder
+        if (request.Name != null)
+        {
+            await _cacheService.InvalidateProductsListCacheAsync(cancellationToken);
+            await _cacheService.InvalidateStockMovementsListCacheAsync(cancellationToken);
+
+            _backgroundJobs.Enqueue<ICategoryElasticsearchReindexService>(
+                "category-reindex",
+                svc => svc.ReindexAfterCategoryNameChangeAsync(category.Id));
+        }
 
         // Cache'i invalidate et (dashboard stats değişti)
         await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);

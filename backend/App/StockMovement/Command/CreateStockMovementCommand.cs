@@ -126,8 +126,9 @@ internal sealed class CreateStockMovementCommandHandler : IRequestHandler<Create
 
         await _context.SaveChangesAsync(cancellationToken);
         
-        // Cache'i invalidate et (dashboard stats değişti)
         await _cacheService.RemoveAsync(CacheKeys.DashboardStats, cancellationToken);
+        await _cacheService.InvalidateStockMovementsListCacheAsync(cancellationToken);
+        await _cacheService.InvalidateProductsListCacheAsync(cancellationToken);
         
         // SignalR ile Gerçek zamanlı bildirim gönder
         try

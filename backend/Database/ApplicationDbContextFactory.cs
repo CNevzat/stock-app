@@ -3,15 +3,15 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace StockApp
 {
+    // Migration’lar: depo kökünde `dotnet tool restore`, backend’de `dotnet ef migrations add ... --output-dir Migrations`.
     public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<ApplicationDbContext>
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            
-            // Use SQLite for design-time (migrations)
-            optionsBuilder.UseSqlite("Data Source=stockapp.db");
-            
+            var cs = Environment.GetEnvironmentVariable("STOCKAPP_CONNECTION_STRING")
+                ?? "Host=localhost;Port=5432;Database=stockapp;Username=stockapp;Password=stockapp";
+            optionsBuilder.UseNpgsql(cs);
             return new ApplicationDbContext(optionsBuilder.Options);
         }
     }

@@ -1,9 +1,6 @@
 using MediatR;
 using StockApp.App.Elasticsearch;
-using StockApp.App.Category.Query;
-using StockApp.App.Location.Query;
 using StockApp.App.Product.Query;
-using StockApp.Common.Constants;
 using StockApp.Services;
 
 namespace StockApp.App.Elasticsearch.Command;
@@ -81,29 +78,7 @@ internal sealed class ReindexProductsElasticsearchCommandHandler
 
             try
             {
-                var categories = await _mediator.Send(new GetCategoriesQuery { PageNumber = 1, PageSize = 100 }, cancellationToken);
-                var locations = await _mediator.Send(new GetLocationsQuery { PageNumber = 1, PageSize = 100 }, cancellationToken);
-
-                for (var page = 1; page <= 10; page++)
-                {
-                    for (var size = 10; size <= 100; size += 10)
-                    {
-                        await _cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, null, null));
-                        await _cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, null, ""));
-
-                        foreach (var cat in categories.Items)
-                        {
-                            await _cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, cat.Id, null, null));
-                            await _cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, cat.Id, null, ""));
-                        }
-
-                        foreach (var loc in locations.Items)
-                        {
-                            await _cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, loc.Id, null));
-                            await _cacheService.RemoveAsync(CacheKeys.ProductsList(page, size, null, loc.Id, ""));
-                        }
-                    }
-                }
+                await _cacheService.InvalidateProductsListCacheAsync(cancellationToken);
             }
             catch
             {

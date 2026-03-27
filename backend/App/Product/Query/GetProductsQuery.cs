@@ -56,13 +56,14 @@ internal class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Pagin
 
     public async Task<PaginatedList<ProductDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
-        // Cache key oluştur
+        var generation = await _cacheService.GetProductsListGenerationAsync(cancellationToken);
         var cacheKey = CacheKeys.ProductsList(
             request.PageNumber,
             request.PageSize,
             request.CategoryId,
             request.LocationId,
-            request.SearchTerm);
+            request.SearchTerm,
+            generation);
 
         // Cache'den oku (Redis boş sonucu önbelleğe aldıysa, ES henüz doldurulmadan kalabilir — boş cache'i atla)
         var cachedResult = await _cacheService.GetAsync<PaginatedList<ProductDto>>(cacheKey, cancellationToken);
@@ -75,28 +76,34 @@ internal class GetProductsQueryHandler : IRequestHandler<GetProductsQuery, Pagin
             return cachedResult;
         }
 
-        // Elasticsearch zorunlu - tüm aramalar Elasticsearch üzerinden yapılır
-        _logger.LogInformation("Using Elasticsearch for product search. SearchTerm: {SearchTerm}, CategoryId: {CategoryId}, LocationId: {LocationId}", 
-            request.SearchTerm ?? "(all)", request.CategoryId, request.LocationId);
-
-        var searchResult = await _elasticsearchService.SearchProductsAsync(
-            request.SearchTerm ?? string.Empty, // Empty string = MatchAll
-            request.PageNumber,
-            request.PageSize,
-            request.CategoryId,
-            request.LocationId,
-            cancellationToken);
-
         PaginatedList<ProductDto> result;
 
-        // Dashboard DB'den sayar; liste ES'ten gelir. İndeks boş / reindex yapılmadıysa burada DB'den doldur.
-        if (searchResult.TotalCount == 0 && string.IsNullOrWhiteSpace(request.SearchTerm))
+        // Metin araması yoksa liste doğrudan PostgreSQL'den (kaynak gerçek). ES indeksi eksik/eski kalsa bile
+        // tüm ürünler görünür; yalnızca güncellenen ürünün indekslenmiş olması tek kayıt göstermez.
+        if (string.IsNullOrWhiteSpace(request.SearchTerm))
         {
-            _logger.LogWarning("Elasticsearch ürün listesi boş; SQLite üzerinden okunuyor.");
+            _logger.LogInformation(
+                "Ürün listesi (metin araması yok): PostgreSQL. CategoryId: {CategoryId}, LocationId: {LocationId}",
+                request.CategoryId,
+                request.LocationId);
             result = await GetProductsFromDatabaseAsync(request, cancellationToken);
         }
         else
         {
+            _logger.LogInformation(
+                "Ürün metin araması: Elasticsearch. SearchTerm: {SearchTerm}, CategoryId: {CategoryId}, LocationId: {LocationId}",
+                request.SearchTerm,
+                request.CategoryId,
+                request.LocationId);
+
+            var searchResult = await _elasticsearchService.SearchProductsAsync(
+                request.SearchTerm,
+                request.PageNumber,
+                request.PageSize,
+                request.CategoryId,
+                request.LocationId,
+                cancellationToken);
+
             result = new PaginatedList<ProductDto>(
                 searchResult.Items,
                 (int)searchResult.TotalCount,

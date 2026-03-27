@@ -14,7 +14,7 @@ Modern, full-stack stok yönetim sistemi. .NET 10 backend ve React + TypeScript 
 - **SQLite Database** - Kolay geliştirme ortamı
 - **Excel Export** - Ürün ve öznitelik verilerini Excel'e aktarma
 - **Stock Movement Export** - Tüm stok hareketlerini Excel'e aktarma
-- **Image Upload** - Ürün resimlerini yükleme ve yönetme
+- **Image Upload** - Ürün resimleri (yerel `wwwroot/images` veya yapılandırılmış MinIO)
 - **Exception Handling** - Merkezi hata yönetimi
 - **Fiyat Yönetimi** - Ürün bazlı alış/satış fiyatı takibi, geçmiş saklama, SignalR ile canlı güncellemeler
 - **Doğal Dil Raporlama** - Gemini API ile soru-cevap tabanlı rapor üretimi
@@ -51,6 +51,7 @@ Modern, full-stack stok yönetim sistemi. .NET 10 backend ve React + TypeScript 
 - **PuppeteerSharp** - PDF oluşturma
 - **ClosedXML** - Excel export
 - **Markdig** - Markdown işleme
+- **MinIO (Minio 6.x)** - Ürün görselleri için isteğe bağlı nesne depolama
 
 ### Frontend
 - **React 19** - UI Framework
@@ -91,6 +92,7 @@ stock-app/                             # Depo kökü
 │   ├── Services/                      # Business Services
 │   │   ├── ExcelService.cs
 │   │   ├── ImageService.cs
+│   │   ├── MinioFileService.cs
 │   │   └── PdfService.cs
 │   └── Program.cs
 │
