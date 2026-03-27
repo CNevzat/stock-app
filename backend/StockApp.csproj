@@ -14,12 +14,13 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="10.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0">
           <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <!-- contentfiles: Roslyn BuildHost (BuildHost-*) çıktıya kopyalanır; EF migrations için gerekmez -->
+          <IncludeAssets>runtime; build; native; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.0">
           <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+          <IncludeAssets>runtime; build; native; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="PuppeteerSharp" Version="20.2.4" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
@@ -35,5 +36,14 @@
         <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     </ItemGroup>
 
+    <!-- Roslyn MSBuild BuildHost; çalışma zamanı / publish için gereksiz, transitive contentfiles yine gelirse temizlenir -->
+    <Target Name="RemoveRoslynBuildHostFolders" AfterTargets="CopyFilesToOutputDirectory">
+        <RemoveDir Directories="$(OutputPath)BuildHost-net472" Condition="Exists('$(OutputPath)BuildHost-net472')" />
+        <RemoveDir Directories="$(OutputPath)BuildHost-netcore" Condition="Exists('$(OutputPath)BuildHost-netcore')" />
+    </Target>
+    <Target Name="RemoveRoslynBuildHostFromPublish" AfterTargets="Publish">
+        <RemoveDir Directories="$(PublishDir)BuildHost-net472" Condition="'$(PublishDir)' != '' And Exists('$(PublishDir)BuildHost-net472')" />
+        <RemoveDir Directories="$(PublishDir)BuildHost-netcore" Condition="'$(PublishDir)' != '' And Exists('$(PublishDir)BuildHost-netcore')" />
+    </Target>
 
 </Project>
