@@ -474,7 +474,11 @@ export default function ProductsPage() {
   [detailPriceHistory])
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    )
   }
 
   return (
@@ -482,7 +486,7 @@ export default function ProductsPage() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-semibold text-gray-900">Ürünler</h1>
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Ürünler</h1>
             <TechnologyInfo
               technologies={[
                 'Redis Cache (60s TTL) - Hızlı veri erişimi',
@@ -492,7 +496,7 @@ export default function ProductsPage() {
               description="Arama sonuçları Redis'te cache'lenir, Elasticsearch ile hızlı ve akıllı arama yapılır."
             />
           </div>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Stokta bulunan tüm ürünlerin listesi.
           </p>
         </div>
@@ -569,7 +573,7 @@ export default function ProductsPage() {
               }, 50)
             }
           }}
-          className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+          className="block flex-1 min-w-0 rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
         <select
           value={categoryFilter || ''}
@@ -577,7 +581,7 @@ export default function ProductsPage() {
             setCategoryFilter(e.target.value ? Number(e.target.value) : undefined)
             setPage(1)
           }}
-          className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+          className="block rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
         >
           <option value="">Tüm Kategoriler</option>
           {categoriesData?.items?.map((cat) => (
@@ -599,15 +603,15 @@ export default function ProductsPage() {
               }
             }}
             onFocus={() => setShowLocationDropdown(true)}
-            className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+            className="block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
           />
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           {showLocationDropdown && (
-            <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-10 mt-1 w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
               <button
                 type="button"
                 onClick={() => {
@@ -615,16 +619,16 @@ export default function ProductsPage() {
                   setLocationSearchInput('')
                   setShowLocationDropdown(false)
                 }}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors border-b border-gray-100"
+                className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 focus:bg-gray-50 dark:focus:bg-gray-800 focus:outline-none transition-colors border-b border-gray-100 dark:border-gray-700"
               >
-                <div className="font-medium text-gray-900">Tüm Lokasyonlar</div>
+                <div className="font-medium text-gray-900 dark:text-gray-100">Tüm Lokasyonlar</div>
               </button>
               {locationsData?.items
                 ?.filter((loc: any) => 
                   loc.name?.toLowerCase().includes(locationSearchInput.toLowerCase())
                 )
                 .length === 0 ? (
-                  <div className="px-4 py-3 text-sm text-gray-500">
+                  <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
                     Lokasyon bulunamadı
                   </div>
                 ) : (
@@ -642,11 +646,11 @@ export default function ProductsPage() {
                           setShowLocationDropdown(false)
                           setPage(1)
                         }}
-                        className="w-full text-left px-4 py-3 hover:bg-gray-50 focus:bg-gray-50 focus:outline-none transition-colors border-b border-gray-100 last:border-b-0"
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 focus:bg-gray-50 dark:focus:bg-gray-800 focus:outline-none transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
                       >
-                        <div className="font-medium text-gray-900">{loc.name}</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{loc.name}</div>
                         {loc.description && (
-                          <div className="text-sm text-gray-500">{loc.description}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">{loc.description}</div>
                         )}
                       </button>
                     ))
@@ -658,48 +662,48 @@ export default function ProductsPage() {
 
       <div className="mt-8 flow-root">
         <div className="inline-block w-full align-middle">
-          <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-50">
+          <div className="overflow-hidden rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60 ring-1 ring-black/5 dark:ring-white/10 sm:rounded-xl">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
-                  <th scope="col" className="py-3.5 pl-2 pr-2 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[50px]">
+                  <th scope="col" className="py-3.5 pl-2 pr-2 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap w-[50px]">
                     #
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[260px] max-w-[260px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[260px] max-w-[260px]">
                     İsim
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[100px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap w-[100px]">
                     Stok Kodu
                   </th>
-                  <th className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap w-[60px]">
+                  <th className="px-1 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap w-[60px]">
                     Stok
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[140px] max-w-[180px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[140px] max-w-[180px]">
                     Kategori
                   </th>
-                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[160px] max-w-[200px]">
+                  <th className="px-2 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[160px] max-w-[200px]">
                     Lokasyon
                   </th>
-                  <th className="px-2 py-3.5 text-right text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[110px]">
+                  <th className="px-2 py-3.5 text-right text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[110px]">
                     Satın Alma
                   </th>
-                  <th className="px-2 py-3.5 text-right text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[110px]">
+                  <th className="px-2 py-3.5 text-right text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[110px]">
                     Satış
                   </th>
-                  <th className="relative py-3.5 pl-2 pr-2 text-right text-sm font-semibold text-gray-900 whitespace-nowrap w-[280px]">
+                  <th className="relative py-3.5 pl-2 pr-2 text-right text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap w-[280px]">
                     <span className="sr-only">İşlemler</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {productsData?.items?.map((product: any, index: number) => (
-                  <tr key={product.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="whitespace-nowrap py-4 pl-2 pr-2 text-sm font-medium text-gray-900">
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 font-semibold text-xs">
+                  <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150">
+                    <td className="whitespace-nowrap py-4 pl-2 pr-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 font-semibold text-xs">
                         {(page - 1) * pageSize + index + 1}
                       </span>
                     </td>
-                    <td className="px-2 py-4 text-sm font-medium text-gray-900 min-w-[260px] max-w-[260px]">
+                    <td className="px-2 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 min-w-[260px] max-w-[260px]">
                       <div className="flex items-center gap-2">
                         {(product as any).imagePath && (
                           <img
@@ -713,31 +717,31 @@ export default function ProductsPage() {
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm w-[100px]">
                       <div className="truncate">
-                        <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-mono font-semibold text-gray-900 ring-1 ring-inset ring-blue-600/20">
+                        <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-mono font-semibold text-gray-900 dark:text-blue-100 dark:bg-blue-950/50 ring-1 ring-inset ring-blue-600/20 dark:ring-blue-400/35">
                           {product.stockCode}
                         </span>
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-1 py-4 text-sm text-center w-[60px]">
-                      <span className="text-gray-900 font-medium">
+                      <span className="text-gray-900 dark:text-gray-100 font-medium">
                         {product.stockQuantity ?? 0}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[140px] max-w-[180px]">
-                      <span className="block truncate text-gray-700">
+                      <span className="block truncate text-gray-700 dark:text-gray-300">
                         {product.categoryName || '-'}
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-2 py-4 text-sm min-w-[160px] max-w-[200px]">
-                      <span className="block truncate max-w-[220px]">{product.locationName || '-'}</span>
+                      <span className="block truncate max-w-[220px] text-gray-900 dark:text-gray-100">{product.locationName || '-'}</span>
                     </td>
-                    <td className="whitespace-nowrap px-2 py-4 text-sm text-right min-w-[110px]">
+                    <td className="whitespace-nowrap px-2 py-4 text-sm text-right min-w-[110px] text-gray-900 dark:text-gray-100">
                       ₺{Number(product.currentPurchasePrice ?? 0).toLocaleString('tr-TR', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
                     </td>
-                    <td className="whitespace-nowrap px-2 py-4 text-sm text-right min-w-[110px]">
+                    <td className="whitespace-nowrap px-2 py-4 text-sm text-right min-w-[110px] text-gray-900 dark:text-gray-100">
                       ₺{Number(product.currentSalePrice ?? 0).toLocaleString('tr-TR', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
@@ -747,17 +751,17 @@ export default function ProductsPage() {
                       <div className="flex justify-end items-center gap-1.5">
                          <button
                            onClick={() => openDetailModal(product)}
-                           className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100">
+                           className="inline-flex items-center gap-1 rounded-md bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-900/50">
                            Detay
                          </button>
                          <button
                            onClick={() => openEditModal(product)}
-                           className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100">
+                           className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300 dark:hover:bg-blue-900/50">
                            Düzenle
                          </button>
                          <button
                            onClick={() => handleDelete(product)}
-                           className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
+                           className="inline-flex items-center gap-1 rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 dark:bg-red-950/50 dark:text-red-300 dark:hover:bg-red-900/50">
                            Sil
                          </button>
                        </div>
@@ -772,26 +776,26 @@ export default function ProductsPage() {
 
       {/* Pagination */}
       {productsData && (productsData.totalPages ?? 0) > 1 && (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 mt-4 rounded-lg">
+        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 px-4 py-3 sm:px-6 mt-4 rounded-lg">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPage(page - 1)}
               disabled={!productsData.hasPreviousPage}
-              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Önceki
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={!productsData.hasNextPage}
-              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sonraki
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 <span className="font-medium">{productsData.pageNumber}</span> / <span className="font-medium">{productsData.totalPages}</span> sayfa gösteriliyor
               </p>
             </div>
@@ -800,14 +804,14 @@ export default function ProductsPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!productsData.hasPreviousPage}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Önceki
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!productsData.hasNextPage}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sonraki
                 </button>
@@ -825,15 +829,15 @@ export default function ProductsPage() {
               setIsCreateModalOpen(false)
               resetForm()
             }} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={handleCreate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Ürün Oluştur
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         İsim
                       </label>
                       <input
@@ -842,11 +846,11 @@ export default function ProductsPage() {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama
                       </label>
                       <textarea
@@ -854,11 +858,11 @@ export default function ProductsPage() {
                         required
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="purchasePrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Satın Alma Fiyatı *
                       </label>
                       <input
@@ -876,11 +880,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, purchasePrice: 0 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Satış Fiyatı *
                       </label>
                       <input
@@ -898,11 +902,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, salePrice: 0 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="stockQuantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Stok Miktarı
                       </label>
                       <input
@@ -924,11 +928,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, stockQuantity: 0 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Düşük Stok Eşiği
                       </label>
                       <input
@@ -950,11 +954,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, lowStockThreshold: 5 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Kategori
                       </label>
                       <select
@@ -962,7 +966,7 @@ export default function ProductsPage() {
                         required
                         value={formData.categoryId}
                         onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value) })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       >
                         <option value="">Kategori Seçin</option>
                         {categoriesData?.items?.map((cat) => (
@@ -973,7 +977,7 @@ export default function ProductsPage() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="locationId" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="locationId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Lokasyon (Opsiyonel)
                       </label>
                       <div className="relative location-dropdown-container">
@@ -1046,7 +1050,7 @@ export default function ProductsPage() {
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="image" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="image" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Ürün Resmi (Opsiyonel)
                       </label>
                       <input
@@ -1082,7 +1086,7 @@ export default function ProductsPage() {
                       setIsCreateModalOpen(false)
                       resetForm()
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>
@@ -1098,15 +1102,15 @@ export default function ProductsPage() {
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsEditModalOpen(false)} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={handleUpdate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Ürün Düzenle
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         İsim
                       </label>
                       <input
@@ -1114,22 +1118,22 @@ export default function ProductsPage() {
                         id="edit-name"
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama
                       </label>
                       <textarea
                         id="edit-description"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-purchasePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-purchasePrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Satın Alma Fiyatı *
                       </label>
                       <input
@@ -1146,11 +1150,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, purchasePrice: 0 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-salePrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-salePrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Satış Fiyatı *
                       </label>
                       <input
@@ -1167,11 +1171,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, salePrice: 0 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-lowStockThreshold" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-lowStockThreshold" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Düşük Stok Eşiği
                       </label>
                       <input
@@ -1192,11 +1196,11 @@ export default function ProductsPage() {
                             setFormData({ ...formData, lowStockThreshold: 5 })
                           }
                         }}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                   <div>
-                    <label htmlFor="edit-categoryId" className="block text-sm font-medium text-gray-700">
+                    <label htmlFor="edit-categoryId" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Kategori
                     </label>
                     <select
@@ -1204,7 +1208,7 @@ export default function ProductsPage() {
                       required
                       value={formData.categoryId}
                       onChange={(e) => setFormData({ ...formData, categoryId: Number(e.target.value) })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                     >
                       <option value="">Kategori Seçin</option>
                       {categoriesData?.items?.map((cat) => (
@@ -1215,7 +1219,7 @@ export default function ProductsPage() {
                     </select>
                   </div>
                     <div>
-                      <label htmlFor="edit-locationId" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="edit-locationId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         Lokasyon (Opsiyonel)
                       </label>
                       <div className="relative location-dropdown-container">
@@ -1288,7 +1292,7 @@ export default function ProductsPage() {
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="edit-image" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-image" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Ürün Resmi (Opsiyonel)
                       </label>
                       <input
@@ -1321,7 +1325,7 @@ export default function ProductsPage() {
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>
@@ -1340,9 +1344,9 @@ export default function ProductsPage() {
               setIsDetailModalOpen(false)
               setDetailProductId(null)
             }} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all w-full max-w-4xl max-h-[85vh] flex flex-col z-50">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all w-full max-w-4xl max-h-[85vh] flex flex-col z-50 ring-1 ring-gray-200 dark:ring-gray-700">
               <div className="flex-1 overflow-y-auto px-4 pb-4 pt-5">
-                <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-6">
+                <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-6">
                   Ürün Detayları ve Stok Hareketleri
                 </h3>
                 
@@ -1352,8 +1356,8 @@ export default function ProductsPage() {
 
                   if (!baseProduct) {
                     return isDetailProductLoading ? (
-                      <div className="mb-6 p-4 bg-gray-50 rounded-lg text-center">
-                        <span className="text-sm text-gray-500">Ürün bilgileri yükleniyor...</span>
+                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg ring-1 ring-gray-200/80 dark:ring-gray-700/60 text-center">
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Ürün bilgileri yükleniyor...</span>
                       </div>
                     ) : null;
                   }
@@ -1389,7 +1393,7 @@ export default function ProductsPage() {
 
                   return (
                     <>
-                      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg ring-1 ring-gray-200/80 dark:ring-gray-700/60">
                         <div className="flex gap-6">
                           {/* Ürün Resmi */}
                           {productImage && (
@@ -1397,35 +1401,35 @@ export default function ProductsPage() {
                               <img
                                 src={getImageUrl(productImage) || ''}
                                 alt={baseProduct.name}
-                                className="h-48 w-48 object-cover rounded-lg border-2 border-gray-200 shadow-md"
+                                className="h-48 w-48 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-600 shadow-md"
                               />
                             </div>
                           )}
                           {/* Ürün Bilgileri */}
                           <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Ürün Adı</label>
-                              <p className="text-base font-semibold text-gray-900">{baseProduct.name}</p>
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Ürün Adı</label>
+                              <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{baseProduct.name}</p>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Stok Kodu</label>
-                              <p className="text-base font-mono text-gray-900">{baseProduct.stockCode}</p>
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Stok Kodu</label>
+                              <p className="text-base font-mono text-gray-900 dark:text-gray-100">{baseProduct.stockCode}</p>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Kategori</label>
-                              <p className="text-base text-gray-900">{baseProduct.categoryName}</p>
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Kategori</label>
+                              <p className="text-base text-gray-900 dark:text-gray-100">{baseProduct.categoryName}</p>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Lokasyon</label>
-                              <p className="text-base text-gray-900">{(baseProduct as any).locationName || '-'}</p>
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Lokasyon</label>
+                              <p className="text-base text-gray-900 dark:text-gray-100">{(baseProduct as any).locationName || '-'}</p>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Mevcut Stok</label>
-                              <p className="text-base font-semibold text-gray-900">{baseProduct.stockQuantity}</p>
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Mevcut Stok</label>
+                              <p className="text-base font-semibold text-gray-900 dark:text-gray-100">{baseProduct.stockQuantity}</p>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Eklenme Tarihi</label>
-                              <p className="text-base text-gray-900">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Eklenme Tarihi</label>
+                              <p className="text-base text-gray-900 dark:text-gray-100">
                                 {createdAtDate}
                                 {createdAtTime && (
                                   <span className="text-sm text-gray-500 ml-2">{createdAtTime}</span>
@@ -1433,8 +1437,8 @@ export default function ProductsPage() {
                               </p>
                             </div>
                             <div>
-                              <label className="text-sm font-medium text-gray-500">Güncelleme Tarihi</label>
-                              <p className="text-base text-gray-900">
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Güncelleme Tarihi</label>
+                              <p className="text-base text-gray-900 dark:text-gray-100">
                                 {updatedAtDate}
                                 {updatedAtTime && (
                                   <span className="text-sm text-gray-500 ml-2">{updatedAtTime}</span>
@@ -1442,25 +1446,25 @@ export default function ProductsPage() {
                               </p>
                             </div>
                             <div className="md:col-span-2">
-                              <label className="text-sm font-medium text-gray-500">Açıklama</label>
-                              <p className="text-base text-gray-900">{baseProduct.description || '-'}</p>
+                              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Açıklama</label>
+                              <p className="text-base text-gray-900 dark:text-gray-100">{baseProduct.description || '-'}</p>
                             </div>
                           </div>
                         </div>
 
                         {displayAttributes.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <h4 className="text-sm font-semibold text-gray-900 mb-3">Ürün öznitelikleri</h4>
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Ürün öznitelikleri</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                               {displayAttributes.map((attribute: { id?: number; key?: string; value?: string }) => (
                                 <div
                                   key={attribute.id ?? `${attribute.key}-${attribute.value}`}
-                                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm"
+                                  className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800/80 px-3 py-2 shadow-sm"
                                 >
-                                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+                                  <div className="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
                                     {attribute.key}
                                   </div>
-                                  <div className="mt-0.5 text-sm font-semibold text-gray-900">{attribute.value}</div>
+                                  <div className="mt-0.5 text-sm font-semibold text-gray-900 dark:text-gray-100">{attribute.value}</div>
                                 </div>
                               ))}
                             </div>
@@ -1469,22 +1473,22 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Satın Alma Fiyatı</div>
-                          <div className="mt-2 text-lg font-bold text-gray-900">{formatCurrency(lastPurchasePrice)}</div>
-                          <div className="text-sm text-gray-500">Ortalama: {formatCurrency(averagePurchasePrice)}</div>
+                        <div className="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Satın Alma Fiyatı</div>
+                          <div className="mt-2 text-lg font-bold text-gray-900 dark:text-gray-100">{formatCurrency(lastPurchasePrice)}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">Ortalama: {formatCurrency(averagePurchasePrice)}</div>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Satış Fiyatı</div>
-                          <div className="mt-2 text-lg font-bold text-gray-900">{formatCurrency(lastSalePrice)}</div>
-                          <div className="text-sm text-gray-500">Ortalama: {formatCurrency(averageSalePrice)}</div>
+                        <div className="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Satış Fiyatı</div>
+                          <div className="mt-2 text-lg font-bold text-gray-900 dark:text-gray-100">{formatCurrency(lastSalePrice)}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">Ortalama: {formatCurrency(averageSalePrice)}</div>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Envanter Maliyeti</div>
+                        <div className="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Envanter Maliyeti</div>
                           <div className="mt-2 text-lg font-bold text-blue-600">{formatCurrency(inventoryCost)}</div>
                         </div>
-                        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Potansiyel Kar</div>
+                        <div className="bg-white dark:bg-gray-800/80 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
+                          <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Potansiyel Kar</div>
                           <div className={`mt-2 text-lg font-bold ${potentialProfit >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                             {formatCurrency(potentialProfit)}
                           </div>
@@ -1492,8 +1496,8 @@ export default function ProductsPage() {
                       </div>
 
                       {detailPriceHistory.length > 0 && (
-                        <div className="mb-6 bg-gray-50 rounded-lg p-4">
-                          <h4 className="text-md font-semibold text-gray-900 mb-4">Fiyat Geçmişi</h4>
+                        <div className="mb-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 ring-1 ring-gray-200/80 dark:ring-gray-700/60">
+                          <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100 mb-4">Fiyat Geçmişi</h4>
                           <div className="h-64">
                             <ResponsiveContainer width="100%" height="100%">
                               <LineChart data={priceHistoryChartData}>
@@ -1512,19 +1516,19 @@ export default function ProductsPage() {
                               </LineChart>
                             </ResponsiveContainer>
                           </div>
-                          <div className="mt-4 overflow-x-auto bg-white rounded-lg border border-gray-200">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-100">
+                          <div className="mt-4 overflow-x-auto bg-white dark:bg-gray-900/80 rounded-lg border border-gray-200 dark:border-gray-600">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                              <thead className="bg-gray-100 dark:bg-gray-800/90">
                                 <tr>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tarih</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satın Alma</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Satış</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tarih</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Satın Alma</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Satış</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-200">
+                              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                                 {[...detailPriceHistory].reverse().map((entry) => (
-                                  <tr key={entry.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 text-sm text-gray-700">
+                                  <tr key={entry.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                    <td className="px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                                       {new Date(entry.effectiveDate ?? '').toLocaleString('tr-TR', {
                                         day: '2-digit',
                                         month: '2-digit',
@@ -1533,10 +1537,10 @@ export default function ProductsPage() {
                                         minute: '2-digit',
                                       })}
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
                                       ₺{Number(entry.purchasePrice ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
-                                    <td className="px-4 py-3 text-sm font-semibold text-gray-900">
+                                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-gray-100">
                                       ₺{Number(entry.salePrice ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
                                   </tr>
@@ -1550,7 +1554,7 @@ export default function ProductsPage() {
                       {/* Stok Hareketleri Tablosu */}
                       <div className="mt-4">
                         <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-md font-semibold text-gray-900">Stok Hareketleri</h4>
+                          <h4 className="text-md font-semibold text-gray-900 dark:text-gray-100">Stok Hareketleri</h4>
                           <button
                             onClick={() => {
                               setStockMovementFormData({
@@ -1572,60 +1576,60 @@ export default function ProductsPage() {
                         </div>
                         {(stockMovementsData as any)?.items && (stockMovementsData as any).items.length > 0 ? (
                           <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                              <thead className="bg-gray-50">
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                              <thead className="bg-gray-50 dark:bg-gray-800/90">
                                 <tr>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                     #
                                   </th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                     İşlem Tipi
                                   </th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                     Miktar
                                   </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                   Birim Fiyat
                                 </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                   Toplam
                                 </th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                     Açıklama
                                   </th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
                                     Tarih
                                   </th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-gray-200 bg-white">
+                              <tbody className="divide-y divide-gray-200 dark:divide-gray-600 bg-white dark:bg-gray-900/40">
                                 {(stockMovementsData as any).items.map((movement: any, index: number) => (
-                                  <tr key={movement.id} className="hover:bg-gray-50">
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  <tr key={movement.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
                                       {(stockMovementPage - 1) * stockMovementPageSize + index + 1}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap">
                                       <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
                                         movement.type === 1
-                                          ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                                          : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                                          ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-500/30'
+                                          : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-500/30'
                                       }`}>
                                         {movement.type === 1 ? '📥 Giriş' : '📤 Çıkış'}
                                       </span>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-900 dark:text-gray-100">
                                       {movement.quantity}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-right text-gray-700">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-mono text-right text-gray-700 dark:text-gray-300">
                                       ₺{Number(movement.unitPrice ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
                                     <td className="px-4 py-3 whitespace-nowrap text-sm font-semibold text-right text-blue-600">
                                       ₺{Number(movement.totalValue ?? ((movement.quantity || 0) * (movement.unitPrice || 0))).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </td>
-                                    <td className="px-4 py-3 text-sm text-gray-600 max-w-xs truncate">
+                                    <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
                                       {movement.description || '-'}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                       {movement.createdAt ? new Date(movement.createdAt).toLocaleString('tr-TR', {
                                         day: '2-digit',
                                         month: '2-digit',
@@ -1640,33 +1644,33 @@ export default function ProductsPage() {
                             </table>
                           </div>
                         ) : (
-                          <div className="text-center py-8 text-gray-500">
+                          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                             Bu ürün için henüz stok hareketi bulunmamaktadır.
                           </div>
                         )}
                         
                         {/* Pagination for Stock Movements */}
                         {stockMovementsData && (stockMovementsData.totalPages ?? 0) > 1 && (
-                          <div className="mt-4 flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 rounded-lg">
+                          <div className="mt-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 px-4 py-3 sm:px-6 rounded-lg">
                             <div className="flex flex-1 justify-between sm:hidden">
                               <button
                                 onClick={() => setStockMovementPage(stockMovementPage - 1)}
                                 disabled={!stockMovementsData.hasPreviousPage}
-                                className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="relative inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Önceki
                               </button>
                               <button
                                 onClick={() => setStockMovementPage(stockMovementPage + 1)}
                                 disabled={!stockMovementsData.hasNextPage}
-                                className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="relative ml-3 inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Sonraki
                               </button>
                             </div>
                             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                               <div>
-                                <p className="text-sm text-gray-800">
+                                <p className="text-sm text-gray-800 dark:text-gray-200">
                                   <span className="font-medium">{stockMovementsData.pageNumber}</span> / <span className="font-medium">{stockMovementsData.totalPages}</span> sayfa gösteriliyor
                                 </p>
                               </div>
@@ -1675,14 +1679,14 @@ export default function ProductsPage() {
                                   <button
                                     onClick={() => setStockMovementPage(stockMovementPage - 1)}
                                     disabled={!stockMovementsData.hasPreviousPage}
-                                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     Önceki
                                   </button>
                                   <button
                                     onClick={() => setStockMovementPage(stockMovementPage + 1)}
                                     disabled={!stockMovementsData.hasNextPage}
-                                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                   >
                                     Sonraki
                                   </button>
@@ -1696,7 +1700,7 @@ export default function ProductsPage() {
                   )
                 })()}
               </div>
-              <div className="flex-shrink-0 border-t border-gray-200 px-4 py-3 flex justify-end bg-white">
+              <div className="flex-shrink-0 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex justify-end bg-white dark:bg-gray-900">
                 <button
                   type="button"
                   onClick={() => {
@@ -1704,7 +1708,7 @@ export default function ProductsPage() {
                     setDetailProductId(null)
                     setStockMovementPage(1)
                   }}
-                  className="inline-flex justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  className="inline-flex justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Kapat
                 </button>
@@ -1728,7 +1732,7 @@ export default function ProductsPage() {
                 description: '',
               })
             }} />
-            <div className="relative z-[70] transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative z-[70] transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={(e) => {
                 e.preventDefault()
                 if (stockMovementFormData.productId === 0) {
@@ -1746,12 +1750,12 @@ export default function ProductsPage() {
                 stockMovementMutation.mutate(stockMovementFormData)
               }}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Stok Hareketi Ekle
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="stock-movement-type" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="stock-movement-type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         İşlem Tipi
                       </label>
                       <select
@@ -1774,7 +1778,7 @@ export default function ProductsPage() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="stock-movement-quantity" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="stock-movement-quantity" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Miktar
                       </label>
                       <input
@@ -1800,7 +1804,7 @@ export default function ProductsPage() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="stock-movement-unitPrice" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="stock-movement-unitPrice" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         {stockMovementFormData.type === 1 ? 'Satın Alma Fiyatı' : 'Satış Fiyatı'} *
                       </label>
                       <input
@@ -1826,7 +1830,7 @@ export default function ProductsPage() {
                       />
                     </div>
                     <div>
-                      <label htmlFor="stock-movement-description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="stock-movement-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama (Opsiyonel)
                       </label>
                       <textarea
@@ -1859,7 +1863,7 @@ export default function ProductsPage() {
                         description: '',
                       })
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>

@@ -16,7 +16,7 @@ export default function ProtectedRoute({ children, requiredRoles }: ProtectedRou
   if (requiredRoles && requiredRoles.length > 0) {
     const hasRequiredRole = authService.hasAnyRole(requiredRoles);
     if (!hasRequiredRole) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/dashboard" replace />;
     }
   }
 

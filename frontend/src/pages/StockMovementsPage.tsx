@@ -96,7 +96,11 @@ export default function StockMovementsPage() {
   }, [isFetching, movementsData])
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    )
   }
 
   return (
@@ -104,7 +108,7 @@ export default function StockMovementsPage() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-semibold text-gray-900">Stok Hareketleri</h1>
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Stok Hareketleri</h1>
             <TechnologyInfo
               technologies={[
                 'Redis Cache (60s TTL) - Hızlı veri erişimi',
@@ -114,7 +118,7 @@ export default function StockMovementsPage() {
               description="Arama sonuçları Redis'te cache'lenir, Elasticsearch ile hızlı arama yapılır."
             />
           </div>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Tüm stok giriş ve çıkış hareketleri.
           </p>
         </div>
@@ -185,7 +189,7 @@ export default function StockMovementsPage() {
               }
             }}
             placeholder="Ürün, kategori veya açıklama ile ara..."
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           />
           {searchInput && (
             <button
@@ -206,7 +210,7 @@ export default function StockMovementsPage() {
         {/* Date Range Filter */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 date-input-container">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Başlangıç Tarihi
             </label>
             <input
@@ -218,11 +222,11 @@ export default function StockMovementsPage() {
                   setPage(1)
                 }
               }}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Bitiş Tarihi
             </label>
             <input
@@ -235,7 +239,7 @@ export default function StockMovementsPage() {
                 }
               }}
               min={startDate || undefined}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm [color-scheme:light] dark:[color-scheme:dark]"
             />
           </div>
         </div>
@@ -249,7 +253,7 @@ export default function StockMovementsPage() {
                 setEndDate('')
                 setPage(1)
               }}
-              className="text-sm text-gray-600 hover:text-gray-800 underline"
+              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 underline"
             >
               Tarih filtrelerini temizle
             </button>
@@ -258,66 +262,66 @@ export default function StockMovementsPage() {
       </div>
 
       <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 rounded-lg shadow-sm border border-gray-200 bg-white">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     #
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[150px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[150px]">
                     Ürün
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[120px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[120px]">
                     Kategori
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     İşlem Tipi
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Miktar
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Mevcut Stok
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[200px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[200px]">
                     Açıklama
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Tarih
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {movementsData?.items.map((movement: any, index: number) => (
-                  <tr key={movement.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-semibold">
+                  <tr key={movement.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 font-semibold">
                         {(page - 1) * pageSize + index + 1}
                       </span>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-900 font-medium max-w-[150px]">
+                    <td className="px-3 py-4 text-sm text-gray-900 dark:text-gray-100 font-medium max-w-[150px]">
                       <div className="truncate">{movement.productName}</div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {movement.categoryName || '-'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-700 dark:text-gray-300">
                       {movement.type === 1 ? 'Giriş' : 'Çıkış'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {movement.quantity}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm">
-                      <span className="text-gray-900 font-medium">
+                      <span className="text-gray-900 dark:text-gray-100 font-medium">
                         {movement.currentStockQuantity ?? (movement as any).currentStockQuantity ?? 0}
                       </span>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-600 max-w-xs truncate">
+                    <td className="px-3 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-xs truncate">
                       {movement.description || '-'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {new Date(movement.createdAt).toLocaleString('tr-TR', {
                         day: '2-digit',
                         month: '2-digit',
@@ -336,26 +340,26 @@ export default function StockMovementsPage() {
 
       {/* Pagination */}
       {movementsData && movementsData.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 mt-4 rounded-lg">
+        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 px-4 py-3 sm:px-6 mt-4 rounded-lg">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPage(page - 1)}
               disabled={!movementsData.hasPreviousPage}
-              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Önceki
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={!movementsData.hasNextPage}
-              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sonraki
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 <span className="font-medium">{movementsData.pageNumber}</span> / <span className="font-medium">{movementsData.totalPages}</span> sayfa gösteriliyor
               </p>
             </div>
@@ -364,14 +368,14 @@ export default function StockMovementsPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!movementsData.hasPreviousPage}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Önceki
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!movementsData.hasNextPage}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sonraki
                 </button>

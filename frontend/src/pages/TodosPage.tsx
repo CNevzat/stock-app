@@ -4,15 +4,15 @@ import { todoService } from '../services/todoService'
 import { signalRService } from '../services/signalRService'
 
 const STATUS_OPTIONS = [
-  { value: 1, label: 'Yapılacak', color: 'bg-gray-100 text-gray-800' },
-  { value: 2, label: 'Devam Ediyor', color: 'bg-blue-100 text-blue-800' },
-  { value: 3, label: 'Tamamlandı', color: 'bg-green-100 text-green-800' },
+  { value: 1, label: 'Yapılacak', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' },
+  { value: 2, label: 'Devam Ediyor', color: 'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200' },
+  { value: 3, label: 'Tamamlandı', color: 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-200' },
 ]
 
 const PRIORITY_OPTIONS = [
-  { value: 1, label: 'Düşük', color: 'bg-green-50 text-green-700 ring-green-600/20' },
-  { value: 2, label: 'Orta', color: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20' },
-  { value: 3, label: 'Yüksek', color: 'bg-red-50 text-red-700 ring-red-600/20' },
+  { value: 1, label: 'Düşük', color: 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-500/30' },
+  { value: 2, label: 'Orta', color: 'bg-yellow-50 text-yellow-700 ring-yellow-600/20 dark:bg-yellow-950/40 dark:text-yellow-200 dark:ring-yellow-500/30' },
+  { value: 3, label: 'Yüksek', color: 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-500/30' },
 ]
 
 export default function TodosPage() {
@@ -308,11 +308,11 @@ export default function TodosPage() {
   }
 
   const getStatusColor = (status: number) => {
-    return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-gray-100 text-gray-800'
+    return STATUS_OPTIONS.find(s => s.value === status)?.color || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
   }
 
   const getPriorityColor = (priority: number) => {
-    return PRIORITY_OPTIONS.find(p => p.value === priority)?.color || 'bg-gray-50 text-gray-700'
+    return PRIORITY_OPTIONS.find(p => p.value === priority)?.color || 'bg-gray-50 text-gray-700 ring-gray-600/20 dark:bg-gray-800 dark:text-gray-300 dark:ring-gray-500/30'
   }
 
   const getPriorityLabel = (priority: number) => {
@@ -324,15 +324,19 @@ export default function TodosPage() {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    )
   }
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-semibold text-gray-900">Yapılacaklar</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Yapılacaklar</h1>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Görevlerinizi takip edin ve yönetin.
           </p>
         </div>
@@ -355,7 +359,7 @@ export default function TodosPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mt-6 border-b border-gray-200">
+      <div className="mt-6 border-b border-gray-200 dark:border-gray-600">
         <nav className="-mb-px flex space-x-8" aria-label="Tabs">
           <button
             onClick={() => {
@@ -364,8 +368,8 @@ export default function TodosPage() {
             }}
             className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === 'active'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             Aktif Görevler
@@ -377,8 +381,8 @@ export default function TodosPage() {
             }}
             className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium ${
               activeTab === 'completed'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             Tamamlanan Görevler
@@ -390,8 +394,8 @@ export default function TodosPage() {
             }}
             className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium flex items-center gap-2 ${
               activeTab === 'calendar'
-                ? 'border-indigo-500 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                ? 'border-indigo-500 text-indigo-600 dark:border-indigo-400 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-200'
             }`}
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -415,7 +419,7 @@ export default function TodosPage() {
               setFilterPriority(e.target.value ? Number(e.target.value) : undefined)
               setPage(1)
             }}
-            className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+            className="block rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
           >
             <option value="">Tüm Öncelikler</option>
             {PRIORITY_OPTIONS.map(priority => (
@@ -426,37 +430,37 @@ export default function TodosPage() {
       )}
 
       <div className="mt-8 flow-root">
-        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 rounded-xl shadow-lg backdrop-blur-lg border border-white/10">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8 rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-            <table className="min-w-full divide-y divide-gray-300/20">
-              <thead className="backdrop-blur-md">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
                   {activeTab === 'active' && (
-                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                    <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                       <span className="sr-only">Tamamlandı</span>
                     </th>
                   )}
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     #
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[200px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[200px]">
                     Başlık
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[200px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[200px]">
                     Açıklama
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Oluşturulma
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Tamamlanma
                   </th>
                   {activeTab === 'completed' && (
-                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                    <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                       Durum
                     </th>
                   )}
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Öncelik
                   </th>
                   <th className="relative py-3.5 pl-3 pr-6 sm:pr-4 whitespace-nowrap">
@@ -464,9 +468,9 @@ export default function TodosPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200/20 backdrop-blur-md">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {paginatedTodosData?.items.map((todo: any, index: number) => (
-                  <tr key={todo.id} className={`hover:bg-gray-50 transition-colors duration-150 ${activeTab === 'completed' ? 'opacity-75' : ''}`}>
+                  <tr key={todo.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150 ${activeTab === 'completed' ? 'opacity-75' : ''}`}>
                     {activeTab === 'active' && (
                       <td className="whitespace-nowrap py-4 pl-4 pr-3">
                         <input
@@ -482,22 +486,22 @@ export default function TodosPage() {
                             // Görev tamamlandığında (status === 3) bu sekmede gösterilmemeli
                             // Filtreleme zaten status !== 3 olduğu için otomatik olarak çıkacak
                           }}
-                          className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                          className="h-5 w-5 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
                         />
                       </td>
                     )}
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-semibold">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-semibold">
                         {(page - 1) * pageSize + index + 1}
                       </span>
                     </td>
-                    <td className={`px-3 py-4 text-sm font-medium max-w-[200px] ${activeTab === 'completed' ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                    <td className={`px-3 py-4 text-sm font-medium max-w-[200px] ${activeTab === 'completed' ? 'line-through text-gray-500 dark:text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
                       <div className="truncate">{todo.title}</div>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-600 max-w-[200px]">
+                    <td className="px-3 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-[200px]">
                       <div className="truncate">{todo.description || '-'}</div>
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-300">
                       {todo.createdAt ? new Date(todo.createdAt + (todo.createdAt.endsWith('Z') ? '' : 'Z')).toLocaleString('tr-TR', {
                         year: 'numeric',
                         month: '2-digit',
@@ -506,7 +510,7 @@ export default function TodosPage() {
                         minute: '2-digit'
                       }) : '-'}
                     </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600">
+                    <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-600 dark:text-gray-300">
                       {todo.completedAt ? new Date(todo.completedAt + (todo.completedAt.endsWith('Z') ? '' : 'Z')).toLocaleString('tr-TR', {
                         year: 'numeric',
                         month: '2-digit',
@@ -568,26 +572,26 @@ export default function TodosPage() {
 
       {/* Pagination */}
       {paginatedTodosData && paginatedTodosData.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-white/20 bg-white/30 backdrop-blur-lg px-4 py-3 sm:px-6 mt-4 rounded-xl">
+        <div className="flex items-center justify-between border-t border-white/20 dark:border-gray-600/50 bg-white/30 dark:bg-gray-800/50 backdrop-blur-lg px-4 py-3 sm:px-6 mt-4 rounded-xl">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPage(page - 1)}
               disabled={!paginatedTodosData.hasPreviousPage}
-              className="relative inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800/90 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Önceki
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={!paginatedTodosData.hasNextPage}
-              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800/90 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sonraki
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 <span className="font-medium">{paginatedTodosData.pageNumber}</span> / <span className="font-medium">{paginatedTodosData.totalPages}</span> sayfa gösteriliyor
               </p>
             </div>
@@ -596,14 +600,14 @@ export default function TodosPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!paginatedTodosData.hasPreviousPage}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-800 ring-1 ring-inset ring-white/50 bg-white/70 backdrop-blur-md hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-800 dark:text-gray-200 ring-1 ring-inset ring-white/50 dark:ring-gray-600 bg-white/70 dark:bg-gray-800/90 backdrop-blur-md hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Önceki
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!paginatedTodosData.hasNextPage}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-800 ring-1 ring-inset ring-white/50 bg-white/70 backdrop-blur-md hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-800 dark:text-gray-200 ring-1 ring-inset ring-white/50 dark:ring-gray-600 bg-white/70 dark:bg-gray-800/90 backdrop-blur-md hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sonraki
                 </button>
@@ -619,19 +623,19 @@ export default function TodosPage() {
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => {
+            <div className="fixed inset-0 bg-gray-500/75 dark:bg-gray-950/80 transition-opacity" onClick={() => {
               setIsCreateModalOpen(false)
               resetForm()
             }} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={handleCreate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Yeni Görev Oluştur
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Başlık
                       </label>
                       <input
@@ -640,11 +644,11 @@ export default function TodosPage() {
                         required
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       />
                     </div>
                     <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama
                       </label>
                       <textarea
@@ -652,18 +656,18 @@ export default function TodosPage() {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={3}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       />
                     </div>
                     <div>
-                      <label htmlFor="status" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Durum
                       </label>
                       <select
                         id="status"
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: Number(e.target.value) })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       >
                         {STATUS_OPTIONS.map(status => (
                           <option key={status.value} value={status.value}>{status.label}</option>
@@ -671,14 +675,14 @@ export default function TodosPage() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Öncelik
                       </label>
                       <select
                         id="priority"
                         value={formData.priority}
                         onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       >
                         {PRIORITY_OPTIONS.map(priority => (
                           <option key={priority.value} value={priority.value}>{priority.label}</option>
@@ -701,7 +705,7 @@ export default function TodosPage() {
                       setIsCreateModalOpen(false)
                       resetForm()
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>
@@ -716,19 +720,19 @@ export default function TodosPage() {
       {isEditModalOpen && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => {
+            <div className="fixed inset-0 bg-gray-500/75 dark:bg-gray-950/80 transition-opacity" onClick={() => {
               setIsEditModalOpen(false)
               resetForm()
             }} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={handleUpdate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Görevi Düzenle
                   </h3>
                   <div className="space-y-4">
                     <div>
-                      <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Başlık
                       </label>
                       <input
@@ -737,11 +741,11 @@ export default function TodosPage() {
                         required
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama
                       </label>
                       <textarea
@@ -749,18 +753,18 @@ export default function TodosPage() {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={3}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-status" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Durum
                       </label>
                       <select
                         id="edit-status"
                         value={formData.status}
                         onChange={(e) => setFormData({ ...formData, status: Number(e.target.value) })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       >
                         {STATUS_OPTIONS.map(status => (
                           <option key={status.value} value={status.value}>{status.label}</option>
@@ -768,14 +772,14 @@ export default function TodosPage() {
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="edit-priority" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-priority" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Öncelik
                       </label>
                       <select
                         id="edit-priority"
                         value={formData.priority}
                         onChange={(e) => setFormData({ ...formData, priority: Number(e.target.value) })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       >
                         {PRIORITY_OPTIONS.map(priority => (
                           <option key={priority.value} value={priority.value}>{priority.label}</option>
@@ -798,7 +802,7 @@ export default function TodosPage() {
                       setIsEditModalOpen(false)
                       resetForm()
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>
@@ -826,7 +830,7 @@ function CalendarView({ todos, onEditTodo }: { todos: any[], onEditTodo: (todo: 
   const days = []
   // Fill empty days for the first week
   for (let i = 0; i < (firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1); i++) {
-    days.push(<div key={`empty-${i}`} className="h-32 border border-gray-100 bg-gray-50/30"></div>)
+    days.push(<div key={`empty-${i}`} className="h-32 border border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/40"></div>)
   }
 
   for (let d = 1; d <= daysInMonth; d++) {
@@ -837,18 +841,18 @@ function CalendarView({ todos, onEditTodo }: { todos: any[], onEditTodo: (todo: 
     })
 
     days.push(
-      <div key={d} className="h-32 border border-gray-100 p-2 overflow-hidden hover:bg-gray-50/50 transition-colors">
-        <div className="text-right text-sm font-semibold text-gray-500 mb-1">{d}</div>
+      <div key={d} className="h-32 border border-gray-100 dark:border-gray-700 p-2 overflow-hidden hover:bg-gray-50/50 dark:hover:bg-gray-800/50 transition-colors bg-white/50 dark:bg-gray-900/30">
+        <div className="text-right text-sm font-semibold text-gray-500 dark:text-gray-400 mb-1">{d}</div>
         <div className="space-y-1 overflow-y-auto max-h-[85px] scrollbar-hide">
           {dayTodos.map(todo => (
             <div
               key={todo.id}
               onClick={() => onEditTodo(todo)}
               className={`text-[10px] p-1 rounded truncate cursor-pointer transition-transform hover:scale-105 ${
-                todo.status === 3 ? 'bg-green-100 text-green-800 line-through' :
-                todo.priority === 3 ? 'bg-red-100 text-red-800 border-l-2 border-red-500' :
-                todo.priority === 2 ? 'bg-yellow-100 text-yellow-800 border-l-2 border-yellow-500' :
-                'bg-blue-100 text-blue-800 border-l-2 border-blue-500'
+                todo.status === 3 ? 'bg-green-100 text-green-800 dark:bg-green-950/60 dark:text-green-200 line-through' :
+                todo.priority === 3 ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-200 border-l-2 border-red-500' :
+                todo.priority === 2 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/60 dark:text-yellow-200 border-l-2 border-yellow-500' :
+                'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-200 border-l-2 border-blue-500'
               }`}
               title={todo.title}
             >
@@ -861,31 +865,31 @@ function CalendarView({ todos, onEditTodo }: { todos: any[], onEditTodo: (todo: 
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6 mt-6">
+    <div className="bg-white/80 dark:bg-gray-800/60 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 dark:border-gray-700/60 p-6 mt-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-gray-800 capitalize">{monthName}</h3>
+        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 capitalize">{monthName}</h3>
         <div className="flex gap-2">
-          <button onClick={prevMonth} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+            <svg className="h-5 w-5 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <button onClick={nextMonth} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-            <svg className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <button onClick={nextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors">
+            <svg className="h-5 w-5 text-gray-600 dark:text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
         </div>
       </div>
-      <div className="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-7 gap-px bg-gray-200 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
         {['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'].map(day => (
-          <div key={day} className="bg-gray-50 py-2 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+          <div key={day} className="bg-gray-50 dark:bg-gray-800 py-2 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             {day}
           </div>
         ))}
         {days}
       </div>
-      <div className="mt-4 flex gap-4 text-xs text-gray-500">
+      <div className="mt-4 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
         <div className="flex items-center gap-1"><span className="w-3 h-3 bg-red-100 border-l-2 border-red-500 rounded"></span> Yüksek Öncelik</div>
         <div className="flex items-center gap-1"><span className="w-3 h-3 bg-yellow-100 border-l-2 border-yellow-500 rounded"></span> Orta Öncelik</div>
         <div className="flex items-center gap-1"><span className="w-3 h-3 bg-blue-100 border-l-2 border-blue-500 rounded"></span> Düşük Öncelik</div>

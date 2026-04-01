@@ -17,6 +17,7 @@ namespace StockApp
         public DbSet<TodoItem> TodoItems => Set<TodoItem>();
         public DbSet<Location> Locations => Set<Location>();
         public DbSet<ProductPrice> ProductPrices => Set<ProductPrice>();
+        public DbSet<SupportRequest> SupportRequests => Set<SupportRequest>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

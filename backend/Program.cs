@@ -134,21 +134,13 @@ app.MapHub<StockHub>("/hubs/stock");
 
 app.MapControllers();
 
-// Static files serving (images ve frontend için)
-// Production'da frontend dosyalarını serve et (SPA fallback)
+// Production'da React build'ini serve et (SPA fallback)
+// Development'ta görsel dosyaları wwwroot değil MinIO üzerinden gelir
 if (!app.Environment.IsDevelopment())
 {
-    // Default files (index.html) ve static files için
     app.UseDefaultFiles();
     app.UseStaticFiles();
-    
-    // React Router için fallback - tüm non-API istekleri index.html'e yönlendir
     app.MapFallbackToFile("/index.html");
-}
-else
-{
-    // Development'ta sadece images için static files
-    app.UseStaticFiles();
 }
 
 using (var scope = app.Services.CreateScope())

@@ -161,7 +161,11 @@ export default function LocationsPage() {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    )
   }
 
   return (
@@ -169,7 +173,7 @@ export default function LocationsPage() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-semibold text-gray-900">Lokasyonlar</h1>
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Lokasyonlar</h1>
             <TechnologyInfo
               technologies={[
                 'SignalR - Real-time güncellemeler',
@@ -178,7 +182,7 @@ export default function LocationsPage() {
               description="Lokasyon değişiklikleri tüm client'lara anlık bildirilir ve dashboard cache'i güncellenir."
             />
           </div>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Ürünlerin saklandığı lokasyonlar (Raf, Dolap, vb.)
           </p>
         </div>
@@ -232,27 +236,27 @@ export default function LocationsPage() {
               }, 50)
             }
           }}
-          className="block rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+          className="block w-full max-w-md rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
       </div>
       
 
       <div className="mt-8 flow-root">
-        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-lg shadow-sm border border-gray-200 bg-white">
+        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60">
           <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     #
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[200px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[200px]">
                     İsim
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[250px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[250px]">
                     Açıklama
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     Ürün Sayısı
                   </th>
                   <th className="relative py-3.5 pl-3 pr-6 sm:pr-4 whitespace-nowrap">
@@ -260,30 +264,30 @@ export default function LocationsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {locationsData?.items?.map((location: LocationDto, index: number) => (
-                  <tr key={location.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-semibold">
+                  <tr key={location.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 font-semibold">
                         {(page - 1) * pageSize + index + 1}
                       </span>
                     </td>
-                    <td className="px-3 py-4 text-sm font-medium text-gray-900 max-w-[200px]">
+                    <td className="px-3 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 max-w-[200px]">
                       <div className="flex items-center">
-                        <svg className="w-5 h-5 mr-2 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-5 h-5 mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         <span className="truncate">{location.name}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-600 max-w-[250px]">
+                    <td className="px-3 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-[250px]">
                       <div className="truncate">{location.description || '-'}</div>
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-sm">
                       <button
                         onClick={() => navigate(`/products?locationId=${location.id}`)}
-                        className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset bg-blue-50 text-blue-700 ring-blue-600/20 hover:opacity-80 transition-opacity cursor-pointer"
+                        className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-950/50 dark:text-blue-200 dark:ring-blue-400/35 hover:opacity-80 transition-opacity cursor-pointer"
                       >
                         <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -327,26 +331,26 @@ export default function LocationsPage() {
 
       {/* Pagination */}
       {locationsData && locationsData.totalPages && locationsData.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 px-4 py-3 sm:px-6 mt-4 rounded-lg">
+        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700/60 bg-gray-50 dark:bg-gray-800/60 px-4 py-3 sm:px-6 mt-4 rounded-lg">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPage(page - 1)}
               disabled={!locationsData.hasPreviousPage}
-              className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Önceki
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={!locationsData.hasNextPage}
-              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sonraki
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 <span className="font-medium">{locationsData.pageNumber}</span> / <span className="font-medium">{locationsData.totalPages}</span> sayfa gösteriliyor
               </p>
             </div>
@@ -355,14 +359,14 @@ export default function LocationsPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!locationsData.hasPreviousPage}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 ring-1 ring-inset ring-gray-300 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-700 dark:text-gray-200 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Önceki
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!locationsData.hasNextPage}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-800 ring-1 ring-inset ring-white/50 bg-white/70 backdrop-blur-md hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-800 dark:text-gray-200 ring-1 ring-inset ring-white/50 dark:ring-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sonraki
                 </button>
@@ -377,15 +381,15 @@ export default function LocationsPage() {
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsCreateModalOpen(false)} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={handleCreate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Lokasyon Oluştur
                   </h3>
                   <div className="mt-2 space-y-4">
                     <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         İsim *
                       </label>
                       <input
@@ -394,19 +398,19 @@ export default function LocationsPage() {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                         placeholder="Örn: Raf 1, Çekmece 3"
                       />
                     </div>
                     <div>
-                      <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama
                       </label>
                       <textarea
                         id="description"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                         placeholder="Opsiyonel açıklama (örn: Üst raf, sol taraf)"
                         rows={3}
                       />
@@ -424,7 +428,7 @@ export default function LocationsPage() {
                   <button
                     type="button"
                     onClick={() => setIsCreateModalOpen(false)}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>
@@ -440,15 +444,15 @@ export default function LocationsPage() {
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setIsEditModalOpen(false)} />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={handleUpdate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     Lokasyon Düzenle
                   </h3>
                   <div className="mt-2 space-y-4">
                     <div>
-                      <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         İsim *
                       </label>
                       <input
@@ -457,18 +461,18 @@ export default function LocationsPage() {
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700">
+                      <label htmlFor="edit-description" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         Açıklama
                       </label>
                       <textarea
                         id="edit-description"
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100"
                         rows={3}
                       />
                     </div>
@@ -485,7 +489,7 @@ export default function LocationsPage() {
                   <button
                     type="button"
                     onClick={() => setIsEditModalOpen(false)}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>

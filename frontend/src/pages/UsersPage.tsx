@@ -169,15 +169,19 @@ export default function UsersPage() {
   };
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>;
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    );
   }
 
   return (
     <div className="px-2 sm:px-4 lg:px-6">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-semibold text-gray-900">Kullanıcı Yönetimi</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Kullanıcı Yönetimi</h1>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Sistem kullanıcılarını yönetin ve yetkilendirin.
           </p>
         </div>
@@ -205,51 +209,51 @@ export default function UsersPage() {
       </div>
 
       <div className="mt-8 flow-root">
-        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10">
+        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60">
           <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full divide-y divide-gray-300/20">
-              <thead className="backdrop-blur-md">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Ad Soyad</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">E-posta</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Rol</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Durum</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Şifre Değiştirme</th>
+                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Ad Soyad</th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">E-posta</th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Rol</th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Durum</th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Şifre Değiştirme</th>
                   <th className="relative py-3.5 pl-3 pr-6 sm:pr-4">
                     <span className="sr-only">İşlemler</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200/20 backdrop-blur-md">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {users?.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                  <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                       {user.firstName} {user.lastName}
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-600">{user.email}</td>
+                    <td className="px-3 py-4 text-sm text-gray-600 dark:text-gray-300">{user.email}</td>
                     <td className="px-3 py-4 text-sm">
                       {user.roles.length > 0 ? (
                         <span
                           className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                            user.roles[0] === 'Admin' ? 'ring-red-300' : user.roles[0] === 'Manager' ? 'ring-blue-300' : 'ring-gray-300'
+                            user.roles[0] === 'Admin'
+                              ? 'bg-red-100 text-red-800 ring-red-300 dark:bg-red-950/50 dark:text-red-200 dark:ring-red-500/40'
+                              : user.roles[0] === 'Manager'
+                                ? 'bg-blue-100 text-blue-800 ring-blue-300 dark:bg-blue-950/50 dark:text-blue-200 dark:ring-blue-500/40'
+                                : 'bg-gray-100 text-gray-800 ring-gray-300 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-600'
                           }`}
-                          style={{
-                            backgroundColor: user.roles[0] === 'Admin' ? '#FEE2E2' : user.roles[0] === 'Manager' ? '#DBEAFE' : '#F3F4F6',
-                            color: user.roles[0] === 'Admin' ? '#991B1B' : user.roles[0] === 'Manager' ? '#1E40AF' : '#374151',
-                          }}
                         >
                           {user.roles[0]}
                         </span>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
                     <td className="px-3 py-4 text-sm">
                       <span
                         className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
                           user.isActive
-                            ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20'
-                            : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20'
+                            ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-950/40 dark:text-green-300 dark:ring-green-500/30'
+                            : 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-500/30'
                         }`}
                       >
                         {user.isActive ? 'Aktif' : 'Pasif'}
@@ -257,18 +261,18 @@ export default function UsersPage() {
                     </td>
                     <td className="px-3 py-4 text-sm">
                       {user.mustChangePassword ? (
-                        <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20">
+                        <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-700 ring-1 ring-inset ring-yellow-600/20 dark:bg-yellow-950/40 dark:text-yellow-200 dark:ring-yellow-500/30">
                           Gerekli
                         </span>
                       ) : (
-                        <span className="text-gray-400">-</span>
+                        <span className="text-gray-400 dark:text-gray-500">-</span>
                       )}
                     </td>
                     <td className="relative whitespace-nowrap py-4 pl-3 pr-6 text-right text-sm font-medium sm:pr-4">
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={() => startEdit(user)}
-                          className="inline-flex items-center justify-center p-2 rounded-lg text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 transition-colors duration-200"
+                          className="inline-flex items-center justify-center p-2 rounded-lg text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors duration-200"
                           title="Düzenle"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -277,7 +281,7 @@ export default function UsersPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(user.id, `${user.firstName} ${user.lastName}`)}
-                          className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
+                          className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-700 dark:hover:text-red-300 transition-colors duration-200"
                           title="Sil"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -299,7 +303,7 @@ export default function UsersPage() {
         <div className="fixed inset-0 z-50 overflow-y-auto" style={{ overflow: 'auto' }}>
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="fixed inset-0 bg-gray-500/75 dark:bg-gray-950/80 transition-opacity"
               onClick={() => {
                 setIsCreateModalOpen(false);
                 setEditingUser(null);
@@ -315,74 +319,74 @@ export default function UsersPage() {
                 setRoleSearchTerm('');
               }}
             />
-            <div className="relative transform rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6" style={{ overflow: 'visible' }}>
+            <div className="relative transform rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700" style={{ overflow: 'visible' }}>
               <form onSubmit={editingUser ? handleUpdate : handleCreate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     {editingUser ? 'Kullanıcı Düzenle' : 'Yeni Kullanıcı Oluştur'}
                   </h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Ad</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ad</label>
                         <input
                           type="text"
                           required
                           value={formData.firstName}
                           onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                          className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">Soyad</label>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Soyad</label>
                         <input
                           type="text"
                           required
                           value={formData.lastName}
                           onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                          className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">E-posta</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">E-posta</label>
                       <input
                         type="email"
                         required
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                       />
                     </div>
                     {!editingUser && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Kullanıcı Adı (Opsiyonel)</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Kullanıcı Adı (Opsiyonel)</label>
                           <input
                             type="text"
                             value={formData.userName}
                             onChange={(e) => setFormData({ ...formData, userName: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                             placeholder="Boş bırakılırsa e-posta kullanılır"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700">Varsayılan Şifre</label>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Varsayılan Şifre</label>
                           <input
                             type="text"
                             required
                             value={formData.password}
                             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                            className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2"
                           />
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             Kullanıcı ilk girişinde bu şifreyi değiştirmek zorunda olacaktır.
                           </p>
                         </div>
                       </>
                     )}
                     <div className="relative" style={{ zIndex: isRoleDropdownOpen ? 1000 : 'auto' }}>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rol</label>
                       <div className="relative" ref={roleDropdownRef} style={{ zIndex: isRoleDropdownOpen ? 1000 : 'auto' }}>
                         <button
                           type="button"
@@ -392,16 +396,16 @@ export default function UsersPage() {
                             setIsRoleDropdownOpen(!isRoleDropdownOpen);
                             setRoleSearchTerm('');
                           }}
-                          className="w-full flex items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="w-full flex items-center justify-between rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                         >
                           <span>{formData.role || 'Rol seçin'}</span>
-                          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
                         {isRoleDropdownOpen && (
                           <div 
-                            className="absolute z-[1001] mt-1 w-full rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+                            className="absolute z-[1001] mt-1 w-full rounded-md bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-gray-600"
                             style={{ 
                               position: 'absolute',
                               top: '100%',
@@ -415,13 +419,13 @@ export default function UsersPage() {
                               e.stopPropagation();
                             }}
                           >
-                            <div className="p-2 border-b border-gray-200 bg-white sticky top-0">
+                            <div className="p-2 border-b border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 sticky top-0">
                               <input
                                 type="text"
                                 placeholder="Rol ara..."
                                 value={roleSearchTerm}
                                 onChange={(e) => setRoleSearchTerm(e.target.value)}
-                                className="w-full rounded-md border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500 border"
+                                className="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
                                 onClick={(e) => e.stopPropagation()}
                                 onKeyDown={(e) => e.stopPropagation()}
                                 autoFocus
@@ -462,12 +466,12 @@ export default function UsersPage() {
                                         setIsRoleDropdownOpen(false);
                                         setRoleSearchTerm('');
                                       }}
-                                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 transition-colors ${
-                                        formData.role === role ? 'bg-indigo-100 text-indigo-700 font-medium' : 'text-gray-700'
+                                      className={`w-full text-left px-4 py-2.5 text-sm hover:bg-indigo-50 dark:hover:bg-indigo-950/50 transition-colors ${
+                                        formData.role === role ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-medium' : 'text-gray-700 dark:text-gray-200'
                                       }`}
                                     >
                                       <div className="flex items-center">
-                                        <svg className={`w-4 h-4 mr-2 flex-shrink-0 ${formData.role === role ? 'text-indigo-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <svg className={`w-4 h-4 mr-2 flex-shrink-0 ${formData.role === role ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                           {formData.role === role ? (
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                           ) : (
@@ -480,7 +484,7 @@ export default function UsersPage() {
                                   ))}
                                 </div>
                               ) : (
-                                <div className="px-4 py-3 text-sm text-gray-500 text-center">Rol bulunamadı</div>
+                                <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">Rol bulunamadı</div>
                               )}
                             </div>
                           </div>
@@ -515,7 +519,7 @@ export default function UsersPage() {
                       setIsRoleDropdownOpen(false);
                       setRoleSearchTerm('');
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>

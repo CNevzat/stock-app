@@ -331,21 +331,25 @@ export default function RolesPage() {
   if (!canView) {
     return (
       <div className="flex justify-center items-center h-64">
-        <p className="text-red-600">Bu sayfayı görüntüleme yetkiniz yok.</p>
+        <p className="text-red-600 dark:text-red-400">Bu sayfayı görüntüleme yetkiniz yok.</p>
       </div>
     );
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>;
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    );
   }
 
   return (
     <div className="px-2 sm:px-4 lg:px-6">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-3xl font-semibold text-gray-900">Rol Yönetimi</h1>
-          <p className="mt-2 text-sm text-gray-700">
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Rol Yönetimi</h1>
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Sistem rollerini yönetin ve yetkilendirin.
           </p>
         </div>
@@ -368,30 +372,30 @@ export default function RolesPage() {
       </div>
 
       <div className="mt-8 flow-root">
-        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10">
+        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60">
           <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full divide-y divide-gray-300/20">
-              <thead className="backdrop-blur-md">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900">Rol Adı</th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Yetkiler (Claims)</th>
+                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Rol Adı</th>
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Yetkiler (Claims)</th>
                   <th className="relative py-3.5 pl-3 pr-6 sm:pr-4">
                     <span className="sr-only">İşlemler</span>
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200/20 backdrop-blur-md">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {roles?.map((role) => (
-                  <tr key={role.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
+                  <tr key={role.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${
-                        role.name === 'Admin' ? 'bg-red-100 text-red-800' :
-                        role.name === 'User' ? 'bg-gray-100 text-gray-800' :
-                        'bg-blue-100 text-blue-800'
+                        role.name === 'Admin' ? 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-200' :
+                        role.name === 'User' ? 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200' :
+                        'bg-blue-100 text-blue-800 dark:bg-blue-950/50 dark:text-blue-200'
                       }`}>
                         {role.name}
                         {(role.name === 'Admin' || role.name === 'User') && (
-                          <span className="ml-2 text-xs text-gray-500">(Korumalı)</span>
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">(Korumalı)</span>
                         )}
                       </span>
                     </td>
@@ -402,7 +406,7 @@ export default function RolesPage() {
                             {(expandedRoles.has(role.id) ? role.claims : role.claims.slice(0, 10)).map((claim, idx) => (
                               <span
                                 key={idx}
-                                className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20"
+                                className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20 dark:bg-purple-950/50 dark:text-purple-200 dark:ring-purple-500/40"
                               >
                                 {claim.type}: {claim.value}
                               </span>
@@ -418,7 +422,7 @@ export default function RolesPage() {
                                   }
                                   setExpandedRoles(newExpanded);
                                 }}
-                                className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/20 hover:bg-indigo-100 transition-colors cursor-pointer"
+                                className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/20 hover:bg-indigo-100 dark:bg-indigo-950/50 dark:text-indigo-300 dark:hover:bg-indigo-950/70 transition-colors cursor-pointer"
                               >
                                 {expandedRoles.has(role.id) 
                                   ? `Daha az göster (${role.claims.length - 10} gizle)`
@@ -427,7 +431,7 @@ export default function RolesPage() {
                             )}
                           </>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-400 dark:text-gray-500">-</span>
                         )}
                       </div>
                     </td>
@@ -437,7 +441,7 @@ export default function RolesPage() {
                           {!isAdminRole(role.name) && (
                             <button
                               onClick={() => startEdit(role)}
-                              className="text-indigo-600 hover:text-indigo-900"
+                              className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300"
                             >
                               Düzenle
                             </button>
@@ -445,7 +449,7 @@ export default function RolesPage() {
                           {!isProtectedRole(role.name) && (
                             <button
                               onClick={() => handleDelete(role.id, role.name)}
-                              className="text-red-600 hover:text-red-900"
+                              className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                             >
                               Sil
                             </button>
@@ -466,37 +470,37 @@ export default function RolesPage() {
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="fixed inset-0 bg-gray-500/75 dark:bg-gray-950/80 transition-opacity"
               onClick={() => {
                 setIsCreateModalOpen(false);
                 setEditingRole(null);
                 setFormData({ name: '', selectedPermissions: [] });
               }}
             />
-            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6">
+            <div className="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-900 px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl sm:p-6 ring-1 ring-gray-200 dark:ring-gray-700">
               <form onSubmit={editingRole ? handleUpdate : handleCreate}>
                 <div>
-                  <h3 className="text-lg font-semibold leading-6 text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 mb-4">
                     {editingRole ? 'Rol Düzenle' : 'Yeni Rol Oluştur'}
                   </h3>
                   <div className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rol Adı</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rol Adı</label>
                       <input
                         type="text"
                         required
                         value={formData.name}
                         onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         disabled={isAdminRole(formData.name) || isUserRole(formData.name)}
-                        className={`block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border ${
+                        className={`block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 ${
                           (isAdminRole(formData.name) || isUserRole(formData.name)) 
-                            ? 'bg-gray-100 cursor-not-allowed' 
+                            ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed' 
                             : ''
                         }`}
                         placeholder="Örn: Editor, Viewer, Moderator"
                       />
                       {(isAdminRole(formData.name) || isUserRole(formData.name)) && (
-                        <p className="mt-1 text-xs text-gray-500">
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                           {isAdminRole(formData.name) 
                             ? 'Admin rolünün adı değiştirilemez.' 
                             : 'User rolünün adı değiştirilemez.'}
@@ -504,48 +508,48 @@ export default function RolesPage() {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">Yetkiler</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Yetkiler</label>
                       {isAdminRole(formData.name) ? (
-                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-sm text-blue-800 mb-3">
+                        <div className="p-4 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/60 rounded-lg">
+                          <p className="text-sm text-blue-800 dark:text-blue-200 mb-3">
                             <strong>Admin rolü tüm yetkilere otomatik sahiptir.</strong> Yeni yetkiler eklendiğinde otomatik olarak Admin rolüne atanır.
                           </p>
                           <div className="space-y-4">
                             {PERMISSION_CATEGORIES.map((category) => (
-                              <div key={category.id} className="border border-blue-200 rounded-lg overflow-hidden bg-white">
-                                <div className="bg-blue-50 px-4 py-3 border-b border-blue-200">
-                                  <h4 className="text-sm font-semibold text-gray-900">{category.name}</h4>
+                              <div key={category.id} className="border border-blue-200 dark:border-blue-800/60 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                                <div className="bg-blue-50 dark:bg-blue-950/50 px-4 py-3 border-b border-blue-200 dark:border-blue-800/60">
+                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{category.name}</h4>
                                 </div>
-                                <div className="bg-white">
-                                  <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <div className="bg-white dark:bg-gray-900">
+                                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                                    <thead className="bg-gray-50 dark:bg-gray-800/90">
                                       <tr>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                           Yetki
                                         </th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                           Açıklama
                                         </th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-20">
                                           Durum
                                         </th>
                                       </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-600">
                                       {category.permissions.map((permission) => (
                                           <tr
                                             key={permission.value}
-                                            className="bg-green-50"
+                                            className="bg-green-50 dark:bg-green-950/30"
                                           >
                                             <td className="px-4 py-4 whitespace-nowrap">
-                                              <div className="text-sm font-medium text-gray-900">{permission.label}</div>
-                                              <div className="text-xs text-gray-500 mt-1">{permission.value}</div>
+                                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{permission.label}</div>
+                                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{permission.value}</div>
                                             </td>
                                             <td className="px-4 py-4">
-                                              <div className="text-sm text-gray-500">{permission.description || '-'}</div>
+                                              <div className="text-sm text-gray-500 dark:text-gray-400">{permission.description || '-'}</div>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap">
-                                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-200">
                                                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                 </svg>
@@ -565,33 +569,33 @@ export default function RolesPage() {
                         <>
                           <div className="space-y-4">
                             {PERMISSION_CATEGORIES.map((category) => (
-                              <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                                  <h4 className="text-sm font-semibold text-gray-900">{category.name}</h4>
+                              <div key={category.id} className="border border-gray-200 dark:border-gray-600 rounded-lg overflow-hidden">
+                                <div className="bg-gray-50 dark:bg-gray-800/90 px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{category.name}</h4>
                                 </div>
-                                <div className="bg-white">
-                                  <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-50">
+                                <div className="bg-white dark:bg-gray-900">
+                                  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                                    <thead className="bg-gray-50 dark:bg-gray-800/90">
                                       <tr>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
+                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-12">
                                           <span className="sr-only">Seç</span>
                                         </th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                           Yetki
                                         </th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                                           Açıklama
                                         </th>
                                       </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-600">
                                       {category.permissions.map((permission) => {
                                         const isSelected = formData.selectedPermissions.includes(permission.value);
                                         return (
                                           <tr
                                             key={permission.value}
-                                            className={`hover:bg-gray-50 transition-colors cursor-pointer ${
-                                              isSelected ? 'bg-indigo-50' : ''
+                                            className={`hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-colors cursor-pointer ${
+                                              isSelected ? 'bg-indigo-50 dark:bg-indigo-950/40' : ''
                                             }`}
                                             onClick={() => togglePermission(permission.value)}
                                           >
@@ -601,15 +605,15 @@ export default function RolesPage() {
                                                 checked={isSelected}
                                                 onChange={() => togglePermission(permission.value)}
                                                 onClick={(e) => e.stopPropagation()}
-                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 dark:bg-gray-800 rounded"
                                               />
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap">
-                                              <div className="text-sm font-medium text-gray-900">{permission.label}</div>
-                                              <div className="text-xs text-gray-500 mt-1">{permission.value}</div>
+                                              <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{permission.label}</div>
+                                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{permission.value}</div>
                                             </td>
                                             <td className="px-4 py-4">
-                                              <div className="text-sm text-gray-500">{permission.description || '-'}</div>
+                                              <div className="text-sm text-gray-500 dark:text-gray-400">{permission.description || '-'}</div>
                                             </td>
                                           </tr>
                                         );
@@ -621,8 +625,8 @@ export default function RolesPage() {
                             ))}
                           </div>
                           {formData.selectedPermissions.length > 0 && (
-                            <div className="mt-4 p-3 bg-indigo-50 rounded-md">
-                              <p className="text-xs text-indigo-700">
+                            <div className="mt-4 p-3 bg-indigo-50 dark:bg-indigo-950/40 rounded-md">
+                              <p className="text-xs text-indigo-700 dark:text-indigo-300">
                                 <span className="font-medium">{formData.selectedPermissions.length}</span> yetki seçildi
                               </p>
                             </div>
@@ -647,7 +651,7 @@ export default function RolesPage() {
                       setEditingRole(null);
                       setFormData({ name: '', selectedPermissions: [] });
                     }}
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:col-start-1 sm:mt-0"
                   >
                     İptal
                   </button>

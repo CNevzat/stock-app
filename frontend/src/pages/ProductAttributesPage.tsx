@@ -9,14 +9,14 @@ import type { CreateProductAttributeCommand, UpdateProductAttributeCommand } fro
 // Product ID'ye göre renk döndüren helper fonksiyon
 const getProductColor = (productId: number) => {
   const colors = [
-    { bg: 'bg-blue-100', text: 'text-blue-800', ring: 'ring-blue-600/20' },
-    { bg: 'bg-green-100', text: 'text-green-800', ring: 'ring-green-600/20' },
-    { bg: 'bg-purple-100', text: 'text-purple-800', ring: 'ring-purple-600/20' },
-    { bg: 'bg-pink-100', text: 'text-pink-800', ring: 'ring-pink-600/20' },
-    { bg: 'bg-yellow-100', text: 'text-yellow-800', ring: 'ring-yellow-600/20' },
-    { bg: 'bg-indigo-100', text: 'text-indigo-800', ring: 'ring-indigo-600/20' },
-    { bg: 'bg-red-100', text: 'text-red-800', ring: 'ring-red-600/20' },
-    { bg: 'bg-cyan-100', text: 'text-cyan-800', ring: 'ring-cyan-600/20' },
+    { bg: 'bg-blue-100 dark:bg-blue-950/50', text: 'text-blue-800 dark:text-blue-200', ring: 'ring-blue-600/20 dark:ring-blue-400/35' },
+    { bg: 'bg-green-100 dark:bg-green-950/50', text: 'text-green-800 dark:text-green-200', ring: 'ring-green-600/20 dark:ring-green-400/35' },
+    { bg: 'bg-purple-100 dark:bg-purple-950/50', text: 'text-purple-800 dark:text-purple-200', ring: 'ring-purple-600/20 dark:ring-purple-400/35' },
+    { bg: 'bg-pink-100 dark:bg-pink-950/50', text: 'text-pink-800 dark:text-pink-200', ring: 'ring-pink-600/20 dark:ring-pink-400/35' },
+    { bg: 'bg-yellow-100 dark:bg-yellow-950/50', text: 'text-yellow-800 dark:text-yellow-200', ring: 'ring-yellow-600/20 dark:ring-yellow-400/35' },
+    { bg: 'bg-indigo-100 dark:bg-indigo-950/50', text: 'text-indigo-800 dark:text-indigo-200', ring: 'ring-indigo-600/20 dark:ring-indigo-400/35' },
+    { bg: 'bg-red-100 dark:bg-red-950/50', text: 'text-red-800 dark:text-red-200', ring: 'ring-red-600/20 dark:ring-red-400/35' },
+    { bg: 'bg-cyan-100 dark:bg-cyan-950/50', text: 'text-cyan-800 dark:text-cyan-200', ring: 'ring-cyan-600/20 dark:ring-cyan-400/35' },
   ];
   return colors[productId % colors.length];
 };
@@ -314,7 +314,11 @@ export default function ProductAttributesPage() {
   }
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64">Yükleniyor...</div>
+    return (
+      <div className="flex justify-center items-center h-64 text-gray-700 dark:text-gray-300">
+        Yükleniyor...
+      </div>
+    )
   }
 
   if (error) {
@@ -346,7 +350,7 @@ export default function ProductAttributesPage() {
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-semibold text-gray-900">Ürün Öznitelikleri</h1>
+            <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100">Ürün Öznitelikleri</h1>
             <TechnologyInfo
               technologies={[
                 'Redis Cache (60s TTL) - Hızlı veri erişimi',
@@ -356,7 +360,7 @@ export default function ProductAttributesPage() {
               description="Arama sonuçları Redis'te cache'lenir, Elasticsearch ile hızlı arama yapılır."
             />
           </div>
-          <p className="mt-2 text-sm text-gray-700">
+          <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
             Tüm ürün özniteliklerinin listesi.
           </p>
         </div>
@@ -432,26 +436,26 @@ export default function ProductAttributesPage() {
               }, 50)
             }
           }}
-          className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 border"
+          className="block w-full max-w-md rounded-md border border-gray-300 bg-white text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm px-3 py-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-500"
         />
       </div>
 
       <div className="mt-8 flow-root">
-        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10">
+        <div className="-mx-2 -my-2 overflow-x-auto sm:-mx-4 lg:-mx-6 rounded-xl shadow-lg backdrop-blur-lg border border-white/10 dark:border-gray-700/60 bg-white/40 dark:bg-gray-800/60">
           <div className="inline-block min-w-full py-2 align-middle">
-            <table className="min-w-full divide-y divide-gray-300/20">
-              <thead className="backdrop-blur-md">
+            <table className="min-w-full divide-y divide-gray-300/20 dark:divide-gray-600/50">
+              <thead className="backdrop-blur-md bg-white/60 dark:bg-gray-800/90">
                 <tr>
-                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
+                  <th className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap">
                     #
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[150px] max-w-[150px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[150px] max-w-[150px]">
                     Ürün
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[150px] max-w-[150px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[150px] max-w-[150px]">
                     Anahtar
                   </th>
-                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap min-w-[150px] max-w-[150px]">
+                  <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-gray-100 whitespace-nowrap min-w-[150px] max-w-[150px]">
                     Değer
                   </th>
                   <th className="relative py-3.5 pl-3 pr-6 sm:pr-4 whitespace-nowrap">
@@ -459,12 +463,12 @@ export default function ProductAttributesPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200/20 backdrop-blur-md">
+              <tbody className="divide-y divide-gray-200/20 dark:divide-gray-600/40 backdrop-blur-md">
                 {attributesData?.items && attributesData.items.length > 0 ? (
                   attributesData.items.map((attribute, index) => (
-                  <tr key={attribute.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 font-semibold">
+                  <tr key={attribute.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors duration-150">
+                    <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-gray-100">
+                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-200 font-semibold">
                         {(page - 1) * pageSize + index + 1}
                       </span>
                     </td>
@@ -480,17 +484,17 @@ export default function ProductAttributesPage() {
                         })()}
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-sm font-medium text-gray-900 max-w-[150px]">
+                    <td className="px-3 py-4 text-sm font-medium text-gray-900 dark:text-gray-100 max-w-[150px]">
                       <div className="flex items-center min-w-0">
-                        <svg className="w-4 h-4 text-purple-500 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-purple-500 dark:text-purple-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                         </svg>
                         <span className="truncate min-w-0">{attribute.key}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-4 text-sm text-gray-600 max-w-[150px]">
+                    <td className="px-3 py-4 text-sm text-gray-600 dark:text-gray-300 max-w-[150px]">
                       <div className="flex items-center min-w-0">
-                        <svg className="w-4 h-4 text-gray-400 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 text-gray-400 dark:text-gray-500 mr-1.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                         <span className="truncate min-w-0">{attribute.value}</span>
@@ -526,7 +530,7 @@ export default function ProductAttributesPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                    <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                       {isLoading ? 'Yükleniyor...' : 'Öznitelik bulunamadı'}
                     </td>
                   </tr>
@@ -539,26 +543,26 @@ export default function ProductAttributesPage() {
 
       {/* Pagination */}
       {attributesData && attributesData.totalPages && attributesData.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-white/20 bg-white/30 backdrop-blur-lg px-4 py-3 sm:px-6 mt-4 rounded-xl">
+        <div className="flex items-center justify-between border-t border-white/20 dark:border-gray-700/60 bg-white/30 dark:bg-gray-800/60 backdrop-blur-lg px-4 py-3 sm:px-6 mt-4 rounded-xl">
           <div className="flex flex-1 justify-between sm:hidden">
             <button
               onClick={() => setPage(page - 1)}
               disabled={!attributesData.hasPreviousPage}
-              className="relative inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Önceki
             </button>
             <button
               onClick={() => setPage(page + 1)}
               disabled={!attributesData.hasNextPage}
-              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 bg-white/70 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative ml-3 inline-flex items-center rounded-md border border-white/50 dark:border-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Sonraki
             </button>
           </div>
           <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm text-gray-800">
+              <p className="text-sm text-gray-800 dark:text-gray-200">
                 <span className="font-medium">{attributesData.pageNumber}</span> / <span className="font-medium">{attributesData.totalPages}</span> sayfa gösteriliyor
               </p>
             </div>
@@ -567,14 +571,14 @@ export default function ProductAttributesPage() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={!attributesData.hasPreviousPage}
-                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-800 ring-1 ring-inset ring-white/50 bg-white/70 backdrop-blur-md hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-800 dark:text-gray-200 ring-1 ring-inset ring-white/50 dark:ring-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Önceki
                 </button>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={!attributesData.hasNextPage}
-                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-800 ring-1 ring-inset ring-white/50 bg-white/70 backdrop-blur-md hover:bg-white/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-800 dark:text-gray-200 ring-1 ring-inset ring-white/50 dark:ring-gray-600 bg-white/70 dark:bg-gray-800 backdrop-blur-md hover:bg-white/80 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sonraki
                 </button>
